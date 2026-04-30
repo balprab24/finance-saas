@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const routes = [
-  { href: '/', label: 'Overview' },
+  { href: '/dashboard', label: 'Overview' },
   { href: '/transactions', label: 'Transactions' },
   { href: '/accounts', label: 'Accounts' },
   { href: '/categories', label: 'Categories' },
