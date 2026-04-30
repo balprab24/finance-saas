@@ -32,6 +32,17 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*.local
+.env
+
+# local sqlite database (may contain user data)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# screenshots (may capture authenticated UI / PII)
+/screenshots
+/scripts/.auth
 
 # vercel
 .vercel
