@@ -1,6 +1,7 @@
 'use client';
 
 import { useUser } from '@clerk/nextjs';
+import { format } from 'date-fns';
 
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -14,19 +15,27 @@ function getGreeting() {
 
 export function WelcomeMsg() {
   const { user, isLoaded } = useUser();
+  const today = format(new Date(), 'EEEE, MMMM d');
 
   return (
-    <div className="space-y-2 mb-4">
-      <h2 className="text-2xl lg:text-4xl text-white font-medium tracking-tight flex items-center gap-x-2">
+    <div className="space-y-2">
+      <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--aurex-text-3)]">
+        <span className="size-1.5 rounded-full bg-[#a5b4fc] shadow-[0_0_8px_#a5b4fc]" />
+        Dashboard · {today}
+      </span>
+      <h2 className="flex items-center gap-x-3 text-[28px] font-semibold tracking-tight text-[var(--aurex-text-1)] lg:text-[36px]">
         {getGreeting()},
         {isLoaded ? (
-          <span>{user?.firstName} 👋</span>
+          <span className="bg-gradient-to-br from-[#a5b4fc] via-[#8b5cf6] to-[#22d3ee] bg-clip-text text-transparent">
+            {user?.firstName ?? 'friend'}
+          </span>
         ) : (
-          <Skeleton className="h-8 w-32 bg-white/20" />
+          <Skeleton className="h-8 w-32 bg-white/10" />
         )}
+        <span aria-hidden>👋</span>
       </h2>
-      <p className="text-sm lg:text-base text-[#89b6fd]">
-        Here&apos;s a snapshot of your finances.
+      <p className="text-[15px] leading-[1.55] text-[var(--aurex-text-2)] lg:text-[16px]">
+        Here&apos;s a snapshot of your finances. Charts, totals, and trends — all up to date.
       </p>
     </div>
   );

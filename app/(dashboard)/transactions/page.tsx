@@ -5,7 +5,6 @@ import { Loader2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DataTable } from '@/components/data-table';
 
@@ -66,17 +65,13 @@ export default function TransactionsPage() {
 
   if (transactionsQuery.isLoading) {
     return (
-      <div className="max-w-screen-2xl mx-auto w-full pb-10 -mt-24">
-        <Card className="border-none drop-shadow-sm">
-          <CardHeader>
-            <Skeleton className="h-8 w-48" />
-          </CardHeader>
-          <CardContent>
-            <div className="h-[500px] w-full flex items-center justify-center">
-              <Loader2 className="size-6 text-slate-300 animate-spin" />
-            </div>
-          </CardContent>
-        </Card>
+      <div className="mx-auto w-full max-w-screen-2xl pb-16 pt-8">
+        <div className="aurex-card p-6">
+          <Skeleton className="h-8 w-48 bg-white/10" />
+          <div className="mt-6 flex h-[500px] w-full items-center justify-center">
+            <Loader2 className="size-6 animate-spin text-[var(--aurex-text-3)]" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -95,19 +90,33 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="max-w-screen-2xl mx-auto w-full pb-10 -mt-24">
-      <Card className="border-none drop-shadow-sm">
-        <CardHeader className="gap-y-2 lg:flex-row lg:items-center lg:justify-between">
-          <CardTitle className="text-xl line-clamp-1">Transactions history</CardTitle>
-          <div className="flex flex-col lg:flex-row gap-y-2 items-center gap-x-2">
-            <Button onClick={newTransaction.onOpen} size="sm" className="w-full lg:w-auto">
-              <Plus className="size-4 mr-2" />
+    <div className="mx-auto w-full max-w-screen-2xl space-y-6 pb-16 pt-8">
+      <div className="flex flex-col gap-2">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--aurex-text-3)]">
+          Transactions
+        </span>
+        <h1 className="text-[28px] font-semibold tracking-tight text-[var(--aurex-text-1)] lg:text-[34px]">
+          Every dollar, accounted for
+        </h1>
+      </div>
+      <div className="aurex-card p-6">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <h2 className="text-[18px] font-semibold tracking-tight text-[var(--aurex-text-1)]">
+            Transactions history
+          </h2>
+          <div className="flex flex-col items-stretch gap-2 lg:flex-row lg:items-center">
+            <Button
+              onClick={newTransaction.onOpen}
+              size="sm"
+              className="w-full bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] text-white shadow-[0_8px_24px_rgba(99,102,241,0.32)] hover:from-[#7a7df7] hover:to-[#9b6cf8] lg:w-auto"
+            >
+              <Plus className="mr-2 size-4" />
               Add new
             </Button>
             <UploadButton onUpload={onUpload} />
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="mt-4">
           <DataTable
             filterKey="payee"
             columns={columns}
@@ -115,8 +124,8 @@ export default function TransactionsPage() {
             onDelete={(rows) => deleteTransactions.mutate({ ids: rows.map((r) => r.original.id) })}
             disabled={isDisabled}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

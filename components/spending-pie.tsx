@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { FileSearch, PieChart, Radar, Target } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
@@ -24,44 +23,51 @@ export function SpendingPie({ data = [] }: Props) {
   const [chartType, setChartType] = useState('pie');
 
   return (
-    <Card className="rounded-2xl border-none shadow-sm">
-      <CardHeader className="flex space-y-2 lg:space-y-0 lg:flex-row lg:items-center justify-between">
-        <CardTitle className="text-lg font-semibold tracking-tight line-clamp-1">
-          Categories
-        </CardTitle>
+    <div className="aurex-card relative overflow-hidden p-6">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h3 className="text-[20px] font-semibold tracking-tight text-[var(--aurex-text-1)]">
+            Top categories
+          </h3>
+          <p className="text-[13px] text-[var(--aurex-text-3)]">
+            Where the money is going
+          </p>
+        </div>
         <Select defaultValue={chartType} onValueChange={setChartType}>
-          <SelectTrigger className="lg:w-auto h-9 rounded-lg px-3">
+          <SelectTrigger className="h-9 rounded-full border border-[var(--aurex-border)] bg-[var(--aurex-surface)] px-3.5 text-[13px] text-[var(--aurex-text-1)] hover:bg-[var(--aurex-surface-hover)] focus:ring-0 focus:ring-offset-0 lg:w-auto">
             <SelectValue placeholder="Chart type" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="pie">
               <div className="flex items-center">
-                <PieChart className="size-4 mr-2 shrink-0" />
+                <PieChart className="mr-2 size-4 shrink-0" />
                 <p className="line-clamp-1">Pie chart</p>
               </div>
             </SelectItem>
             <SelectItem value="radar">
               <div className="flex items-center">
-                <Radar className="size-4 mr-2 shrink-0" />
+                <Radar className="mr-2 size-4 shrink-0" />
                 <p className="line-clamp-1">Radar chart</p>
               </div>
             </SelectItem>
             <SelectItem value="radial">
               <div className="flex items-center">
-                <Target className="size-4 mr-2 shrink-0" />
+                <Target className="mr-2 size-4 shrink-0" />
                 <p className="line-clamp-1">Radial chart</p>
               </div>
             </SelectItem>
           </SelectContent>
         </Select>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div className="mt-5">
         {data.length === 0 ? (
-          <div className="flex flex-col gap-y-3 items-center justify-center h-[350px] w-full rounded-xl bg-muted/30">
-            <div className="rounded-full bg-muted p-3">
-              <FileSearch className="size-6 text-muted-foreground" />
+          <div className="flex h-[350px] w-full flex-col items-center justify-center gap-y-3 rounded-xl bg-[var(--aurex-surface)] ring-1 ring-[var(--aurex-border)]">
+            <div className="rounded-full bg-[var(--aurex-surface-hover)] p-3">
+              <FileSearch className="size-6 text-[var(--aurex-text-3)]" />
             </div>
-            <p className="text-muted-foreground text-sm">No spending in this period.</p>
+            <p className="text-[14px] text-[var(--aurex-text-3)]">
+              No spending in this period.
+            </p>
           </div>
         ) : (
           <>
@@ -70,21 +76,19 @@ export function SpendingPie({ data = [] }: Props) {
             {chartType === 'radial' && <RadialVariant data={data} />}
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
 export function SpendingPieLoading() {
   return (
-    <Card className="rounded-2xl border-none shadow-sm">
-      <CardHeader className="flex space-y-2 lg:space-y-0 lg:flex-row lg:items-center justify-between">
-        <Skeleton className="h-7 w-40" />
-        <Skeleton className="h-9 lg:w-[140px] w-full rounded-lg" />
-      </CardHeader>
-      <CardContent>
-        <Skeleton className="h-[350px] w-full rounded-xl" />
-      </CardContent>
-    </Card>
+    <div className="aurex-card relative overflow-hidden p-6">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <Skeleton className="h-7 w-40 bg-white/10" />
+        <Skeleton className="h-9 w-full rounded-full bg-white/10 lg:w-[140px]" />
+      </div>
+      <Skeleton className="mt-6 h-[350px] w-full rounded-xl bg-white/10" />
+    </div>
   );
 }

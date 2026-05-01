@@ -34,23 +34,34 @@ export function Navigation() {
           <Button
             variant="outline"
             size="sm"
-            className="font-normal bg-white/10 hover:bg-white/20 hover:text-white border-none focus-visible:ring-offset-0 focus-visible:ring-transparent outline-none text-white focus:bg-white/30 transition"
+            className="border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] hover:bg-[var(--aurex-surface-hover)] hover:text-[var(--aurex-text-1)] focus-visible:ring-offset-0"
           >
             <Menu className="size-4" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="px-2">
-          <nav className="flex flex-col gap-y-2 pt-6">
-            {routes.map((route) => (
-              <Button
-                key={route.href}
-                variant={route.href === pathname ? 'secondary' : 'ghost'}
-                onClick={() => onClick(route.href)}
-                className="w-full justify-start"
-              >
-                {route.label}
-              </Button>
-            ))}
+        <SheetContent side="left" className="border-r border-[var(--aurex-border)] bg-[var(--aurex-bg-elev)] px-2">
+          <nav className="flex flex-col gap-y-1.5 pt-8">
+            {routes.map((route) => {
+              const active = route.href === pathname;
+              return (
+                <button
+                  key={route.href}
+                  onClick={() => onClick(route.href)}
+                  className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[15px] font-medium transition-colors ${
+                    active
+                      ? 'bg-[var(--aurex-surface-hover)] text-[var(--aurex-text-1)] ring-1 ring-[var(--aurex-border-strong)]'
+                      : 'text-[var(--aurex-text-2)] hover:bg-[var(--aurex-surface)] hover:text-[var(--aurex-text-1)]'
+                  }`}
+                >
+                  <span
+                    className={`size-1.5 rounded-full ${
+                      active ? 'bg-[#a5b4fc] shadow-[0_0_8px_#a5b4fc]' : 'bg-transparent'
+                    }`}
+                  />
+                  {route.label}
+                </button>
+              );
+            })}
           </nav>
         </SheetContent>
       </Sheet>
@@ -58,7 +69,7 @@ export function Navigation() {
   }
 
   return (
-    <nav className="hidden lg:flex items-center gap-x-2 overflow-x-auto">
+    <nav className="hidden lg:flex items-center gap-1 overflow-x-auto">
       {routes.map((route) => (
         <NavButton
           key={route.href}

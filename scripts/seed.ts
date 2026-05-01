@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { config } from 'dotenv';
-import { subDays, eachDayOfInterval, format } from 'date-fns';
+import { format } from 'date-fns';
 
 config({ path: '.env.local' });
 
@@ -9,6 +9,7 @@ import postgres from 'postgres';
 import { eq, inArray } from 'drizzle-orm';
 
 import * as schema from '../db/schema';
+import { buildDemoWorkspace } from '../lib/demo-data';
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -37,23 +38,6 @@ if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PROD_SEED !== 'tr
   process.exit(1);
 }
 
-const SEED_ACCOUNTS = ['Chase Checking', 'Apple Card', 'Savings'];
-const SEED_CATEGORIES = ['Groceries', 'Rent', 'Salary', 'Dining', 'Transport', 'Entertainment'];
-
-const TX_PATTERNS = [
-  { payee: 'Whole Foods', amount: -45_00, category: 'Groceries' },
-  { payee: 'Trader Joes', amount: -38_00, category: 'Groceries' },
-  { payee: 'Landlord LLC', amount: -1850_00, category: 'Rent' },
-  { payee: 'Acme Corp', amount: 4200_00, category: 'Salary' },
-  { payee: 'Chipotle', amount: -16_00, category: 'Dining' },
-  { payee: 'Sushi Place', amount: -52_00, category: 'Dining' },
-  { payee: 'Uber', amount: -22_00, category: 'Transport' },
-  { payee: 'Lyft', amount: -14_00, category: 'Transport' },
-  { payee: 'Netflix', amount: -15_00, category: 'Entertainment' },
-  { payee: 'Spotify', amount: -10_00, category: 'Entertainment' },
-  { payee: 'Movie Theater', amount: -28_00, category: 'Entertainment' },
-];
-
 async function main() {
   console.log(`Seeding for user ${userId.slice(0, 6)}...`);
 
@@ -75,53 +59,20 @@ async function main() {
   await db.delete(schema.categories).where(eq(schema.categories.userId, userId));
   console.log(`  cleared ${ownedAccounts.length} accounts, ${ownedCategories.length} categories`);
 
-  const accountRows = SEED_ACCOUNTS.map((name) => ({
-    id: crypto.randomUUID(),
-    name,
-    userId,
-  }));
-  await db.insert(schema.accounts).values(accountRows);
-  console.log(`  inserted ${accountRows.length} accounts`);
+  const demo = buildDemoWorkspace(userId);
+  await db.insert(schema.accounts).values(demo.accounts);
+  console.log(`  inserted ${demo.accounts.length} accounts`);
 
-  const categoryRows = SEED_CATEGORIES.map((name) => ({
-    id: crypto.randomUUID(),
-    name,
-    userId,
-  }));
-  await db.insert(schema.categories).values(categoryRows);
-  console.log(`  inserted ${categoryRows.length} categories`);
+  await db.insert(schema.categories).values(demo.categories);
+  console.log(`  inserted ${demo.categories.length} categories`);
 
-  const categoryByName = Object.fromEntries(categoryRows.map((c) => [c.name, c.id]));
-  const accountId = accountRows[0].id;
-
-  const today = new Date();
-  const start = subDays(today, 60);
-  const days = eachDayOfInterval({ start, end: today });
-
-  const txRows = days.flatMap((day) => {
-    const count = Math.random() < 0.6 ? 1 : Math.random() < 0.85 ? 2 : 0;
-    const out: typeof schema.transactions.$inferInsert[] = [];
-    for (let i = 0; i < count; i++) {
-      const pattern = TX_PATTERNS[Math.floor(Math.random() * TX_PATTERNS.length)];
-      const jitter = 1 + (Math.random() - 0.5) * 0.4;
-      out.push({
-        id: crypto.randomUUID(),
-        amount: Math.round(pattern.amount * jitter * 1000),
-        payee: pattern.payee,
-        notes: null,
-        date: day,
-        accountId,
-        categoryId: categoryByName[pattern.category] ?? null,
-      });
-    }
-    return out;
-  });
-
-  if (txRows.length > 0) {
-    await db.insert(schema.transactions).values(txRows);
+  if (demo.transactions.length > 0) {
+    await db.insert(schema.transactions).values(demo.transactions);
   }
+  const firstTransaction = demo.transactions[0]?.date ?? new Date();
+  const lastTransaction = demo.transactions.at(-1)?.date ?? new Date();
   console.log(
-    `  inserted ${txRows.length} transactions across ${format(start, 'MMM dd')} - ${format(today, 'MMM dd')}`,
+    `  inserted ${demo.transactions.length} transactions across ${format(firstTransaction, 'MMM dd')} - ${format(lastTransaction, 'MMM dd')}`,
   );
   console.log('');
   console.log('Done. Reload http://localhost:3000 to see the populated dashboard.');

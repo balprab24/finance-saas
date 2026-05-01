@@ -4,7 +4,7 @@ import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recha
 import { CategoryTooltip } from '@/components/category-tooltip';
 import { formatPercentage } from '@/lib/utils';
 
-const COLORS = ['#0062ff', '#12c6ff', '#ff647f', '#ff9354'];
+const COLORS = ['#6366f1', '#22d3ee', '#34d399', '#fb7185', '#fbbf24', '#a78bfa'];
 
 type Props = { data: { name: string; value: number }[] };
 
@@ -21,10 +21,13 @@ export function PieVariant({ data }: Props) {
             <ul className="flex flex-col space-y-2">
               {payload?.map((entry, index) => (
                 <li key={`item-${index}`} className="flex items-center space-x-2">
-                  <span className="size-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                  <span
+                    className="size-2 rounded-full"
+                    style={{ backgroundColor: entry.color, boxShadow: `0 0 8px ${entry.color}` }}
+                  />
                   <div className="space-x-1">
-                    <span className="text-sm text-muted-foreground">{entry.value}</span>
-                    <span className="text-sm">
+                    <span className="text-[13px] text-[var(--aurex-text-2)]">{entry.value}</span>
+                    <span className="text-[13px] font-medium text-[var(--aurex-text-1)]">
                       {formatPercentage((entry.payload as unknown as { percent: number }).percent * 100)}
                     </span>
                   </div>
@@ -34,7 +37,19 @@ export function PieVariant({ data }: Props) {
           )}
         />
         <Tooltip content={<CategoryTooltip />} />
-        <Pie data={data} cx="50%" cy="50%" outerRadius={90} innerRadius={60} paddingAngle={2} fill="#8884d8" dataKey="value" labelLine={false}>
+        <Pie
+          data={data}
+          cx="50%"
+          cy="50%"
+          outerRadius={92}
+          innerRadius={62}
+          paddingAngle={3}
+          fill="#6366f1"
+          dataKey="value"
+          labelLine={false}
+          stroke="rgba(11,15,36,0.6)"
+          strokeWidth={2}
+        >
           {data.map((_entry, index) => (
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}

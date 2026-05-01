@@ -3,27 +3,30 @@ import { Loader2 } from 'lucide-react';
 
 import { HeaderLogo } from '@/components/header-logo';
 import { Navigation } from '@/components/navigation';
-import { WelcomeMsg } from '@/components/welcome-msg';
-import { Filters } from '@/components/filters';
 
 export function Header() {
   return (
-    <header className="bg-gradient-to-b from-blue-700 to-blue-500 px-4 py-8 lg:px-14 pb-32 shadow-lg shadow-blue-900/20">
-      <div className="max-w-screen-2xl mx-auto">
-        <div className="w-full flex items-center justify-between mb-14">
-          <div className="flex items-center lg:gap-x-16">
-            <HeaderLogo />
-            <Navigation />
-          </div>
+    <header className="sticky top-0 z-40 border-b border-[var(--aurex-border)] bg-[rgba(5,7,23,0.78)] backdrop-blur-xl">
+      <div className="mx-auto flex h-[68px] w-full max-w-screen-2xl items-center justify-between px-4 lg:px-14">
+        <div className="flex items-center gap-x-10">
+          <HeaderLogo />
+          <Navigation />
+        </div>
+        <div className="flex items-center gap-3">
           <ClerkLoaded>
-            <UserButton />
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox:
+                    'size-9 ring-1 ring-[var(--aurex-border-strong)] shadow-[0_0_0_3px_rgba(99,102,241,0.18)]',
+                },
+              }}
+            />
           </ClerkLoaded>
           <ClerkLoading>
-            <Loader2 className="size-8 animate-spin text-slate-400" />
+            <Loader2 className="size-6 animate-spin text-[var(--aurex-text-3)]" />
           </ClerkLoading>
         </div>
-        <WelcomeMsg />
-        <Filters />
       </div>
     </header>
   );
