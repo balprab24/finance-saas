@@ -8,6 +8,13 @@
       "when": 1777587539611,
       "tag": "0000_jazzy_pride",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779770508334,
+      "tag": "0001_chief_odin",
+      "breakpoints": true
     }
   ]
 }

@@ -18,24 +18,20 @@ export function WelcomeMsg() {
   const today = format(new Date(), 'EEEE, MMMM d');
 
   return (
-    <div className="space-y-2">
-      <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--aurex-text-3)]">
-        <span className="size-1.5 rounded-full bg-[#a5b4fc] shadow-[0_0_8px_#a5b4fc]" />
+    <div className="space-y-1.5">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--aurex-text-3)]">
         Dashboard · {today}
       </span>
-      <h2 className="flex items-center gap-x-3 text-[28px] font-semibold tracking-tight text-[var(--aurex-text-1)] lg:text-[36px]">
-        {getGreeting()},
+      <h2 className="flex items-center gap-x-2 text-[24px] font-semibold tracking-tight text-[var(--aurex-text-1)] lg:text-[28px]">
+        {getGreeting()},{' '}
         {isLoaded ? (
-          <span className="bg-gradient-to-br from-[#a5b4fc] via-[#8b5cf6] to-[#22d3ee] bg-clip-text text-transparent">
-            {user?.firstName ?? 'friend'}
-          </span>
+          <span className="text-[var(--aurex-text-1)]">{user?.firstName ?? 'friend'}</span>
         ) : (
-          <Skeleton className="h-8 w-32 bg-white/10" />
+          <Skeleton className="h-7 w-28 bg-white/8" />
         )}
-        <span aria-hidden>👋</span>
       </h2>
-      <p className="text-[15px] leading-[1.55] text-[var(--aurex-text-2)] lg:text-[16px]">
-        Here&apos;s a snapshot of your finances. Charts, totals, and trends — all up to date.
+      <p className="text-[13.5px] leading-[1.55] text-[var(--aurex-text-3)]">
+        A snapshot of your accounts, totals, and trends.
       </p>
     </div>
   );

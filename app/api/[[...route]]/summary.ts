@@ -1,28 +1,31 @@
 import { Hono } from 'hono';
-import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { clerkMiddleware, getAuth } from '@hono/clerk-auth';
+import { clerkMiddleware } from '@clerk/hono';
 import { and, desc, eq, gte, lt, sql, sum } from 'drizzle-orm';
 import { differenceInDays, subDays } from 'date-fns';
 
 import { db } from '@/db/drizzle';
-import { accounts, categories, transactions } from '@/db/schema';
+import { categories, transactions } from '@/db/schema';
 import { parseRange } from '@/lib/date-range';
+import { dateRangeQuerySchema } from '@/lib/api-schemas';
+import {
+  AuthEnv,
+  getUserId,
+  requireAuth,
+} from '@/lib/api-helpers';
 
-const app = new Hono().get(
+function percentageChange(current: number, previous: number) {
+  if (previous === 0) return current === 0 ? 0 : 100;
+  return ((current - previous) / previous) * 100;
+}
+
+const app = new Hono<AuthEnv>().get(
   '/',
   clerkMiddleware(),
-  zValidator(
-    'query',
-    z.object({
-      from: z.string().optional(),
-      to: z.string().optional(),
-      accountId: z.string().optional(),
-    }),
-  ),
+  requireAuth,
+  zValidator('query', dateRangeQuerySchema),
   async (c) => {
-    const auth = getAuth(c);
-    if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+    const userId = getUserId(c);
     const { from, to, accountId } = c.req.valid('query');
 
     const { start: startDate, endExclusive } = parseRange(from, to);
@@ -31,36 +34,40 @@ const app = new Hono().get(
     const lastPeriodStart = subDays(startDate, periodLength);
     const lastPeriodEndExclusive = subDays(endExclusive, periodLength);
 
-    async function fetchFinancialData(userId: string, sd: Date, edExclusive: Date) {
+    async function fetchFinancialData(uid: string, sd: Date, edExclusive: Date) {
       return await db
         .select({
           income: sql<number>`SUM(CASE WHEN ${transactions.amount} >= 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(Number),
-          expenses: sql<number>`SUM(CASE WHEN ${transactions.amount} < 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(Number),
+          // Sum of negative amounts (still a negative number) used internally.
+          expensesSigned: sql<number>`SUM(CASE WHEN ${transactions.amount} < 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(Number),
           remaining: sum(transactions.amount).mapWith(Number),
         })
         .from(transactions)
-        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
         .where(
           and(
+            eq(transactions.userId, uid),
             accountId ? eq(transactions.accountId, accountId) : undefined,
-            eq(accounts.userId, userId),
             gte(transactions.date, sd),
             lt(transactions.date, edExclusive),
           ),
         );
     }
 
-    const [currentPeriod] = await fetchFinancialData(auth.userId, startDate, endExclusive);
-    const [lastPeriod] = await fetchFinancialData(auth.userId, lastPeriodStart, lastPeriodEndExclusive);
+    const [currentPeriod] = await fetchFinancialData(userId, startDate, endExclusive);
+    const [lastPeriod] = await fetchFinancialData(userId, lastPeriodStart, lastPeriodEndExclusive);
 
-    const calculatePercentageChange = (current: number, previous: number) => {
-      if (previous === 0) return previous === current ? 0 : 100;
-      return ((current - previous) / previous) * 100;
-    };
+    const incomeAmount = currentPeriod.income ?? 0;
+    const lastIncome = lastPeriod.income ?? 0;
 
-    const incomeChange = calculatePercentageChange(currentPeriod.income ?? 0, lastPeriod.income ?? 0);
-    const expensesChange = calculatePercentageChange(currentPeriod.expenses ?? 0, lastPeriod.expenses ?? 0);
-    const remainingChange = calculatePercentageChange(currentPeriod.remaining ?? 0, lastPeriod.remaining ?? 0);
+    const expensesAmount = Math.abs(currentPeriod.expensesSigned ?? 0);
+    const lastExpenses = Math.abs(lastPeriod.expensesSigned ?? 0);
+
+    const remainingAmount = currentPeriod.remaining ?? 0;
+    const lastRemaining = lastPeriod.remaining ?? 0;
+
+    const incomeChange = percentageChange(incomeAmount, lastIncome);
+    const expensesChange = percentageChange(expensesAmount, lastExpenses);
+    const remainingChange = percentageChange(remainingAmount, lastRemaining);
 
     const category = await db
       .select({
@@ -68,12 +75,11 @@ const app = new Hono().get(
         value: sql<number>`SUM(ABS(${transactions.amount}))`.mapWith(Number),
       })
       .from(transactions)
-      .innerJoin(accounts, eq(transactions.accountId, accounts.id))
       .innerJoin(categories, eq(transactions.categoryId, categories.id))
       .where(
         and(
+          eq(transactions.userId, userId),
           accountId ? eq(transactions.accountId, accountId) : undefined,
-          eq(accounts.userId, auth.userId),
           lt(transactions.amount, 0),
           gte(transactions.date, startDate),
           lt(transactions.date, endExclusive),
@@ -84,7 +90,7 @@ const app = new Hono().get(
 
     const topCategories = category.slice(0, 3);
     const otherCategories = category.slice(3);
-    const otherSum = otherCategories.reduce((sum, c) => sum + c.value, 0);
+    const otherSum = otherCategories.reduce((acc, c) => acc + c.value, 0);
     const finalCategories = [...topCategories];
     if (otherCategories.length > 0) finalCategories.push({ name: 'Other', value: otherSum });
 
@@ -95,11 +101,10 @@ const app = new Hono().get(
         expenses: sql<number>`SUM(CASE WHEN ${transactions.amount} < 0 THEN ABS(${transactions.amount}) ELSE 0 END)`.mapWith(Number),
       })
       .from(transactions)
-      .innerJoin(accounts, eq(transactions.accountId, accounts.id))
       .where(
         and(
+          eq(transactions.userId, userId),
           accountId ? eq(transactions.accountId, accountId) : undefined,
-          eq(accounts.userId, auth.userId),
           gte(transactions.date, startDate),
           lt(transactions.date, endExclusive),
         ),
@@ -115,11 +120,11 @@ const app = new Hono().get(
 
     return c.json({
       data: {
-        remainingAmount: currentPeriod.remaining ?? 0,
+        remainingAmount,
         remainingChange,
-        incomeAmount: currentPeriod.income ?? 0,
+        incomeAmount,
         incomeChange,
-        expensesAmount: currentPeriod.expenses ?? 0,
+        expensesAmount,
         expensesChange,
         categories: finalCategories,
         days,

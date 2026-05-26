@@ -6,7 +6,7 @@ config({ path: '.env.local' });
 
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { eq, inArray } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import * as schema from '../db/schema';
 import { buildDemoWorkspace } from '../lib/demo-data';
@@ -21,7 +21,7 @@ const db = drizzle(client, { schema });
 
 const userId = process.argv[2];
 if (!userId) {
-  console.error('Usage: pnpm db:seed <clerk-user-id>');
+  console.error('Usage: npm run db:seed -- <clerk-user-id>');
   console.error('');
   console.error('To find your Clerk user id:');
   console.error('  1. Sign in at http://localhost:3000');
@@ -41,34 +41,38 @@ if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PROD_SEED !== 'tr
 async function main() {
   console.log(`Seeding for user ${userId.slice(0, 6)}...`);
 
-  const ownedAccounts = await db
-    .select()
-    .from(schema.accounts)
-    .where(eq(schema.accounts.userId, userId));
-  const ownedCategories = await db
-    .select()
-    .from(schema.categories)
-    .where(eq(schema.categories.userId, userId));
-  const ownedAccountIds = ownedAccounts.map((a) => a.id);
-  if (ownedAccountIds.length > 0) {
-    await db
-      .delete(schema.transactions)
-      .where(inArray(schema.transactions.accountId, ownedAccountIds));
-  }
-  await db.delete(schema.accounts).where(eq(schema.accounts.userId, userId));
-  await db.delete(schema.categories).where(eq(schema.categories.userId, userId));
-  console.log(`  cleared ${ownedAccounts.length} accounts, ${ownedCategories.length} categories`);
-
   const demo = buildDemoWorkspace(userId);
-  await db.insert(schema.accounts).values(demo.accounts);
+  const result = await db.transaction(async (tx) => {
+    const ownedAccounts = await tx
+      .select({ id: schema.accounts.id })
+      .from(schema.accounts)
+      .where(eq(schema.accounts.userId, userId));
+    const ownedCategories = await tx
+      .select({ id: schema.categories.id })
+      .from(schema.categories)
+      .where(eq(schema.categories.userId, userId));
+
+    // Cascade from accounts removes their transactions; we also explicitly
+    // clear any transactions tagged with this user_id in case orphans exist.
+    await tx.delete(schema.transactions).where(eq(schema.transactions.userId, userId));
+    await tx.delete(schema.accounts).where(eq(schema.accounts.userId, userId));
+    await tx.delete(schema.categories).where(eq(schema.categories.userId, userId));
+
+    await tx.insert(schema.accounts).values(demo.accounts);
+    await tx.insert(schema.categories).values(demo.categories);
+    if (demo.transactions.length > 0) {
+      await tx.insert(schema.transactions).values(demo.transactions);
+    }
+
+    return {
+      clearedAccounts: ownedAccounts.length,
+      clearedCategories: ownedCategories.length,
+    };
+  });
+
+  console.log(`  cleared ${result.clearedAccounts} accounts, ${result.clearedCategories} categories`);
   console.log(`  inserted ${demo.accounts.length} accounts`);
-
-  await db.insert(schema.categories).values(demo.categories);
   console.log(`  inserted ${demo.categories.length} categories`);
-
-  if (demo.transactions.length > 0) {
-    await db.insert(schema.transactions).values(demo.transactions);
-  }
   const firstTransaction = demo.transactions[0]?.date ?? new Date();
   const lastTransaction = demo.transactions.at(-1)?.date ?? new Date();
   console.log(

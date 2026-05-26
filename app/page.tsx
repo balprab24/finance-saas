@@ -158,7 +158,7 @@ function Hero() {
             {[
               { value: '6 charts', label: 'Visualizations' },
               { value: 'CSV', label: 'Import in seconds' },
-              { value: 'E2E', label: 'Encrypted by Clerk' },
+              { value: 'Clerk', label: 'Sign-in handled for you' },
             ].map((s) => (
               <div key={s.label}>
                 <dt className="text-[20px] font-semibold tracking-tight text-[var(--aurex-text-1)]">
@@ -193,7 +193,7 @@ function Hero() {
 
 function DashboardPreview() {
   return (
-    <div className="aurex-card aurex-card-hover relative overflow-hidden p-4 sm:p-5">
+    <div className="aurex-card-marketing relative overflow-hidden p-4 sm:p-5">
       {/* Faux dashboard header */}
       <div className="flex items-center justify-between border-b border-[var(--aurex-border)] pb-4">
         <div className="flex items-center gap-2.5">
@@ -243,7 +243,7 @@ function DashboardPreview() {
 
       {/* Chart + side rail */}
       <div className="mt-4 grid gap-3 lg:grid-cols-[1.55fr_1fr]">
-        <div className="aurex-card relative overflow-hidden p-4">
+        <div className="aurex-card-marketing relative overflow-hidden p-4">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-[13px] font-semibold text-[var(--aurex-text-1)]">
@@ -325,7 +325,7 @@ function KpiTile({
 
   return (
     <div
-      className={`aurex-card aurex-card-hover relative overflow-hidden p-4 ring-1 ${toneMap.ring}`}
+      className={`aurex-card-marketing relative overflow-hidden p-4 ring-1 ${toneMap.ring}`}
       style={{ boxShadow: `inset 0 1px 0 rgba(255,255,255,0.05), ${toneMap.glow}` }}
     >
       <div className="flex items-start justify-between">
@@ -425,7 +425,7 @@ function RecentTransactions() {
   ];
 
   return (
-    <div className="aurex-card p-4">
+    <div className="aurex-card-marketing p-4">
       <div className="mb-3 flex items-center justify-between">
         <div className="text-[13px] font-semibold text-[var(--aurex-text-1)]">
           Recent transactions
@@ -473,7 +473,7 @@ function TopCategories() {
   ];
 
   return (
-    <div className="aurex-card p-4">
+    <div className="aurex-card-marketing p-4">
       <div className="mb-3 flex items-center justify-between">
         <div className="text-[13px] font-semibold text-[var(--aurex-text-1)]">
           Top categories
@@ -542,7 +542,7 @@ function FeatureRow() {
 
         <div className="grid gap-5 md:grid-cols-3">
           {features.map((f) => (
-            <div key={f.title} className="aurex-card aurex-card-hover p-6">
+            <div key={f.title} className="aurex-card-marketing p-6">
               <div
                 className="mb-5 inline-grid size-11 place-items-center rounded-[12px] text-white"
                 style={{
@@ -601,7 +601,7 @@ function InsightsSection() {
       </div>
 
       <div className={`${SECTION_WIDE} mt-12`}>
-        <div className="aurex-card relative overflow-hidden p-6 sm:p-7">
+        <div className="aurex-card-marketing relative overflow-hidden p-6 sm:p-7">
           <div className="flex items-center justify-between border-b border-[var(--aurex-border)] pb-4">
             <div className="flex items-center gap-2.5">
               <TrendingUp className="size-4 text-[#a5b4fc]" />
@@ -701,7 +701,7 @@ function SmallFeature({
   desc: string;
 }) {
   return (
-    <div className="aurex-card aurex-card-hover p-6">
+    <div className="aurex-card-marketing p-6">
       <div className="mb-4 inline-grid size-10 place-items-center rounded-[10px] bg-[rgba(99,102,241,0.16)] ring-1 ring-[rgba(99,102,241,0.32)]">
         <Icon className="size-4.5 text-[#a5b4fc]" />
       </div>
@@ -722,7 +722,7 @@ function ImportSection() {
   return (
     <section id="import" className="relative border-b border-[var(--aurex-border)] py-24">
       <div className={SECTION}>
-        <div className="aurex-card aurex-card-hover relative overflow-hidden p-10 sm:p-14">
+        <div className="aurex-card-marketing relative overflow-hidden p-10 sm:p-14">
           <div
             aria-hidden
             className="pointer-events-none absolute -right-24 -top-24 h-[360px] w-[360px] rounded-full opacity-50 blur-[100px]"
@@ -779,8 +779,8 @@ function ImportSection() {
 
 function TrustBand() {
   const items = [
-    { icon: Lock, label: 'Auth by Clerk' },
-    { icon: ShieldCheck, label: 'Multi-tenant by design' },
+    { icon: Lock, label: 'Auth handled by Clerk' },
+    { icon: ShieldCheck, label: 'Per-user data isolation' },
     { icon: Zap, label: 'Built on Next.js 15' },
     { icon: TrendingUp, label: 'Recharts + Tailwind v4' },
   ];

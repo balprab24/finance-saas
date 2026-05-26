@@ -1,72 +1,90 @@
 import { Hono } from 'hono';
-import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { clerkMiddleware, getAuth } from '@hono/clerk-auth';
+import { clerkMiddleware } from '@clerk/hono';
 import { and, eq, inArray } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
-import { accounts, insertAccountSchema } from '@/db/schema';
+import { accounts } from '@/db/schema';
+import {
+  bulkIdsSchema,
+  createAccountSchema,
+  idParamSchema,
+  updateAccountSchema,
+} from '@/lib/api-schemas';
+import {
+  AuthEnv,
+  getUserId,
+  isUniqueViolation,
+  jsonError,
+  requireAuth,
+} from '@/lib/api-helpers';
 
-const app = new Hono()
-  .get('/', clerkMiddleware(), async (c) => {
-    const auth = getAuth(c);
-    if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+const app = new Hono<AuthEnv>()
+  .get('/', clerkMiddleware(), requireAuth, async (c) => {
+    const userId = getUserId(c);
 
     const data = await db
       .select({ id: accounts.id, name: accounts.name })
       .from(accounts)
-      .where(eq(accounts.userId, auth.userId));
+      .where(eq(accounts.userId, userId));
 
     return c.json({ data });
   })
   .get(
     '/:id',
     clerkMiddleware(),
-    zValidator('param', z.object({ id: z.string().optional() })),
+    requireAuth,
+    zValidator('param', idParamSchema),
     async (c) => {
-      const auth = getAuth(c);
-      if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+      const userId = getUserId(c);
       const { id } = c.req.valid('param');
-      if (!id) return c.json({ error: 'Missing id' }, 400);
+      if (!id) return jsonError(c, 400, 'Missing id');
 
       const [data] = await db
         .select({ id: accounts.id, name: accounts.name })
         .from(accounts)
-        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id)));
+        .where(and(eq(accounts.userId, userId), eq(accounts.id, id)));
 
-      if (!data) return c.json({ error: 'Not found' }, 404);
+      if (!data) return jsonError(c, 404, 'Not found');
       return c.json({ data });
     },
   )
   .post(
     '/',
     clerkMiddleware(),
-    zValidator('json', insertAccountSchema.pick({ name: true })),
+    requireAuth,
+    zValidator('json', createAccountSchema),
     async (c) => {
-      const auth = getAuth(c);
-      if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+      const userId = getUserId(c);
       const values = c.req.valid('json');
 
-      const [data] = await db
-        .insert(accounts)
-        .values({ id: crypto.randomUUID(), userId: auth.userId, ...values })
-        .returning();
+      try {
+        const [data] = await db
+          .insert(accounts)
+          .values({ id: crypto.randomUUID(), userId, ...values })
+          .returning();
 
-      return c.json({ data });
+        return c.json({ data });
+      } catch (err) {
+        if (isUniqueViolation(err)) {
+          return jsonError(c, 409, 'An account with that name already exists');
+        }
+        throw err;
+      }
     },
   )
   .post(
     '/bulk-delete',
     clerkMiddleware(),
-    zValidator('json', z.object({ ids: z.array(z.string()) })),
+    requireAuth,
+    zValidator('json', bulkIdsSchema),
     async (c) => {
-      const auth = getAuth(c);
-      if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+      const userId = getUserId(c);
       const values = c.req.valid('json');
 
       const data = await db
         .delete(accounts)
-        .where(and(eq(accounts.userId, auth.userId), inArray(accounts.id, values.ids)))
+        .where(and(eq(accounts.userId, userId), inArray(accounts.id, values.ids)))
         .returning({ id: accounts.id });
 
       return c.json({ data });
@@ -75,41 +93,48 @@ const app = new Hono()
   .patch(
     '/:id',
     clerkMiddleware(),
-    zValidator('param', z.object({ id: z.string().optional() })),
-    zValidator('json', insertAccountSchema.pick({ name: true })),
+    requireAuth,
+    zValidator('param', idParamSchema),
+    zValidator('json', updateAccountSchema),
     async (c) => {
-      const auth = getAuth(c);
-      if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+      const userId = getUserId(c);
       const { id } = c.req.valid('param');
+      if (!id) return jsonError(c, 400, 'Missing id');
       const values = c.req.valid('json');
-      if (!id) return c.json({ error: 'Missing id' }, 400);
 
-      const [data] = await db
-        .update(accounts)
-        .set(values)
-        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id)))
-        .returning();
+      try {
+        const [data] = await db
+          .update(accounts)
+          .set(values)
+          .where(and(eq(accounts.userId, userId), eq(accounts.id, id)))
+          .returning();
 
-      if (!data) return c.json({ error: 'Not found' }, 404);
-      return c.json({ data });
+        if (!data) return jsonError(c, 404, 'Not found');
+        return c.json({ data });
+      } catch (err) {
+        if (isUniqueViolation(err)) {
+          return jsonError(c, 409, 'An account with that name already exists');
+        }
+        throw err;
+      }
     },
   )
   .delete(
     '/:id',
     clerkMiddleware(),
-    zValidator('param', z.object({ id: z.string().optional() })),
+    requireAuth,
+    zValidator('param', idParamSchema),
     async (c) => {
-      const auth = getAuth(c);
-      if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+      const userId = getUserId(c);
       const { id } = c.req.valid('param');
-      if (!id) return c.json({ error: 'Missing id' }, 400);
+      if (!id) return jsonError(c, 400, 'Missing id');
 
       const [data] = await db
         .delete(accounts)
-        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id)))
+        .where(and(eq(accounts.userId, userId), eq(accounts.id, id)))
         .returning({ id: accounts.id });
 
-      if (!data) return c.json({ error: 'Not found' }, 404);
+      if (!data) return jsonError(c, 404, 'Not found');
       return c.json({ data });
     },
   );

@@ -5,7 +5,6 @@ import { Toaster } from 'sonner';
 
 import './globals.css';
 import { QueryProvider } from '@/providers/query-provider';
-import { SheetProvider } from '@/providers/sheet-provider';
 
 const inter = Inter({
   variable: '--font-sans',
@@ -22,14 +21,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
+    >
       <html lang="en" className="dark">
         <body
           suppressHydrationWarning
           className={`${inter.variable} ${geistMono.variable} antialiased`}
         >
           <QueryProvider>
-            <SheetProvider />
             <Toaster theme="dark" />
             {children}
           </QueryProvider>

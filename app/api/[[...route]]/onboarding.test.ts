@@ -44,7 +44,7 @@ vi.mock('@/db/drizzle', () => {
   return { db };
 });
 
-vi.mock('@hono/clerk-auth', () => ({
+vi.mock('@clerk/hono', () => ({
   clerkMiddleware: () => async (_c: unknown, next: () => Promise<void>) => {
     await next();
   },

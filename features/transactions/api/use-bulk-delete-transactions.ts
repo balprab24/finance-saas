@@ -1,6 +1,7 @@
 import { InferRequestType, InferResponseType } from 'hono';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { readApiError } from '@/lib/api-errors';
 
 import { client } from '@/lib/hono';
 
@@ -12,7 +13,7 @@ export const useBulkDeleteTransactions = () => {
   return useMutation<ResponseType, Error, RequestType>({
     mutationFn: async (json) => {
       const response = await client.api.transactions['bulk-delete']['$post']({ json });
-      if (!response.ok) throw new Error('Failed to delete transactions');
+      if (!response.ok) throw new Error(await readApiError(response, 'Failed to delete transactions'));
       return await response.json();
     },
     onSuccess: () => {
@@ -20,6 +21,6 @@ export const useBulkDeleteTransactions = () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['summary'] });
     },
-    onError: () => toast.error('Failed to delete transactions'),
+    onError: (err) => toast.error(err.message),
   });
 };

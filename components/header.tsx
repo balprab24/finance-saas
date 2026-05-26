@@ -6,9 +6,9 @@ import { Navigation } from '@/components/navigation';
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--aurex-border)] bg-[rgba(5,7,23,0.78)] backdrop-blur-xl">
-      <div className="mx-auto flex h-[68px] w-full max-w-screen-2xl items-center justify-between px-4 lg:px-14">
-        <div className="flex items-center gap-x-10">
+    <header className="sticky top-0 z-40 border-b border-[var(--aurex-border)] bg-[rgba(10,11,16,0.85)] backdrop-blur-xl">
+      <div className="mx-auto flex h-14 w-full max-w-screen-2xl items-center justify-between px-4 lg:px-10">
+        <div className="flex items-center gap-x-8">
           <HeaderLogo />
           <Navigation />
         </div>
@@ -16,15 +16,12 @@ export function Header() {
           <ClerkLoaded>
             <UserButton
               appearance={{
-                elements: {
-                  avatarBox:
-                    'size-9 ring-1 ring-[var(--aurex-border-strong)] shadow-[0_0_0_3px_rgba(99,102,241,0.18)]',
-                },
+                elements: { avatarBox: 'size-8' },
               }}
             />
           </ClerkLoaded>
           <ClerkLoading>
-            <Loader2 className="size-6 animate-spin text-[var(--aurex-text-3)]" />
+            <Loader2 className="size-5 animate-spin text-[var(--aurex-text-3)]" />
           </ClerkLoading>
         </div>
       </div>

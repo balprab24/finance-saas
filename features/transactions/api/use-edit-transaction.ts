@@ -1,6 +1,7 @@
 import { InferRequestType, InferResponseType } from 'hono';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { readApiError } from '@/lib/api-errors';
 
 import { client } from '@/lib/hono';
 
@@ -12,7 +13,7 @@ export const useEditTransaction = (id?: string) => {
   return useMutation<ResponseType, Error, RequestType>({
     mutationFn: async (json) => {
       const response = await client.api.transactions[':id']['$patch']({ param: { id }, json });
-      if (!response.ok) throw new Error('Failed to update transaction');
+      if (!response.ok) throw new Error(await readApiError(response, 'Failed to update transaction'));
       return await response.json();
     },
     onSuccess: () => {
@@ -21,6 +22,6 @@ export const useEditTransaction = (id?: string) => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['summary'] });
     },
-    onError: () => toast.error('Failed to update transaction'),
+    onError: (err) => toast.error(err.message),
   });
 };

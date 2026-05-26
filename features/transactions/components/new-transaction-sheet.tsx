@@ -20,7 +20,7 @@ import { useCreateAccount } from '@/features/accounts/api/use-create-account';
 import { useGetCategories } from '@/features/categories/api/use-get-categories';
 import { useCreateCategory } from '@/features/categories/api/use-create-category';
 
-type FormValues = z.input<ReturnType<typeof insertTransactionSchema.omit<{ id: true }>>>;
+type FormValues = z.input<ReturnType<typeof insertTransactionSchema.omit<{ id: true; userId: true }>>>;
 
 export function NewTransactionSheet() {
   const { isOpen, onClose } = useNewTransaction();

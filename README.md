@@ -52,6 +52,22 @@ DATABASE_URL=
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
+### Local database with Docker
+
+The fastest path to a local Postgres matching what the app expects is the bundled `docker-compose.yml`:
+
+```bash
+docker compose up -d db
+```
+
+This starts Postgres 16 on `localhost:5432` with the default `postgres` database, user `postgres`, password `postgres`. Set the matching `DATABASE_URL` in your `.env.local`:
+
+```
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres
+```
+
+Any other Postgres (Neon, Supabase, RDS, a system-installed daemon, `brew install postgresql@16`) works just as well — Docker is just the simplest local path. Just point `DATABASE_URL` at it.
+
 Run database migrations:
 
 ```bash
@@ -79,6 +95,8 @@ npm run db:migrate   # Apply Drizzle migrations
 npm run db:push      # Push schema changes
 npm run db:studio    # Open Drizzle Studio
 npm run db:seed      # Seed demo data for one Clerk user id
+npm run screenshot      # Capture a public/local page screenshot
+npm run screenshot:auth # Capture authenticated QA screenshots via Chrome CDP
 ```
 
 Seed data for a specific Clerk user:
@@ -105,6 +123,57 @@ lib/                      Utilities, typed Hono client, date/CSV helpers
 providers/                Query and sheet providers
 scripts/                  Seed and screenshot helpers
 ```
+
+## Authenticated visual QA
+
+Clerk's Google OAuth flow refuses to complete inside a fresh Playwright
+Chromium build, which blocks `scripts/screenshot.ts --login` for any account
+that signs in via Google. The supported path is to attach Playwright to a
+real Chrome that you have already signed in to, over the Chrome DevTools
+Protocol.
+
+```bash
+# 1. Fully quit Chrome.
+# 2. Launch Chrome with the debug port open:
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
+
+# 3. In that Chrome window, open the app and sign in once:
+#      http://localhost:3000/sign-in
+#    Leave the window open after sign-in completes.
+
+# 4. Make sure the dev server and a seeded database are up:
+npm run dev
+npm run db:seed -- <your_clerk_user_id>   # optional, populates demo data
+
+# 5. Capture all required authenticated screenshots into screenshots/auth/:
+npm run screenshot:auth
+
+# Or scope to one scenario:
+npm run screenshot:auth -- dashboard-desktop
+npm run screenshot:auth -- --list
+```
+
+Scenario keys produced under `screenshots/auth/`:
+
+- `dashboard-desktop.png`, `dashboard-mobile.png`
+- `transactions-desktop.png`, `transactions-mobile.png`
+- `accounts-desktop.png`, `accounts-mobile.png`
+- `categories-desktop.png`, `categories-mobile.png`
+- `transaction-new-sheet.png`
+- `transaction-edit-sheet.png` (requires at least one seeded transaction)
+- `csv-import-map.png`
+- `csv-import-review.png` (driven by `scripts/fixtures/import-sample.csv`,
+  which intentionally contains an unparseable-date row, a missing-payee
+  row, and one duplicate row)
+
+The script disconnects from Chrome rather than closing it, so your real
+browser session stays intact. If you see `The attached Chrome is NOT
+signed in`, complete sign-in in the CDP-attached Chrome window and re-run.
+
+If automation is unavailable, capture the same filenames manually by
+opening each URL in a 1440x900 (desktop) or 390x844 (mobile) window and
+saving full-page screenshots into `screenshots/auth/` using the keys
+above.
 
 ## Security Notes
 

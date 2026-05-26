@@ -1,7 +1,13 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type Props = {
   columnIndex: number;
@@ -15,11 +21,15 @@ export function TableHeadSelect({ columnIndex, selectedColumns, onChange }: Prop
   const currentSelection = selectedColumns[`column_${columnIndex}`];
 
   return (
-    <Select value={currentSelection || ''} onValueChange={(value) => onChange(columnIndex, value)}>
+    <Select
+      value={currentSelection || 'skip'}
+      onValueChange={(value) => onChange(columnIndex, value)}
+    >
       <SelectTrigger
         className={cn(
-          'focus:ring-offset-0 focus:ring-transparent outline-none border-none bg-transparent capitalize',
-          currentSelection && 'text-blue-500',
+          'h-8 w-full justify-start gap-2 rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-surface)] px-2.5 text-[12.5px] font-medium capitalize text-[var(--aurex-text-2)] hover:bg-[var(--aurex-surface-hover)] focus:ring-0 focus:ring-offset-0',
+          currentSelection &&
+            'border-[rgba(99,102,241,0.32)] bg-[rgba(99,102,241,0.1)] text-[var(--aurex-brand-text)]',
         )}
       >
         <SelectValue placeholder="Skip" />
@@ -28,7 +38,8 @@ export function TableHeadSelect({ columnIndex, selectedColumns, onChange }: Prop
         <SelectItem value="skip">Skip</SelectItem>
         {options.map((option, index) => {
           const disabled =
-            Object.values(selectedColumns).includes(option) && selectedColumns[`column_${columnIndex}`] !== option;
+            Object.values(selectedColumns).includes(option) &&
+            selectedColumns[`column_${columnIndex}`] !== option;
           return (
             <SelectItem key={index} value={option} disabled={disabled} className="capitalize">
               {option}

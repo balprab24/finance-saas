@@ -5,12 +5,17 @@ import { Trash } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { insertAccountSchema } from '@/db/schema';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-const formSchema = insertAccountSchema.pick({ name: true });
+const formSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Name is required')
+    .max(120, 'Name must be 120 characters or fewer'),
+});
 type FormValues = z.input<typeof formSchema>;
 
 type Props = {

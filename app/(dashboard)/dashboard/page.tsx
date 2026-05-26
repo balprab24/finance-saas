@@ -12,8 +12,8 @@ export default function DashboardPage() {
   const showEmptyState = onboardingStatus.data?.isEmpty === true;
 
   return (
-    <div className="mx-auto w-full max-w-screen-2xl space-y-8 pb-16 pt-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="mx-auto w-full max-w-screen-2xl space-y-6 pb-16 pt-6">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <WelcomeMsg />
         <Filters />
       </div>

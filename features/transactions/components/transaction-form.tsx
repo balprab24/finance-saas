@@ -6,7 +6,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { insertTransactionSchema } from '@/db/schema';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/select';
@@ -15,15 +22,30 @@ import { AmountInput } from '@/components/amount-input';
 import { convertAmountToMiliunits } from '@/lib/utils';
 
 const formSchema = z.object({
-  date: z.coerce.date(),
-  accountId: z.string(),
+  date: z.coerce.date({ message: 'Pick a date for this transaction' }),
+  accountId: z.string().min(1, 'Select an account'),
   categoryId: z.string().nullable().optional(),
-  payee: z.string(),
-  amount: z.string(),
-  notes: z.string().nullable().optional(),
+  payee: z
+    .string()
+    .trim()
+    .min(1, 'Add a payee')
+    .max(200, 'Payee must be 200 characters or fewer'),
+  amount: z
+    .string()
+    .min(1, 'Enter an amount')
+    .refine((v) => !Number.isNaN(parseFloat(v)) && Number.isFinite(parseFloat(v)), {
+      message: 'Amount must be a number',
+    })
+    .refine((v) => parseFloat(v) !== 0, { message: 'Amount cannot be zero' }),
+  notes: z
+    .string()
+    .trim()
+    .max(2000, 'Notes must be 2000 characters or fewer')
+    .nullable()
+    .optional(),
 });
 
-const apiSchema = insertTransactionSchema.omit({ id: true });
+const apiSchema = insertTransactionSchema.omit({ id: true, userId: true });
 
 type FormValues = z.input<typeof formSchema>;
 type ApiFormValues = z.input<typeof apiSchema>;
@@ -51,7 +73,11 @@ export function TransactionForm({
   onCreateAccount,
   onCreateCategory,
 }: Props) {
-  const form = useForm<FormValues>({ resolver: zodResolver(formSchema), defaultValues });
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues,
+    mode: 'onBlur',
+  });
 
   const handleSubmit = (values: FormValues) => {
     const amount = parseFloat(values.amount);
@@ -75,6 +101,7 @@ export function TransactionForm({
                   disabled={disabled}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -94,6 +121,7 @@ export function TransactionForm({
                   disabled={disabled}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -102,7 +130,9 @@ export function TransactionForm({
           control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Category</FormLabel>
+              <FormLabel>
+                Category <span className="text-[var(--aurex-text-4)] font-normal">(optional)</span>
+              </FormLabel>
               <FormControl>
                 <Select
                   placeholder="Select a category"
@@ -113,6 +143,7 @@ export function TransactionForm({
                   disabled={disabled}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -123,8 +154,9 @@ export function TransactionForm({
             <FormItem>
               <FormLabel>Payee</FormLabel>
               <FormControl>
-                <Input disabled={disabled} placeholder="Add a payee" {...field} />
+                <Input disabled={disabled} placeholder="e.g. Whole Foods" {...field} />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -137,6 +169,10 @@ export function TransactionForm({
               <FormControl>
                 <AmountInput {...field} disabled={disabled} placeholder="0.00" />
               </FormControl>
+              <p className="text-[11.5px] text-[var(--aurex-text-4)]">
+                Negative for expenses, positive for income.
+              </p>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -145,15 +181,18 @@ export function TransactionForm({
           control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Notes</FormLabel>
+              <FormLabel>
+                Notes <span className="text-[var(--aurex-text-4)] font-normal">(optional)</span>
+              </FormLabel>
               <FormControl>
                 <Input
                   disabled={disabled}
-                  placeholder="Optional notes"
+                  placeholder="e.g. trip to Tahoe with friends"
                   value={field.value ?? ''}
                   onChange={field.onChange}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -161,7 +200,13 @@ export function TransactionForm({
           {id ? 'Save changes' : 'Create transaction'}
         </Button>
         {!!id && (
-          <Button type="button" disabled={disabled} onClick={onDelete} className="w-full" variant="outline">
+          <Button
+            type="button"
+            disabled={disabled}
+            onClick={onDelete}
+            className="w-full"
+            variant="outline"
+          >
             <Trash className="size-4 mr-2" />
             Delete transaction
           </Button>

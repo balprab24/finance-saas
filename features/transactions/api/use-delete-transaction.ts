@@ -1,6 +1,7 @@
 import { InferResponseType } from 'hono';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { readApiError } from '@/lib/api-errors';
 
 import { client } from '@/lib/hono';
 
@@ -11,7 +12,7 @@ export const useDeleteTransaction = (id?: string) => {
   return useMutation<ResponseType, Error>({
     mutationFn: async () => {
       const response = await client.api.transactions[':id']['$delete']({ param: { id } });
-      if (!response.ok) throw new Error('Failed to delete transaction');
+      if (!response.ok) throw new Error(await readApiError(response, 'Failed to delete transaction'));
       return await response.json();
     },
     onSuccess: () => {
@@ -20,6 +21,6 @@ export const useDeleteTransaction = (id?: string) => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['summary'] });
     },
-    onError: () => toast.error('Failed to delete transaction'),
+    onError: (err) => toast.error(err.message),
   });
 };

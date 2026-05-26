@@ -65,11 +65,11 @@ export default function TransactionsPage() {
 
   if (transactionsQuery.isLoading) {
     return (
-      <div className="mx-auto w-full max-w-screen-2xl pb-16 pt-8">
-        <div className="aurex-card p-6">
-          <Skeleton className="h-8 w-48 bg-white/10" />
-          <div className="mt-6 flex h-[500px] w-full items-center justify-center">
-            <Loader2 className="size-6 animate-spin text-[var(--aurex-text-3)]" />
+      <div className="mx-auto w-full max-w-screen-2xl pb-16 pt-6">
+        <div className="aurex-card p-5">
+          <Skeleton className="h-6 w-44 bg-white/8" />
+          <div className="mt-5 flex h-[420px] w-full items-center justify-center">
+            <Loader2 className="size-5 animate-spin text-[var(--aurex-text-3)]" />
           </div>
         </div>
       </div>
@@ -83,35 +83,35 @@ export default function TransactionsPage() {
         <ImportCard
           data={importResults.data}
           onCancel={onCancelImport}
-          onSubmit={onSubmitImport as never}
+          onSubmit={onSubmitImport}
         />
       </>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-screen-2xl space-y-6 pb-16 pt-8">
+    <div className="mx-auto w-full max-w-screen-2xl space-y-5 pb-16 pt-6">
       <div className="flex flex-col gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--aurex-text-3)]">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--aurex-text-3)]">
           Transactions
         </span>
-        <h1 className="text-[28px] font-semibold tracking-tight text-[var(--aurex-text-1)] lg:text-[34px]">
+        <h1 className="text-[24px] font-semibold tracking-tight text-[var(--aurex-text-1)] lg:text-[28px]">
           Every dollar, accounted for
         </h1>
       </div>
-      <div className="aurex-card p-6">
+      <div className="aurex-card p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <h2 className="text-[18px] font-semibold tracking-tight text-[var(--aurex-text-1)]">
-            Transactions history
+          <h2 className="text-[15px] font-semibold text-[var(--aurex-text-1)]">
+            Transaction history
           </h2>
           <div className="flex flex-col items-stretch gap-2 lg:flex-row lg:items-center">
             <Button
               onClick={newTransaction.onOpen}
               size="sm"
-              className="w-full bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] text-white shadow-[0_8px_24px_rgba(99,102,241,0.32)] hover:from-[#7a7df7] hover:to-[#9b6cf8] lg:w-auto"
+              className="h-9 w-full bg-[var(--aurex-brand)] text-white hover:bg-[#7a7df7] lg:w-auto"
             >
-              <Plus className="mr-2 size-4" />
-              Add new
+              <Plus className="mr-2 size-3.5" />
+              Add transaction
             </Button>
             <UploadButton onUpload={onUpload} />
           </div>
@@ -121,7 +121,9 @@ export default function TransactionsPage() {
             filterKey="payee"
             columns={columns}
             data={transactions}
-            onDelete={(rows) => deleteTransactions.mutate({ ids: rows.map((r) => r.original.id) })}
+            onDelete={(rows) =>
+              deleteTransactions.mutate({ ids: rows.map((r) => r.original.id) })
+            }
             disabled={isDisabled}
           />
         </div>

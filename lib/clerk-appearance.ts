@@ -1,26 +1,61 @@
 import type { Appearance } from '@clerk/types';
 
+// Dark theme appearance tuned to the Aurex palette so Clerk's widget feels
+// native inside the auth shell instead of dropping in a white modal.
 export const clerkAppearance: Appearance = {
   variables: {
-    colorPrimary: '#2563eb',
-    borderRadius: '0.625rem',
-    fontFamily: 'var(--font-geist-sans)',
+    colorPrimary: '#6366f1',
+    colorBackground: '#12141c',
+    colorText: '#eef0f6',
+    colorTextSecondary: '#b4b8c4',
+    colorInputBackground: 'rgba(255, 255, 255, 0.04)',
+    colorInputText: '#eef0f6',
+    colorNeutral: '#eef0f6',
+    colorDanger: '#fb7185',
+    colorSuccess: '#34d399',
+    colorWarning: '#fbbf24',
+    borderRadius: '10px',
+    fontFamily: 'var(--font-geist-sans), system-ui, sans-serif',
+    fontSize: '14px',
   },
   elements: {
     rootBox: 'w-full',
     card: 'shadow-none border-0 bg-transparent p-0',
     cardBox: 'shadow-none border-0 bg-transparent w-full',
     header: 'hidden',
-    footer: 'bg-transparent',
+    headerTitle: 'hidden',
+    headerSubtitle: 'hidden',
+    logoBox: 'hidden',
+    logoImage: 'hidden',
+    developmentMode: 'hidden',
+    footer:
+      'bg-transparent text-[13px] text-[var(--aurex-text-3)] [&_a]:text-[var(--aurex-brand-text)] [&_a:hover]:text-[#c4cbff]',
+    footerActionLink:
+      'text-[var(--aurex-brand-text)] hover:text-[#c4cbff] font-medium',
     formButtonPrimary:
-      'bg-blue-600 hover:bg-blue-700 text-sm font-medium normal-case shadow-none',
+      'bg-[var(--aurex-brand)] hover:bg-[#7a7df7] text-sm font-medium normal-case shadow-none h-10 rounded-[10px]',
     socialButtonsBlockButton:
-      'border-slate-200 hover:bg-slate-50 text-slate-700 normal-case',
-    formFieldInput: 'border-slate-200 focus:border-blue-500 focus:ring-blue-500',
-    formFieldLabel: 'text-slate-700 font-medium',
-    dividerLine: 'bg-slate-200',
-    dividerText: 'text-slate-400',
-    footerActionLink: 'text-blue-600 hover:text-blue-700',
-    identityPreviewEditButton: 'text-blue-600 hover:text-blue-700',
+      'border-[var(--aurex-border)] bg-[var(--aurex-surface)] hover:bg-[var(--aurex-surface-hover)] text-[var(--aurex-text-1)] normal-case h-10 rounded-[10px]',
+    socialButtonsBlockButtonText: 'text-[var(--aurex-text-1)] font-medium',
+    formFieldInput:
+      'border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] placeholder:text-[var(--aurex-text-4)] focus:border-[var(--aurex-brand)] focus:ring-1 focus:ring-[var(--aurex-brand)]/40 h-10 rounded-[10px]',
+    formFieldLabel: 'text-[var(--aurex-text-2)] font-medium text-[13px]',
+    formFieldInputShowPasswordButton:
+      'text-[var(--aurex-text-3)] hover:text-[var(--aurex-text-1)]',
+    formFieldErrorText: 'text-[#fb7185] text-[12.5px]',
+    formResendCodeLink:
+      'text-[var(--aurex-brand-text)] hover:text-[#c4cbff]',
+    dividerLine: 'bg-[var(--aurex-border)]',
+    dividerText: 'text-[var(--aurex-text-3)] text-[12px]',
+    identityPreview:
+      'border-[var(--aurex-border)] bg-[var(--aurex-surface)] rounded-[10px]',
+    identityPreviewText: 'text-[var(--aurex-text-1)]',
+    identityPreviewEditButton:
+      'text-[var(--aurex-brand-text)] hover:text-[#c4cbff]',
+    otpCodeFieldInput:
+      'border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] rounded-[10px]',
+    alertText: 'text-[var(--aurex-text-2)]',
+    alert:
+      'border-[var(--aurex-border)] bg-[var(--aurex-surface)] rounded-[10px]',
   },
 };

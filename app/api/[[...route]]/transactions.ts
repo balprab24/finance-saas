@@ -1,33 +1,34 @@
 import { Hono } from 'hono';
-import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { clerkMiddleware, getAuth } from '@hono/clerk-auth';
-import { and, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
+import { clerkMiddleware } from '@clerk/hono';
+import { and, desc, eq, gte, inArray, lt } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
 import { parseRange } from '@/lib/date-range';
+import { accounts, categories, transactions } from '@/db/schema';
 import {
-  accounts,
-  categories,
-  insertTransactionSchema,
-  transactions,
-} from '@/db/schema';
+  bulkCreateTransactionsSchema,
+  bulkIdsSchema,
+  createTransactionSchema,
+  dateRangeQuerySchema,
+  idParamSchema,
+  updateTransactionSchema,
+} from '@/lib/api-schemas';
+import {
+  AuthEnv,
+  getUserId,
+  jsonError,
+  requireAuth,
+} from '@/lib/api-helpers';
 
-const app = new Hono()
+const app = new Hono<AuthEnv>()
   .get(
     '/',
     clerkMiddleware(),
-    zValidator(
-      'query',
-      z.object({
-        from: z.string().optional(),
-        to: z.string().optional(),
-        accountId: z.string().optional(),
-      }),
-    ),
+    requireAuth,
+    zValidator('query', dateRangeQuerySchema),
     async (c) => {
-      const auth = getAuth(c);
-      if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+      const userId = getUserId(c);
       const { from, to, accountId } = c.req.valid('query');
 
       const { start: startDate, endExclusive } = parseRange(from, to);
@@ -49,8 +50,8 @@ const app = new Hono()
         .leftJoin(categories, eq(transactions.categoryId, categories.id))
         .where(
           and(
+            eq(transactions.userId, userId),
             accountId ? eq(transactions.accountId, accountId) : undefined,
-            eq(accounts.userId, auth.userId),
             gte(transactions.date, startDate),
             lt(transactions.date, endExclusive),
           ),
@@ -63,12 +64,12 @@ const app = new Hono()
   .get(
     '/:id',
     clerkMiddleware(),
-    zValidator('param', z.object({ id: z.string().optional() })),
+    requireAuth,
+    zValidator('param', idParamSchema),
     async (c) => {
-      const auth = getAuth(c);
-      if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+      const userId = getUserId(c);
       const { id } = c.req.valid('param');
-      if (!id) return c.json({ error: 'Missing id' }, 400);
+      if (!id) return jsonError(c, 400, 'Missing id');
 
       const [data] = await db
         .select({
@@ -81,41 +82,38 @@ const app = new Hono()
           accountId: transactions.accountId,
         })
         .from(transactions)
-        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-        .where(and(eq(transactions.id, id), eq(accounts.userId, auth.userId)));
+        .where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
 
-      if (!data) return c.json({ error: 'Not found' }, 404);
+      if (!data) return jsonError(c, 404, 'Not found');
       return c.json({ data });
     },
   )
   .post(
     '/',
     clerkMiddleware(),
-    zValidator('json', insertTransactionSchema.omit({ id: true })),
+    requireAuth,
+    zValidator('json', createTransactionSchema),
     async (c) => {
-      const auth = getAuth(c);
-      if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+      const userId = getUserId(c);
       const values = c.req.valid('json');
 
       const [account] = await db
         .select({ id: accounts.id })
         .from(accounts)
-        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, values.accountId)));
-      if (!account) return c.json({ error: 'Invalid account' }, 400);
+        .where(and(eq(accounts.userId, userId), eq(accounts.id, values.accountId)));
+      if (!account) return jsonError(c, 400, 'Invalid account');
 
       if (values.categoryId) {
         const [category] = await db
           .select({ id: categories.id })
           .from(categories)
-          .where(
-            and(eq(categories.userId, auth.userId), eq(categories.id, values.categoryId)),
-          );
-        if (!category) return c.json({ error: 'Invalid category' }, 400);
+          .where(and(eq(categories.userId, userId), eq(categories.id, values.categoryId)));
+        if (!category) return jsonError(c, 400, 'Invalid category');
       }
 
       const [data] = await db
         .insert(transactions)
-        .values({ id: crypto.randomUUID(), ...values })
+        .values({ id: crypto.randomUUID(), userId, ...values })
         .returning();
 
       return c.json({ data });
@@ -124,21 +122,19 @@ const app = new Hono()
   .post(
     '/bulk-create',
     clerkMiddleware(),
-    zValidator('json', z.array(insertTransactionSchema.omit({ id: true }))),
+    requireAuth,
+    zValidator('json', bulkCreateTransactionsSchema),
     async (c) => {
-      const auth = getAuth(c);
-      if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+      const userId = getUserId(c);
       const values = c.req.valid('json');
-
-      if (values.length === 0) return c.json({ data: [] });
 
       const accountIds = Array.from(new Set(values.map((v) => v.accountId)));
       const owned = await db
         .select({ id: accounts.id })
         .from(accounts)
-        .where(and(eq(accounts.userId, auth.userId), inArray(accounts.id, accountIds)));
+        .where(and(eq(accounts.userId, userId), inArray(accounts.id, accountIds)));
       if (owned.length !== accountIds.length) {
-        return c.json({ error: 'Invalid account in batch' }, 400);
+        return jsonError(c, 400, 'Invalid account in batch');
       }
 
       const categoryIds = Array.from(
@@ -152,17 +148,15 @@ const app = new Hono()
         const ownedCategories = await db
           .select({ id: categories.id })
           .from(categories)
-          .where(
-            and(eq(categories.userId, auth.userId), inArray(categories.id, categoryIds)),
-          );
+          .where(and(eq(categories.userId, userId), inArray(categories.id, categoryIds)));
         if (ownedCategories.length !== categoryIds.length) {
-          return c.json({ error: 'Invalid category in batch' }, 400);
+          return jsonError(c, 400, 'Invalid category in batch');
         }
       }
 
       const data = await db
         .insert(transactions)
-        .values(values.map((v) => ({ id: crypto.randomUUID(), ...v })))
+        .values(values.map((v) => ({ id: crypto.randomUUID(), userId, ...v })))
         .returning();
 
       return c.json({ data });
@@ -171,29 +165,15 @@ const app = new Hono()
   .post(
     '/bulk-delete',
     clerkMiddleware(),
-    zValidator('json', z.object({ ids: z.array(z.string()) })),
+    requireAuth,
+    zValidator('json', bulkIdsSchema),
     async (c) => {
-      const auth = getAuth(c);
-      if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+      const userId = getUserId(c);
       const values = c.req.valid('json');
 
-      const transactionsToDelete = db.$with('transactions_to_delete').as(
-        db
-          .select({ id: transactions.id })
-          .from(transactions)
-          .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-          .where(
-            and(
-              inArray(transactions.id, values.ids),
-              eq(accounts.userId, auth.userId),
-            ),
-          ),
-      );
-
       const data = await db
-        .with(transactionsToDelete)
         .delete(transactions)
-        .where(inArray(transactions.id, sql`(select id from ${transactionsToDelete})`))
+        .where(and(eq(transactions.userId, userId), inArray(transactions.id, values.ids)))
         .returning({ id: transactions.id });
 
       return c.json({ data });
@@ -202,75 +182,55 @@ const app = new Hono()
   .patch(
     '/:id',
     clerkMiddleware(),
-    zValidator('param', z.object({ id: z.string().optional() })),
-    zValidator('json', insertTransactionSchema.omit({ id: true })),
+    requireAuth,
+    zValidator('param', idParamSchema),
+    zValidator('json', updateTransactionSchema),
     async (c) => {
-      const auth = getAuth(c);
-      if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+      const userId = getUserId(c);
       const { id } = c.req.valid('param');
+      if (!id) return jsonError(c, 400, 'Missing id');
       const values = c.req.valid('json');
-      if (!id) return c.json({ error: 'Missing id' }, 400);
 
       const [account] = await db
         .select({ id: accounts.id })
         .from(accounts)
-        .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, values.accountId)));
-      if (!account) return c.json({ error: 'Invalid account' }, 400);
+        .where(and(eq(accounts.userId, userId), eq(accounts.id, values.accountId)));
+      if (!account) return jsonError(c, 400, 'Invalid account');
 
       if (values.categoryId) {
         const [category] = await db
           .select({ id: categories.id })
           .from(categories)
-          .where(
-            and(eq(categories.userId, auth.userId), eq(categories.id, values.categoryId)),
-          );
-        if (!category) return c.json({ error: 'Invalid category' }, 400);
+          .where(and(eq(categories.userId, userId), eq(categories.id, values.categoryId)));
+        if (!category) return jsonError(c, 400, 'Invalid category');
       }
 
-      const transactionsToUpdate = db.$with('transactions_to_update').as(
-        db
-          .select({ id: transactions.id })
-          .from(transactions)
-          .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-          .where(and(eq(transactions.id, id), eq(accounts.userId, auth.userId))),
-      );
-
       const [data] = await db
-        .with(transactionsToUpdate)
         .update(transactions)
         .set(values)
-        .where(inArray(transactions.id, sql`(select id from ${transactionsToUpdate})`))
+        .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
         .returning();
 
-      if (!data) return c.json({ error: 'Not found' }, 404);
+      if (!data) return jsonError(c, 404, 'Not found');
       return c.json({ data });
     },
   )
   .delete(
     '/:id',
     clerkMiddleware(),
-    zValidator('param', z.object({ id: z.string().optional() })),
+    requireAuth,
+    zValidator('param', idParamSchema),
     async (c) => {
-      const auth = getAuth(c);
-      if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+      const userId = getUserId(c);
       const { id } = c.req.valid('param');
-      if (!id) return c.json({ error: 'Missing id' }, 400);
-
-      const transactionsToDelete = db.$with('transactions_to_delete').as(
-        db
-          .select({ id: transactions.id })
-          .from(transactions)
-          .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-          .where(and(eq(transactions.id, id), eq(accounts.userId, auth.userId))),
-      );
+      if (!id) return jsonError(c, 400, 'Missing id');
 
       const [data] = await db
-        .with(transactionsToDelete)
         .delete(transactions)
-        .where(inArray(transactions.id, sql`(select id from ${transactionsToDelete})`))
+        .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
         .returning({ id: transactions.id });
 
-      if (!data) return c.json({ error: 'Not found' }, 404);
+      if (!data) return jsonError(c, 404, 'Not found');
       return c.json({ data });
     },
   );

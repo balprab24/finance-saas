@@ -1,0 +1,8 @@
+Date,Payee,Amount,Notes
+2026-05-20,Coffee Shop,-4.50,Latte
+2026-05-21,Salary,2500.00,Paycheck
+2026-05-20,Coffee Shop,-4.50,Latte
+not-a-date,Bad Row,-1.00,Should fail date parse
+2026-05-22,,2.50,Missing payee
+2026-05-23,Grocery Co,-72.18,Weekly shop
+2026-05-24,Electric Utility,-118.40,Monthly bill

@@ -105,6 +105,7 @@ export function buildDemoWorkspace(
       payee: values.payee,
       notes: values.notes ?? null,
       date,
+      userId,
       accountId: values.accountId,
       categoryId: categoryByName[values.category] ?? null,
     });
