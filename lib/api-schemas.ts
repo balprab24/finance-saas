@@ -78,11 +78,15 @@ const isoDateString = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format');
 
+// Client hooks default unset URL params to '' (e.g. `params.get('from') || ''`),
+// so the API sees `?from=&to=&accountId=`. Treat empty strings as absent.
+const emptyToUndef = (v: unknown) => (v === '' ? undefined : v);
+
 export const dateRangeQuerySchema = z
   .object({
-    from: isoDateString.optional(),
-    to: isoDateString.optional(),
-    accountId: idString.optional(),
+    from: z.preprocess(emptyToUndef, isoDateString.optional()),
+    to: z.preprocess(emptyToUndef, isoDateString.optional()),
+    accountId: z.preprocess(emptyToUndef, idString.optional()),
   })
   .refine(
     (q) => !q.from || !q.to || q.from <= q.to,

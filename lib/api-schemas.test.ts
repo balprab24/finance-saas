@@ -127,4 +127,10 @@ describe('dateRangeQuerySchema', () => {
     expect(() => dateRangeQuerySchema.parse({})).not.toThrow();
     expect(() => dateRangeQuerySchema.parse({ accountId: 'acct_1' })).not.toThrow();
   });
+
+  it('treats empty-string query params as absent', () => {
+    expect(
+      dateRangeQuerySchema.parse({ from: '', to: '', accountId: '' }),
+    ).toEqual({ from: undefined, to: undefined, accountId: undefined });
+  });
 });
