@@ -9,9 +9,12 @@ const COLORS = ['#6366f1', '#22d3ee', '#34d399', '#fb7185', '#fbbf24', '#a78bfa'
 type Props = { data: { name: string; value: number }[] };
 
 export function PieVariant({ data }: Props) {
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+
   return (
-    <ResponsiveContainer width="100%" height={350}>
-      <PieChart>
+    <div className="h-[350px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
         <Legend
           layout="horizontal"
           verticalAlign="bottom"
@@ -19,20 +22,24 @@ export function PieVariant({ data }: Props) {
           iconType="circle"
           content={({ payload }) => (
             <ul className="flex flex-col space-y-2">
-              {payload?.map((entry, index) => (
-                <li key={`item-${index}`} className="flex items-center space-x-2">
-                  <span
-                    className="size-2 rounded-full"
-                    style={{ backgroundColor: entry.color, boxShadow: `0 0 8px ${entry.color}` }}
-                  />
-                  <div className="space-x-1">
-                    <span className="text-[13px] text-[var(--aurex-text-2)]">{entry.value}</span>
-                    <span className="text-[13px] font-medium text-[var(--aurex-text-1)]">
-                      {formatPercentage((entry.payload as unknown as { percent: number }).percent * 100)}
-                    </span>
-                  </div>
-                </li>
-              ))}
+              {payload?.map((entry, index) => {
+                const value = (entry.payload as unknown as { value: number }).value;
+                const percent = total > 0 ? (value / total) * 100 : 0;
+                return (
+                  <li key={`item-${index}`} className="flex items-center space-x-2">
+                    <span
+                      className="size-2 rounded-full"
+                      style={{ backgroundColor: entry.color, boxShadow: `0 0 8px ${entry.color}` }}
+                    />
+                    <div className="space-x-1">
+                      <span className="text-[13px] text-[var(--aurex-text-2)]">{entry.value}</span>
+                      <span className="text-[13px] font-medium text-[var(--aurex-text-1)]">
+                        {formatPercentage(percent)}
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         />
@@ -53,8 +60,9 @@ export function PieVariant({ data }: Props) {
           {data.map((_entry, index) => (
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
-        </Pie>
-      </PieChart>
-    </ResponsiveContainer>
+          </Pie>
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
   );
 }

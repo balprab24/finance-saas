@@ -9,8 +9,9 @@ type Props = { data: { name: string; value: number }[] };
 
 export function RadialVariant({ data }: Props) {
   return (
-    <ResponsiveContainer width="100%" height={350}>
-      <RadialBarChart
+    <div className="h-[350px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <RadialBarChart
         cx="50%"
         cy="30%"
         barSize={10}
@@ -47,7 +48,8 @@ export function RadialVariant({ data }: Props) {
             </ul>
           )}
         />
-      </RadialBarChart>
-    </ResponsiveContainer>
+        </RadialBarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
