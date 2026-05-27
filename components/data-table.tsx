@@ -103,7 +103,7 @@ export function DataTable<TData, TValue>({
           </Button>
         ) : null}
       </div>
-      <div className="overflow-hidden rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-bg-elev)]">
+      <div className="overflow-x-auto rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-bg-elev)]">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
