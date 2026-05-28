@@ -193,13 +193,15 @@ above.
   That's an isolated profile, so sign in to Clerk once in that window
   before running `npm run screenshot:auth`.
 
-- **Recharts 3 / Playwright fullPage artifact.** The chart areas of
-  `dashboard-desktop.png` and `dashboard-mobile.png` may show titles,
-  legends, axis labels, and grid lines but not the actual area/line/pie
-  paths. This is a Recharts 3.x `ResponsiveContainer` interaction with
-  Chrome's `captureBeyondViewport` mode — element-clip screenshots and
-  any real browser session render the charts correctly. Not a runtime UI
-  bug.
+- **Capture against the production server, not `next dev`.** Under `npm
+  run dev`, Playwright's `fullPage` screenshots of the dashboard
+  sometimes show chart titles, legends, axes, and grid lines but not
+  the actual Recharts area/line/pie paths. This is a dev-mode artifact
+  (HMR + React strict-mode + `ResponsiveContainer` measurement
+  interaction); against `npm run build && npm run start` the same
+  scenarios capture the charts correctly. If chart paths look missing,
+  rerun the capture against the production server before treating it as
+  a real bug.
 
 - **The "N" overlay is dev-only.** The small black circle with an "N"
   near the bottom-left of every screenshot is the Next.js dev-mode
