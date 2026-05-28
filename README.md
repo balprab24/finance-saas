@@ -176,23 +176,17 @@ npm run screenshot <url>   # one-off public/local page capture
 npm run screenshot:auth    # authenticated dashboard capture via Chrome CDP
 ```
 
-### Account-delete risk and next migration
+### Account archival and hard-delete safety
 
-Today, deleting an account hard-deletes every transaction tied to it. This is the FK in [`db/schema.ts`](db/schema.ts) on `transactions.accountId` (`onDelete: 'cascade'`). It's permanent — there's no soft-delete column and no archive UI. A user who clicks "Delete" on a populated account loses that history.
+Accounts with transactions are archived instead of deleted. The `accounts.archived_at` column hides inactive accounts from default account lists and new transaction pickers, while historical transactions keep their account link. The `transactions.accountId` foreign key is `onDelete: 'restrict'`, and `DELETE /accounts/:id` only succeeds for accounts with zero transactions.
 
-The deferred mitigation is an archive workflow (kept out of this change to avoid touching product UI):
+Use the account page or `POST /api/accounts/:id/archive` for normal user-facing removal. Use `POST /api/accounts/:id/restore` to make an archived account available again. Bulk account actions archive selected accounts; they do not hard-delete transaction history.
 
-1. Add `archived_at timestamp` and `is_archived boolean default false` to `accounts`.
-2. Change the transactions FK from `onDelete: 'cascade'` to `onDelete: 'restrict'`.
-3. Filter `is_archived = false` from the default `GET /accounts` response; add an opt-in `?archived=true` listing.
-4. Replace the destructive `DELETE /accounts/:id` with `POST /accounts/:id/archive`, and only allow real deletion of accounts with zero transactions.
-5. UI work: add an archive button, a "show archived" toggle, and an unarchive action.
-
-Until that lands, treat the delete button on the accounts page as destructive and warn end users accordingly.
+The accounts page has a **Show archived** toggle that lists archived accounts inline with active ones (marked with an "Archived" badge). The row action menu surfaces **Restore** for archived rows and **Archive** for active ones. `GET /api/accounts?includeArchived=true` is the underlying query.
 
 ### Local-data caveat for the case-insensitive uniqueness migration
 
-The latest schema migration switches the unique index on account/category names from case-sensitive to case-insensitive (`LOWER(name)`). If a local database already contains case-only duplicates for the same user (e.g. both `Savings` and `savings`), `npm run db:migrate` will fail when it tries to create the new unique index. The fix is a one-time rename:
+Migration `0002` switches the unique index on account/category names from case-sensitive to case-insensitive (`LOWER(name)`). If a local database already contains case-only duplicates for the same user (e.g. both `Savings` and `savings`), `npm run db:migrate` will fail when it tries to create the new unique index. The fix is a one-time rename:
 
 ```sql
 -- inspect collisions:

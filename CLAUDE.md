@@ -2,107 +2,136 @@
 
 ## What this is
 
-Personal-finance SaaS for tracking accounts, categories, and transactions with an interactive dashboard and CSV import. Built as a portfolio project; designed to be deployable to Vercel.
+Aurex is a personal-finance SaaS for tracking accounts, categories, transactions,
+CSV imports, and dashboard analytics. It is a Next.js app with a typed Hono API,
+Postgres persistence, Clerk authentication, and a dark operational UI.
 
-## Stack
+## Current stack
 
-- **Next.js 15 (App Router)** — full-stack framework, hosts pages and API
-- **React 19** + **TypeScript**
-- **Tailwind v4** + **shadcn/ui** (radix-nova style) — components are owned in-repo under `components/ui/`
-- **Clerk** (`@clerk/nextjs`) — auth; middleware-protected pages and API
-- **Hono** mounted at `app/api/[[...route]]/route.ts` — typed RPC server
-- **Drizzle ORM** + **better-sqlite3** locally (production target: Postgres on Neon — schemas use `pgTable` semantics that swap cleanly via `drizzle-kit`)
-- **TanStack Query (React Query)** — server-state cache on the client
-- **Hono RPC client** — fully typed, exported from `lib/hono.ts`
-- **react-hook-form** + **zod** + `drizzle-zod` — same schema validates client + server
-- **Recharts** — dashboard charts
-- **papaparse** — CSV parsing in the browser
+- **Next.js 15 App Router** with React 19 and TypeScript.
+- **npm** for package scripts and lockfile management.
+- **Tailwind v4** plus in-repo shadcn/ui primitives under `components/ui/`.
+- **Clerk** via `@clerk/nextjs` and `@clerk/hono`.
+- **Hono** mounted at `app/api/[[...route]]/route.ts`; route files live next to it.
+- **Drizzle ORM + Postgres** using `pgTable` schemas and SQL migrations in `drizzle/`.
+- **postgres** driver in `db/drizzle.ts`.
+- **TanStack Query** plus Hono RPC client from `lib/hono.ts`.
+- **react-hook-form + zod** for client forms and `@hono/zod-validator` for API input.
+- **Recharts** for dashboard charts.
+- **papaparse/react-papaparse** for browser CSV import.
 
-## Folder conventions
+## Folder map
 
-```
+```text
 app/
-  (auth)/sign-in, sign-up         Clerk pages
-  (dashboard)/                    protected app shell
-    layout.tsx                    header + nav + footer
-    page.tsx                      dashboard with charts
-    accounts/page.tsx             CRUD page per resource
-    categories/page.tsx
-    transactions/page.tsx         CRUD + import flow
-  api/[[...route]]/route.ts       Hono mount point
+  (auth)/sign-in/[[...sign-in]]/page.tsx
+  (auth)/sign-up/[[...sign-up]]/page.tsx
+  (dashboard)/layout.tsx              protected app shell + sheet provider
+  (dashboard)/page.tsx                dashboard
+  (dashboard)/accounts/page.tsx       account list
+  (dashboard)/categories/page.tsx     category list
+  (dashboard)/transactions/page.tsx   table + CSV import flow
+  api/[[...route]]/route.ts           Hono mount point
+  api/[[...route]]/*.ts               Hono route modules and tests
 db/
-  schema.ts                       Drizzle tables + drizzle-zod schemas
-  drizzle.ts                      DB client export
+  schema.ts                           Drizzle tables and insert schemas
+  drizzle.ts                          Postgres client export
+drizzle/
+  *.sql                               generated migrations
 features/<resource>/
-  api/use-get-<thing>.ts          React Query hook
-  api/use-create-<thing>.ts       useMutation with cache invalidation
-  components/<thing>-form.tsx     rhf + zod form
-  components/new-<thing>-sheet.tsx
-  components/edit-<thing>-sheet.tsx
-  hooks/use-new-<thing>.ts        zustand store for sheet open/close
-hono/                             route files mounted by app/api/[[...route]]/route.ts
+  api/                                React Query hooks
+  components/                         forms and sheets
+  hooks/                              zustand sheet/dialog state
 lib/
-  hono.ts                         RPC client (typed from server export)
-  utils.ts                        cn() etc.
-providers/
-  query-provider.tsx              QueryClientProvider wrapper
-  sheet-provider.tsx              renders all <NewXSheet/> globally
-components/ui/                    shadcn primitives
+  api-schemas.ts                      public API validation schemas
+  api-helpers.ts                      auth/error helpers
+  hono.ts                             typed Hono RPC client
+  date-range.ts                       dashboard/transaction date-window helpers
+scripts/
+  seed.ts                             demo workspace seed
+  screenshot-auth-cdp.ts              authenticated visual QA via Chrome CDP
 ```
 
 ## Non-negotiable rules
 
-1. **Money is stored in cents (integer).** Never use floats for currency. Negative amounts are expenses, positive are income. Format as dollars at display time only.
-2. **Every API handler filters by `auth.userId`.** Multi-tenant isolation is the most important security invariant. Use `and(eq(table.userId, auth.userId), eq(table.id, id))` in every query.
-3. **All CRUD passes through Hono.** No direct DB calls from React Server Components — keep the API as the single boundary so RPC types stay coherent.
-4. **Validate twice.** Zod on the client (rhf) AND server (`@hono/zod-validator`). Same schema source.
-5. **No secrets in the repo.** `.env.local` is gitignored. Only place secrets there. Never log full tokens; `console.log` only `userId.slice(0, 6)` if debugging.
-6. **`"use client"` belongs on interactive components.** Pages are server by default; forms, hooks, charts, anything calling React Query → client.
-7. **Cache invalidation key matches query key.** `useCreateAccount` → `queryClient.invalidateQueries({ queryKey: ['accounts'] })` to match `useGetAccounts`.
+1. **Money is stored as integer milliunits.** One dollar is `1000`. Never store or
+   compare currency as floats. Negative amounts are expenses; positive amounts
+   are income.
+2. **Every API query must be scoped by Clerk `userId`.** Multi-tenant isolation is
+   the core security invariant.
+3. **React code does not call the DB directly.** CRUD goes through Hono so RPC
+   types, server validation, auth, and cache invalidation stay coherent.
+4. **Validate on both sides.** Client forms use zod through react-hook-form; API
+   handlers use schemas from `lib/api-schemas.ts`.
+5. **No secrets in tracked files.** `.env.local` is gitignored. Do not print full
+   Clerk keys, database URLs, or tokens.
+6. **Account deletion is data-sensitive.** Accounts with transactions must be
+   archived, not hard-deleted. Transaction history must survive account archival.
+7. **Cache invalidation must match query keys.** Account list queries are keyed as
+   `['accounts', { includeArchived }]`; invalidating `['accounts']` intentionally
+   refreshes all account-list variants.
+8. **Middleware protects by default.** `middleware.ts` runs Clerk's `auth.protect()`
+   on every matched path except the public allowlist (`/`, `/sign-in/*`,
+   `/sign-up/*`). To expose a new public page, add it to the allowlist —
+   never the reverse. New dashboard routes need no middleware change.
 
-## Patterns
+## Data model notes
 
-**API route file** (e.g. `hono/routes/accounts.ts`)
-```ts
-const app = new Hono()
-  .get('/', clerkMiddleware(), async (c) => {
-    const auth = getAuth(c)
-    if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401)
-    const data = await db.select().from(accounts).where(eq(accounts.userId, auth.userId))
-    return c.json({ data })
-  })
-  .post('/', clerkMiddleware(), zValidator('json', insertAccountSchema.pick({ name: true })), async (c) => { ... })
-```
-
-**React Query hook** (e.g. `features/accounts/api/use-get-accounts.ts`)
-```ts
-export const useGetAccounts = () => useQuery({
-  queryKey: ['accounts'],
-  queryFn: async () => {
-    const res = await client.api.accounts.$get()
-    if (!res.ok) throw new Error('Failed')
-    const { data } = await res.json()
-    return data
-  },
-})
-```
+- `accounts.archivedAt` marks hidden/inactive accounts. Default account lists and
+  new transaction pickers exclude archived accounts.
+- Historical transactions keep their `accountId`; transaction reads still join to
+  archived accounts so old rows display correctly.
+- `transactions.accountId` uses a restricted foreign key, not cascade delete.
+- `transactions.categoryId` uses `onDelete: 'set null'`, so deleting a category
+  preserves transactions as uncategorized.
+- Account/category names are unique per user case-insensitively through
+  `(user_id, lower(name))` indexes.
 
 ## Useful commands
 
 ```bash
-pnpm dev              # next dev (http://localhost:3000)
-pnpm db:generate      # drizzle-kit generate
-pnpm db:migrate       # apply migrations to local sqlite
-pnpm db:studio        # browse local DB
-pnpm screenshot <url> # take a PNG via playwright
+npm run dev              # next dev on http://localhost:3000
+npm run build            # production build
+npm run start            # serve production build
+npm test                 # vitest suite
+npm run db:generate      # generate Drizzle migration after schema changes
+npm run db:migrate       # apply migrations to DATABASE_URL
+npm run db:studio        # inspect local Postgres with Drizzle Studio
+npm run db:seed -- <id>  # seed demo data for a Clerk user id
+npm run screenshot:auth  # authenticated screenshot QA via Chrome CDP
 ```
 
-## SQLite vs Postgres swap
+## Local database
 
-We use SQLite locally for fast iteration. To swap to Postgres on Neon:
-1. Replace `better-sqlite3` import in `db/drizzle.ts` with `@neondatabase/serverless`
-2. Change `sqliteTable` → `pgTable` in `db/schema.ts` (column types: `integer` → `integer`, `text` → `text`, dates → `timestamp`)
-3. Update `drizzle.config.ts` `dialect: 'sqlite' → 'postgresql'`
-4. `pnpm db:generate && pnpm db:migrate`
+Use the README Docker flow unless a local Postgres service is already running.
+The expected local URL is:
 
-The application code (Hono routes, React hooks, components) is identical for both.
+```text
+postgresql://postgres:postgres@localhost:5432/postgres
+```
+
+Run migrations before relying on local data:
+
+```bash
+npm run db:migrate
+```
+
+## Auth and visual QA
+
+- Clerk pages use catch-all routes under `/sign-in/[[...sign-in]]` and
+  `/sign-up/[[...sign-up]]`.
+- `middleware.ts` protects dashboard pages. Hono route modules run Clerk
+  middleware and `requireAuth`.
+- Authenticated screenshots use Chrome CDP on port `9222`. On macOS, Chrome often
+  needs a custom `--user-data-dir` for the debug port to bind.
+- Prefer `npm run build && npm run start` for screenshot captures when checking
+  Recharts output. Next dev can show screenshot-only chart timing artifacts.
+
+## Implementation habits
+
+- Prefer existing feature/module patterns over new abstractions.
+- Keep Drizzle schema, migrations, API validation, and tests in sync.
+- Use `readApiError` in mutation hooks so server errors surface in toasts.
+- Do not rewrite `.env.local`, generated screenshots, or unrelated files.
+- If a migration can fail on existing local data, document the cleanup path in
+  README before handing off.
