@@ -124,6 +124,84 @@ providers/                Query and sheet providers
 scripts/                  Seed and screenshot helpers
 ```
 
+## Deployment
+
+The app is a standard Next.js 15 App Router build with a Postgres backend and Clerk for auth. Any host that runs Node 20 and can reach your Postgres instance (Vercel, Fly, Render, a VM) will work.
+
+### Required environment variables
+
+All variables must be set in the host's environment (or `.env.local` for local runs). See `.env.example` for the template.
+
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk client SDK key. Production needs a `pk_live_*` key from a production Clerk instance. |
+| `CLERK_SECRET_KEY` | Clerk server SDK key. Production needs a `sk_live_*` key. Never expose to the browser. |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Path to the sign-in page (`/sign-in`). |
+| `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Path to the sign-up page (`/sign-up`). |
+| `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` | Where Clerk redirects after a successful sign-in (`/dashboard`). |
+| `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL` | Where Clerk redirects after a successful sign-up (`/dashboard`). |
+| `DATABASE_URL` | Postgres connection string. Required at runtime and build time — `db/drizzle.ts` throws on startup if unset. |
+| `NEXT_PUBLIC_APP_URL` | Public origin of the deployment, e.g. `https://finance.example.com`. Used as the canonical origin and by the visual-QA scripts. |
+
+### Local DB vs hosted Postgres
+
+- **Local:** the bundled `docker-compose.yml` runs Postgres 16 on `localhost:5432` (`postgres`/`postgres`). A system-installed `postgresql@16` works just as well.
+- **Production:** any managed Postgres ≥ 14 — Neon, Supabase, RDS, Fly Postgres, etc. The Drizzle schema is dialect-agnostic; the same migrations apply. For serverless Postgres providers (e.g. Neon), `postgres-js` with `prepare: false` (already set in `db/drizzle.ts`) is the correct client setup.
+
+### Migrations
+
+Run on every deploy after a schema change:
+
+```bash
+npm run db:migrate
+```
+
+The command is safe to re-run — Drizzle tracks applied migrations and skips ones already in the journal. Migration files live in `drizzle/`.
+
+### Clerk URLs and callbacks
+
+In the Clerk dashboard (Production instance):
+
+- Add `NEXT_PUBLIC_APP_URL` to **Allowed origins**.
+- Set the **Application home URL** and **Sign-in / Sign-up URLs** to match the four `NEXT_PUBLIC_CLERK_*_URL` env vars.
+- For Google OAuth, add `NEXT_PUBLIC_APP_URL` to the Google Cloud OAuth client's authorized redirect URIs (Clerk's docs walk through this).
+- Use production-tier (`pk_live_*` / `sk_live_*`) keys in production — the `pk_test_*` keys are tied to Clerk's test instance and won't accept production users.
+
+### Visual QA
+
+After deploying, you can spot-check the running site with the screenshot helpers — see [Authenticated visual QA](#authenticated-visual-qa) below. Useful commands:
+
+```bash
+npm run screenshot <url>   # one-off public/local page capture
+npm run screenshot:auth    # authenticated dashboard capture via Chrome CDP
+```
+
+### Account-delete risk and next migration
+
+Today, deleting an account hard-deletes every transaction tied to it. This is the FK in [`db/schema.ts`](db/schema.ts) on `transactions.accountId` (`onDelete: 'cascade'`). It's permanent — there's no soft-delete column and no archive UI. A user who clicks "Delete" on a populated account loses that history.
+
+The deferred mitigation is an archive workflow (kept out of this change to avoid touching product UI):
+
+1. Add `archived_at timestamp` and `is_archived boolean default false` to `accounts`.
+2. Change the transactions FK from `onDelete: 'cascade'` to `onDelete: 'restrict'`.
+3. Filter `is_archived = false` from the default `GET /accounts` response; add an opt-in `?archived=true` listing.
+4. Replace the destructive `DELETE /accounts/:id` with `POST /accounts/:id/archive`, and only allow real deletion of accounts with zero transactions.
+5. UI work: add an archive button, a "show archived" toggle, and an unarchive action.
+
+Until that lands, treat the delete button on the accounts page as destructive and warn end users accordingly.
+
+### Local-data caveat for the case-insensitive uniqueness migration
+
+The latest schema migration switches the unique index on account/category names from case-sensitive to case-insensitive (`LOWER(name)`). If a local database already contains case-only duplicates for the same user (e.g. both `Savings` and `savings`), `npm run db:migrate` will fail when it tries to create the new unique index. The fix is a one-time rename:
+
+```sql
+-- inspect collisions:
+SELECT user_id, lower(name), array_agg(name) FROM accounts GROUP BY user_id, lower(name) HAVING count(*) > 1;
+-- rename one of each pair, then re-run npm run db:migrate
+```
+
+Production was migrated from empty data, so this only affects long-running local DBs.
+
 ## Authenticated visual QA
 
 Clerk's Google OAuth flow refuses to complete inside a fresh Playwright

@@ -117,6 +117,17 @@ describe('accounts route — auth and validation', () => {
     expect(body.error).toBe('An account with that name already exists');
   });
 
+  it('surfaces case-insensitive collisions as the same 409', async () => {
+    state.insertShouldThrow = Object.assign(new Error('duplicate'), { code: '23505' });
+    const { status, body } = await request('/', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'savings' }),
+    });
+    expect(status).toBe(409);
+    expect(body.error).toBe('An account with that name already exists');
+  });
+
   it('rejects bulk-delete with too many ids', async () => {
     const ids = Array.from({ length: 501 }, (_, i) => `id_${i}`);
     const { status, body } = await request('/bulk-delete', {

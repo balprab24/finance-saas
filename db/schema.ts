@@ -8,7 +8,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 
 export const accounts = pgTable(
   'accounts',
@@ -20,7 +20,7 @@ export const accounts = pgTable(
   },
   (table) => [
     index('accounts_user_id_idx').on(table.userId),
-    uniqueIndex('accounts_user_id_name_uq').on(table.userId, table.name),
+    uniqueIndex('accounts_user_id_name_uq').on(table.userId, sql`lower(${table.name})`),
   ],
 );
 
@@ -40,7 +40,7 @@ export const categories = pgTable(
   },
   (table) => [
     index('categories_user_id_idx').on(table.userId),
-    uniqueIndex('categories_user_id_name_uq').on(table.userId, table.name),
+    uniqueIndex('categories_user_id_name_uq').on(table.userId, sql`lower(${table.name})`),
   ],
 );
 
