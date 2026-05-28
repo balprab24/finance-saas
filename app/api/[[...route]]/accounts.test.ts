@@ -4,13 +4,19 @@ const state: {
   auth: { userId: string } | null;
   selectResults: unknown[][];
   insertedValues: unknown[];
+  updatedValues: unknown[];
+  updatedReturning: unknown[];
   deletedReturning: unknown[];
+  deleteCalls: number;
   insertShouldThrow: Error | null;
 } = {
   auth: { userId: 'user_alice' },
   selectResults: [],
   insertedValues: [],
+  updatedValues: [],
+  updatedReturning: [{ id: 'acct_1', name: 'X', userId: 'user_alice', archivedAt: null }],
   deletedReturning: [],
+  deleteCalls: 0,
   insertShouldThrow: null,
 };
 
@@ -33,7 +39,10 @@ vi.mock('@/db/drizzle', () => {
   };
 
   const deleteChain = {
-    where: () => deleteChain,
+    where: () => {
+      state.deleteCalls += 1;
+      return deleteChain;
+    },
     returning: () => Promise.resolve(state.deletedReturning),
   };
 
@@ -41,7 +50,10 @@ vi.mock('@/db/drizzle', () => {
     select: () => selectChain,
     insert: () => insertChain,
     update: () => ({
-      set: () => ({ where: () => ({ returning: () => Promise.resolve([{ id: 'acct_1', name: 'X', userId: 'user_alice' }]) }) }),
+      set: (values: unknown) => {
+        state.updatedValues.push(values);
+        return { where: () => ({ returning: () => Promise.resolve(state.updatedReturning) }) };
+      },
     }),
     delete: () => deleteChain,
   };
@@ -66,7 +78,10 @@ beforeEach(() => {
   state.auth = { userId: 'user_alice' };
   state.selectResults = [];
   state.insertedValues = [];
+  state.updatedValues = [];
+  state.updatedReturning = [{ id: 'acct_1', name: 'X', userId: 'user_alice', archivedAt: null }];
   state.deletedReturning = [];
+  state.deleteCalls = 0;
   state.insertShouldThrow = null;
 });
 
@@ -145,6 +160,100 @@ describe('accounts route — auth and validation', () => {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ ids: [] }),
     });
+    expect(status).toBe(400);
+  });
+
+  it('archives accounts without deleting their transactions', async () => {
+    const { status, body } = await request('/acct_1/archive', { method: 'POST' });
+
+    expect(status).toBe(200);
+    expect(body.data).toMatchObject({ id: 'acct_1' });
+    expect(state.updatedValues.at(0)).toMatchObject({ archivedAt: expect.any(Date) });
+    expect(state.deleteCalls).toBe(0);
+  });
+
+  it('restores archived accounts', async () => {
+    const { status } = await request('/acct_1/restore', { method: 'POST' });
+
+    expect(status).toBe(200);
+    expect(state.updatedValues.at(0)).toEqual({ archivedAt: null });
+  });
+
+  it('rejects hard delete when an account has transactions', async () => {
+    state.selectResults = [[{ count: 2 }]];
+
+    const { status, body } = await request('/acct_1', { method: 'DELETE' });
+
+    expect(status).toBe(409);
+    expect(body.error).toBe('Archive accounts with transactions instead of deleting them');
+    expect(state.deleteCalls).toBe(0);
+  });
+
+  it('allows hard delete when an account is empty', async () => {
+    state.selectResults = [[{ count: 0 }]];
+    state.deletedReturning = [{ id: 'acct_1' }];
+
+    const { status, body } = await request('/acct_1', { method: 'DELETE' });
+
+    expect(status).toBe(200);
+    expect(body.data).toMatchObject({ id: 'acct_1' });
+    expect(state.deleteCalls).toBe(1);
+  });
+
+  it('rejects bulk hard delete when any selected account has transactions', async () => {
+    state.selectResults = [[{ count: 3 }]];
+
+    const { status, body } = await request('/bulk-delete', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ids: ['acct_1', 'acct_2'] }),
+    });
+
+    expect(status).toBe(409);
+    expect(body.error).toBe('Archive accounts with transactions instead of deleting them');
+    expect(state.deleteCalls).toBe(0);
+  });
+
+  it('lists archived accounts when includeArchived=true', async () => {
+    state.selectResults = [[
+      { id: 'acct_1', name: 'Savings', archivedAt: null },
+      { id: 'acct_2', name: 'Old Card', archivedAt: new Date('2026-01-01') },
+    ]];
+
+    const { status, body } = await request('/?includeArchived=true');
+
+    expect(status).toBe(200);
+    const data = body.data as Array<{ id: string; archivedAt: string | null }>;
+    expect(data).toHaveLength(2);
+    expect(data.map((d) => d.id)).toEqual(['acct_1', 'acct_2']);
+  });
+
+  it('bulk-archives selected accounts and returns archivedAt', async () => {
+    state.updatedReturning = [
+      { id: 'acct_1', archivedAt: new Date('2026-05-28') },
+      { id: 'acct_2', archivedAt: new Date('2026-05-28') },
+    ];
+
+    const { status, body } = await request('/bulk-archive', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ids: ['acct_1', 'acct_2'] }),
+    });
+
+    expect(status).toBe(200);
+    expect(state.updatedValues.at(0)).toMatchObject({ archivedAt: expect.any(Date) });
+    expect(state.deleteCalls).toBe(0);
+    const data = body.data as Array<{ id: string }>;
+    expect(data.map((d) => d.id)).toEqual(['acct_1', 'acct_2']);
+  });
+
+  it('rejects bulk-archive with empty ids', async () => {
+    const { status } = await request('/bulk-archive', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ids: [] }),
+    });
+
     expect(status).toBe(400);
   });
 });

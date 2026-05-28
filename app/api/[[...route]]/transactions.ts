@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { clerkMiddleware } from '@clerk/hono';
-import { and, desc, eq, gte, inArray, lt } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNull, lt } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
 import { parseRange } from '@/lib/date-range';
@@ -100,7 +100,13 @@ const app = new Hono<AuthEnv>()
       const [account] = await db
         .select({ id: accounts.id })
         .from(accounts)
-        .where(and(eq(accounts.userId, userId), eq(accounts.id, values.accountId)));
+        .where(
+          and(
+            eq(accounts.userId, userId),
+            eq(accounts.id, values.accountId),
+            isNull(accounts.archivedAt),
+          ),
+        );
       if (!account) return jsonError(c, 400, 'Invalid account');
 
       if (values.categoryId) {
@@ -132,7 +138,13 @@ const app = new Hono<AuthEnv>()
       const owned = await db
         .select({ id: accounts.id })
         .from(accounts)
-        .where(and(eq(accounts.userId, userId), inArray(accounts.id, accountIds)));
+        .where(
+          and(
+            eq(accounts.userId, userId),
+            inArray(accounts.id, accountIds),
+            isNull(accounts.archivedAt),
+          ),
+        );
       if (owned.length !== accountIds.length) {
         return jsonError(c, 400, 'Invalid account in batch');
       }

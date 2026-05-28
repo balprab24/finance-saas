@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { clerkMiddleware } from '@clerk/hono';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
-import { accounts } from '@/db/schema';
+import { accounts, transactions } from '@/db/schema';
 import {
   bulkIdsSchema,
   createAccountSchema,
@@ -14,19 +14,34 @@ import {
 import {
   AuthEnv,
   getUserId,
+  isForeignKeyViolation,
   isUniqueViolation,
   jsonError,
   requireAuth,
 } from '@/lib/api-helpers';
 
+async function getAccountTransactionCount(userId: string, accountId: string) {
+  const [result] = await db
+    .select({ count: sql<number>`count(*)`.mapWith(Number) })
+    .from(transactions)
+    .where(and(eq(transactions.userId, userId), eq(transactions.accountId, accountId)));
+
+  return result?.count ?? 0;
+}
+
 const app = new Hono<AuthEnv>()
   .get('/', clerkMiddleware(), requireAuth, async (c) => {
     const userId = getUserId(c);
+    const includeArchived = c.req.query('includeArchived') === 'true';
 
     const data = await db
-      .select({ id: accounts.id, name: accounts.name })
+      .select({ id: accounts.id, name: accounts.name, archivedAt: accounts.archivedAt })
       .from(accounts)
-      .where(eq(accounts.userId, userId));
+      .where(
+        includeArchived
+          ? eq(accounts.userId, userId)
+          : and(eq(accounts.userId, userId), isNull(accounts.archivedAt)),
+      );
 
     return c.json({ data });
   })
@@ -41,7 +56,7 @@ const app = new Hono<AuthEnv>()
       if (!id) return jsonError(c, 400, 'Missing id');
 
       const [data] = await db
-        .select({ id: accounts.id, name: accounts.name })
+        .select({ id: accounts.id, name: accounts.name, archivedAt: accounts.archivedAt })
         .from(accounts)
         .where(and(eq(accounts.userId, userId), eq(accounts.id, id)));
 
@@ -74,6 +89,24 @@ const app = new Hono<AuthEnv>()
     },
   )
   .post(
+    '/bulk-archive',
+    clerkMiddleware(),
+    requireAuth,
+    zValidator('json', bulkIdsSchema),
+    async (c) => {
+      const userId = getUserId(c);
+      const values = c.req.valid('json');
+
+      const data = await db
+        .update(accounts)
+        .set({ archivedAt: new Date() })
+        .where(and(eq(accounts.userId, userId), inArray(accounts.id, values.ids)))
+        .returning({ id: accounts.id, archivedAt: accounts.archivedAt });
+
+      return c.json({ data });
+    },
+  )
+  .post(
     '/bulk-delete',
     clerkMiddleware(),
     requireAuth,
@@ -81,6 +114,18 @@ const app = new Hono<AuthEnv>()
     async (c) => {
       const userId = getUserId(c);
       const values = c.req.valid('json');
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)`.mapWith(Number) })
+        .from(transactions)
+        .where(and(eq(transactions.userId, userId), inArray(transactions.accountId, values.ids)));
+
+      if (count > 0) {
+        return jsonError(
+          c,
+          409,
+          'Archive accounts with transactions instead of deleting them',
+        );
+      }
 
       const data = await db
         .delete(accounts)
@@ -119,6 +164,46 @@ const app = new Hono<AuthEnv>()
       }
     },
   )
+  .post(
+    '/:id/archive',
+    clerkMiddleware(),
+    requireAuth,
+    zValidator('param', idParamSchema),
+    async (c) => {
+      const userId = getUserId(c);
+      const { id } = c.req.valid('param');
+      if (!id) return jsonError(c, 400, 'Missing id');
+
+      const [data] = await db
+        .update(accounts)
+        .set({ archivedAt: new Date() })
+        .where(and(eq(accounts.userId, userId), eq(accounts.id, id)))
+        .returning({ id: accounts.id, archivedAt: accounts.archivedAt });
+
+      if (!data) return jsonError(c, 404, 'Not found');
+      return c.json({ data });
+    },
+  )
+  .post(
+    '/:id/restore',
+    clerkMiddleware(),
+    requireAuth,
+    zValidator('param', idParamSchema),
+    async (c) => {
+      const userId = getUserId(c);
+      const { id } = c.req.valid('param');
+      if (!id) return jsonError(c, 400, 'Missing id');
+
+      const [data] = await db
+        .update(accounts)
+        .set({ archivedAt: null })
+        .where(and(eq(accounts.userId, userId), eq(accounts.id, id)))
+        .returning({ id: accounts.id, archivedAt: accounts.archivedAt });
+
+      if (!data) return jsonError(c, 404, 'Not found');
+      return c.json({ data });
+    },
+  )
   .delete(
     '/:id',
     clerkMiddleware(),
@@ -129,13 +214,25 @@ const app = new Hono<AuthEnv>()
       const { id } = c.req.valid('param');
       if (!id) return jsonError(c, 400, 'Missing id');
 
-      const [data] = await db
-        .delete(accounts)
-        .where(and(eq(accounts.userId, userId), eq(accounts.id, id)))
-        .returning({ id: accounts.id });
+      const transactionCount = await getAccountTransactionCount(userId, id);
+      if (transactionCount > 0) {
+        return jsonError(c, 409, 'Archive accounts with transactions instead of deleting them');
+      }
 
-      if (!data) return jsonError(c, 404, 'Not found');
-      return c.json({ data });
+      try {
+        const [data] = await db
+          .delete(accounts)
+          .where(and(eq(accounts.userId, userId), eq(accounts.id, id)))
+          .returning({ id: accounts.id });
+
+        if (!data) return jsonError(c, 404, 'Not found');
+        return c.json({ data });
+      } catch (err) {
+        if (isForeignKeyViolation(err)) {
+          return jsonError(c, 409, 'Archive accounts with transactions instead of deleting them');
+        }
+        throw err;
+      }
     },
   );
 

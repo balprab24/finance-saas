@@ -40,3 +40,12 @@ export function isUniqueViolation(err: unknown): boolean {
       (err as { code?: string }).code === '23505',
   );
 }
+
+export function isForeignKeyViolation(err: unknown): boolean {
+  return Boolean(
+    err &&
+      typeof err === 'object' &&
+      'code' in err &&
+      (err as { code?: string }).code === '23503',
+  );
+}

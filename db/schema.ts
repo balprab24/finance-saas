@@ -17,9 +17,11 @@ export const accounts = pgTable(
     plaidId: text('plaid_id'),
     name: text('name').notNull(),
     userId: text('user_id').notNull(),
+    archivedAt: timestamp('archived_at', { mode: 'date' }),
   },
   (table) => [
     index('accounts_user_id_idx').on(table.userId),
+    index('accounts_user_archived_idx').on(table.userId, table.archivedAt),
     uniqueIndex('accounts_user_id_name_uq').on(table.userId, sql`lower(${table.name})`),
   ],
 );
@@ -60,7 +62,7 @@ export const transactions = pgTable(
     date: timestamp('date', { mode: 'date' }).notNull(),
     userId: text('user_id').notNull(),
     accountId: text('account_id')
-      .references(() => accounts.id, { onDelete: 'cascade' })
+      .references(() => accounts.id, { onDelete: 'restrict' })
       .notNull(),
     categoryId: text('category_id').references(() => categories.id, {
       onDelete: 'set null',
