@@ -175,6 +175,37 @@ opening each URL in a 1440x900 (desktop) or 390x844 (mobile) window and
 saving full-page screenshots into `screenshots/auth/` using the keys
 above.
 
+### Caveats
+
+- **macOS Chrome and the debug port.** On recent Chrome builds
+  `--remote-debugging-port=9222` silently fails to bind unless Chrome
+  also gets a fresh `--user-data-dir`. If `curl -s
+  http://localhost:9222/json/version` returns nothing after launch, fully
+  quit Chrome and relaunch with:
+
+  ```bash
+  /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+    --remote-debugging-port=9222 \
+    --user-data-dir="$HOME/Library/Application Support/Google/Chrome-CDP" \
+    --no-first-run --no-default-browser-check
+  ```
+
+  That's an isolated profile, so sign in to Clerk once in that window
+  before running `npm run screenshot:auth`.
+
+- **Recharts 3 / Playwright fullPage artifact.** The chart areas of
+  `dashboard-desktop.png` and `dashboard-mobile.png` may show titles,
+  legends, axis labels, and grid lines but not the actual area/line/pie
+  paths. This is a Recharts 3.x `ResponsiveContainer` interaction with
+  Chrome's `captureBeyondViewport` mode — element-clip screenshots and
+  any real browser session render the charts correctly. Not a runtime UI
+  bug.
+
+- **The "N" overlay is dev-only.** The small black circle with an "N"
+  near the bottom-left of every screenshot is the Next.js dev-mode
+  indicator. It is not present in `npm run build && npm run start`
+  output.
+
 ## Security Notes
 
 - Do not commit `.env.local` or real credentials.
