@@ -27,11 +27,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       signInFallbackRedirectUrl="/dashboard"
       signUpFallbackRedirectUrl="/dashboard"
     >
-      <html lang="en" className="dark">
-        <body
-          suppressHydrationWarning
-          className={`${inter.variable} ${geistMono.variable} antialiased`}
-        >
+      <html lang="en" className={`dark ${inter.variable} ${geistMono.variable}`}>
+        <body suppressHydrationWarning className="antialiased">
           <QueryProvider>
             <Toaster theme="dark" />
             {children}

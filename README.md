@@ -2,6 +2,16 @@
 
 A full-stack personal finance dashboard for tracking accounts, categories, and transactions. The app includes Clerk authentication, typed Hono API routes, Drizzle/Postgres persistence, CSV import helpers, and dashboard charts for income, expenses, remaining balance, and category spend.
 
+## Preview
+
+The marketing landing page introduces the workspace at a glance — every account, category, and transaction in one dashboard.
+
+![Aurex landing — hero and dashboard preview](docs/screenshots/hero.png)
+
+The Insights section ships with a real Area / Line / Bar toggle backed by the finance-tuned palette (emerald for income, rose for expenses).
+
+![Aurex landing — Insights chart panel](docs/screenshots/chart.png)
+
 ## Features
 
 - Authenticated dashboard powered by Clerk

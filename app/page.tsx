@@ -1,5 +1,11 @@
 import Link from 'next/link';
 import { Show } from '@clerk/nextjs';
+import { ScrollReveal } from '@/components/marketing/scroll-reveal';
+import { ScrollSpyNav } from '@/components/marketing/scroll-spy-nav';
+import {
+  PreviewFlowChartLarge,
+  PreviewFlowChartSmall,
+} from '@/components/marketing/preview-flow-chart';
 import {
   ArrowDownRight,
   ArrowRight,
@@ -11,11 +17,9 @@ import {
   PieChart,
   ShieldCheck,
   Sparkles,
-  TrendingUp,
   Upload,
   WalletCards,
   Wand2,
-  Zap,
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -45,66 +49,54 @@ function BrandMark({ size = 36 }: { size?: number }) {
 
 function NavBar() {
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--aurex-border)] bg-[rgba(5,7,23,0.72)] backdrop-blur-xl">
+    <header className="sticky top-0 z-50 bg-gradient-to-b from-[rgba(10,11,16,0.85)] to-[rgba(10,11,16,0.7)] shadow-[0_1px_0_rgba(99,102,241,0.08),0_8px_24px_rgba(0,0,0,0.4)] backdrop-blur-xl">
       <div className={`${SECTION_WIDE} flex h-[68px] items-center justify-between`}>
-        <Link href="/" className="flex items-center gap-2.5">
-          <BrandMark size={30} />
-          <span className="text-[17px] font-semibold tracking-tight text-[var(--aurex-text-1)]">
+        <Link href="/" className="group flex items-center gap-2.5">
+          <span className="inline-block transition-shadow duration-300 rounded-[12px] group-hover:shadow-[0_0_24px_rgba(99,102,241,0.5)]">
+            <BrandMark size={30} />
+          </span>
+          <span className="text-[18px] font-semibold tracking-tight text-[var(--aurex-text-1)] transition-colors duration-200 group-hover:text-white">
             Aurex
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
-          {[
-            { href: '#preview', label: 'Product' },
-            { href: '#insights', label: 'Insights' },
-            { href: '#import', label: 'Import' },
-            { href: '#trust', label: 'Security' },
-          ].map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="text-[14px] font-medium text-[var(--aurex-text-2)] transition-colors hover:text-[var(--aurex-text-1)]"
-            >
-              {item.label}
-            </a>
-          ))}
-        </nav>
+        <ScrollSpyNav variant="desktop" />
 
         <div className="flex items-center gap-2">
           <Show when="signed-in">
             <Link
               href="/dashboard"
-              className="inline-flex h-9 items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] px-3.5 text-[14px] font-semibold text-white shadow-[0_8px_24px_rgba(99,102,241,0.35)] transition-transform hover:-translate-y-0.5"
+              className="inline-flex h-10 items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] px-4 text-[15px] font-semibold text-white shadow-[0_8px_24px_rgba(99,102,241,0.35)] transition-transform hover:-translate-y-0.5"
             >
               Open dashboard
-              <ArrowRight className="size-3.5" />
+              <ArrowRight className="size-4" />
             </Link>
           </Show>
           <Show when="signed-out">
             <Link
               href="/sign-in"
-              className="hidden h-9 items-center px-3 text-[14px] font-medium text-[var(--aurex-text-2)] transition-colors hover:text-[var(--aurex-text-1)] sm:inline-flex"
+              className="inline-flex h-10 items-center px-3 text-[15px] font-medium text-[var(--aurex-text-1)]/85 transition-colors hover:text-[var(--aurex-text-1)]"
             >
               Sign in
             </Link>
             <Link
               href="/sign-up"
-              className="inline-flex h-9 items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] px-3.5 text-[14px] font-semibold text-white shadow-[0_8px_24px_rgba(99,102,241,0.35)] transition-transform hover:-translate-y-0.5"
+              className="inline-flex h-10 items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] px-4 text-[15px] font-semibold text-white shadow-[0_8px_24px_rgba(99,102,241,0.35)] transition-transform hover:-translate-y-0.5"
             >
               Get started
-              <ArrowRight className="size-3.5" />
+              <ArrowRight className="size-4" />
             </Link>
           </Show>
         </div>
       </div>
+      <ScrollSpyNav variant="mobile" />
     </header>
   );
 }
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden border-b border-[var(--aurex-border)]">
+    <section className="aurex-hairline relative overflow-hidden">
       <div className="aurex-mesh" aria-hidden />
       <div
         aria-hidden
@@ -114,8 +106,12 @@ function Hero() {
             'radial-gradient(closest-side, rgba(139,92,246,0.45), rgba(34,211,238,0.18) 60%, transparent 80%)',
         }}
       />
+      <div
+        aria-hidden
+        className="aurex-aurora aurex-aurora-violet -bottom-40 left-1/2 h-[320px] w-[640px] -translate-x-1/2 opacity-35"
+      />
 
-      <div className={`${SECTION_WIDE} relative z-10 grid gap-14 pt-20 pb-24 lg:grid-cols-[1.05fr_1.4fr] lg:gap-12 lg:pt-24 lg:pb-28`}>
+      <div className={`${SECTION_WIDE} relative z-10 grid gap-14 pt-16 pb-20 lg:grid-cols-[1.05fr_1.4fr] lg:gap-12 lg:pt-24 lg:pb-24`}>
         {/* Left column — copy */}
         <div className="flex flex-col items-start aurex-rise">
           <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--aurex-border-strong)] bg-[var(--aurex-surface)] px-3 py-1.5 text-[12px] font-medium uppercase tracking-[0.14em] text-[var(--aurex-text-2)]">
@@ -154,17 +150,17 @@ function Hero() {
             </a>
           </div>
 
-          <dl className="mt-12 grid w-full max-w-[460px] grid-cols-3 gap-6 border-t border-[var(--aurex-border)] pt-7">
+          <dl className="mt-10 grid w-full max-w-[460px] grid-cols-3 gap-6 border-t border-[var(--aurex-border)] pt-6">
             {[
               { value: '6 charts', label: 'Visualizations' },
               { value: 'CSV', label: 'Import in seconds' },
               { value: 'Clerk', label: 'Sign-in handled for you' },
             ].map((s) => (
               <div key={s.label}>
-                <dt className="text-[20px] font-semibold tracking-tight text-[var(--aurex-text-1)]">
+                <dt className="text-[20px] font-semibold tracking-tight text-[var(--aurex-text-1)] after:mt-1.5 after:block after:h-px after:w-8 after:bg-gradient-to-r after:from-[#a5b4fc] after:to-[#22d3ee] after:content-['']">
                   {s.value}
                 </dt>
-                <dd className="mt-1 text-[12px] uppercase tracking-[0.1em] text-[var(--aurex-text-3)]">
+                <dd className="mt-1.5 text-[12px] uppercase tracking-[0.1em] text-[var(--aurex-text-3)]">
                   {s.label}
                 </dd>
               </div>
@@ -243,37 +239,7 @@ function DashboardPreview() {
 
       {/* Chart + side rail */}
       <div className="mt-4 grid gap-3 lg:grid-cols-[1.55fr_1fr]">
-        <div className="aurex-card-marketing relative overflow-hidden p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-[13px] font-semibold text-[var(--aurex-text-1)]">
-                Cash flow
-              </div>
-              <div className="text-[11px] text-[var(--aurex-text-3)]">
-                Income vs. expenses · daily
-              </div>
-            </div>
-            <div className="flex items-center gap-1">
-              {['Area', 'Line', 'Bar'].map((r, i) => (
-                <span
-                  key={r}
-                  className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
-                    i === 0
-                      ? 'bg-[var(--aurex-surface-hover)] text-[var(--aurex-text-1)] ring-1 ring-[var(--aurex-border-strong)]'
-                      : 'text-[var(--aurex-text-3)]'
-                  }`}
-                >
-                  {r}
-                </span>
-              ))}
-            </div>
-          </div>
-          <FlowChart />
-          <div className="mt-2 flex items-center gap-4 text-[11px] text-[var(--aurex-text-2)]">
-            <LegendDot color="#34d399" /> Income
-            <LegendDot color="#fb7185" /> Expenses
-          </div>
-        </div>
+        <PreviewFlowChartSmall />
 
         <div className="space-y-3">
           <RecentTransactions />
@@ -349,72 +315,6 @@ function KpiTile({
   );
 }
 
-function FlowChart() {
-  return (
-    <svg viewBox="0 0 600 180" className="mt-3 h-[170px] w-full">
-      <defs>
-        <linearGradient id="incomeGrad" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#34d399" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id="expenseGrad" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#fb7185" stopOpacity="0.45" />
-          <stop offset="100%" stopColor="#fb7185" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      {[...Array(4)].map((_, i) => (
-        <line
-          key={i}
-          x1="0"
-          x2="600"
-          y1={36 * (i + 1)}
-          y2={36 * (i + 1)}
-          stroke="rgba(148,163,255,0.08)"
-        />
-      ))}
-      {/* Expenses (back layer) */}
-      <path
-        d="M0,140 C60,130 100,110 160,118 C220,126 260,100 320,108 C380,116 420,130 480,118 C540,108 580,120 600,114 L600,180 L0,180 Z"
-        fill="url(#expenseGrad)"
-      />
-      <path
-        d="M0,140 C60,130 100,110 160,118 C220,126 260,100 320,108 C380,116 420,130 480,118 C540,108 580,120 600,114"
-        fill="none"
-        stroke="#fb7185"
-        strokeWidth="2"
-      />
-      {/* Income (front layer) */}
-      <path
-        d="M0,110 C60,90 100,40 160,52 C220,64 260,28 320,40 C380,52 420,80 480,58 C540,40 580,30 600,18 L600,180 L0,180 Z"
-        fill="url(#incomeGrad)"
-      />
-      <path
-        d="M0,110 C60,90 100,40 160,52 C220,64 260,28 320,40 C380,52 420,80 480,58 C540,40 580,30 600,18"
-        fill="none"
-        stroke="#34d399"
-        strokeWidth="2.2"
-      />
-      <circle cx="600" cy="18" r="4" fill="#34d399">
-        <animate
-          attributeName="r"
-          values="4;6;4"
-          dur="2.4s"
-          repeatCount="indefinite"
-        />
-      </circle>
-    </svg>
-  );
-}
-
-function LegendDot({ color }: { color: string }) {
-  return (
-    <span
-      className="inline-block size-2 rounded-full"
-      style={{ backgroundColor: color, boxShadow: `0 0 10px ${color}` }}
-    />
-  );
-}
-
 function RecentTransactions() {
   const items = [
     { payee: 'Whole Foods', cat: 'Groceries', amt: '−$84.20', tone: 'expense' as const, color: '#fb7185' },
@@ -433,10 +333,11 @@ function RecentTransactions() {
         <span className="text-[11px] text-[var(--aurex-text-3)]">5 latest</span>
       </div>
       <ul className="space-y-2.5">
-        {items.map((t) => (
+        {items.map((t, i) => (
           <li
             key={t.payee}
-            className="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--aurex-surface)]"
+            className="aurex-rise flex items-center justify-between rounded-lg px-2 py-1.5 transition-all duration-200 hover:translate-x-0.5 hover:bg-[var(--aurex-surface)]"
+            style={{ animationDelay: `${i * 60}ms` }}
           >
             <div className="flex items-center gap-2.5">
               <span
@@ -504,60 +405,79 @@ function TopCategories() {
   );
 }
 
-function FeatureRow() {
-  const features = [
+function HowItWorks() {
+  const steps = [
     {
-      icon: WalletCards,
-      title: 'Every account, one view',
-      desc: 'Checking, savings, credit cards. Each transaction belongs to an account, so totals stay separate where they need to and combine where they should.',
+      n: '01',
+      icon: Upload,
+      title: 'Bring your transactions in',
+      desc: 'Add accounts and rows by hand, or drop a CSV from your bank — Aurex parses it in your browser, no upload required.',
     },
     {
-      icon: TrendingUp,
-      title: 'Charts that read like a story',
-      desc: 'Area, line, bar. Pie, radar, radial. Switch the chart without losing the filter — the data updates together, not piecemeal.',
-    },
-    {
+      n: '02',
       icon: Wand2,
-      title: 'Categorize as you go',
-      desc: 'Rename, split, and refine categories whenever your habits change. Spending breakdowns stay accurate over time.',
+      title: 'Sort spending by category',
+      desc: 'Categorize as you go. Rename or split categories whenever your habits change — old transactions update with them.',
+    },
+    {
+      n: '03',
+      icon: LineChart,
+      title: 'See where the money went',
+      desc: 'Income, expenses, and the gap between — across every account, in one dashboard you can filter by date or account.',
     },
   ];
 
   return (
-    <section id="preview" className="relative border-b border-[var(--aurex-border)] py-24">
-      <div className={SECTION}>
-        <div className="mb-14 max-w-[640px]">
-          <SectionEyebrow icon={LineChart} label="Built for clarity" />
+    <section id="preview" className="aurex-hairline relative overflow-hidden py-16 sm:py-20 lg:py-24">
+      <div
+        aria-hidden
+        className="aurex-aurora aurex-aurora-cyan -right-40 top-1/4 h-[420px] w-[520px] opacity-25"
+      />
+      <div className={`${SECTION} relative z-10`}>
+        <div className="aurex-reveal mb-10 max-w-[640px]" data-reveal>
+          <SectionEyebrow icon={Sparkles} label="How it works" />
           <h2 className="text-[34px] font-semibold leading-[1.1] tracking-[-0.02em] text-[var(--aurex-text-1)] sm:text-[44px]">
-            A workspace that{' '}
+            Three steps to a{' '}
             <span className="bg-gradient-to-br from-[#a5b4fc] to-[#22d3ee] bg-clip-text text-transparent">
-              respects your time.
+              clearer picture.
             </span>
           </h2>
           <p className="mt-5 max-w-[520px] text-[16px] leading-[1.65] text-[var(--aurex-text-2)]">
-            Three things matter when you&rsquo;re looking at your money: the
-            number, the trend, and the why. Aurex keeps all three on screen.
+            Aurex is straightforward by design. Bring your money in, sort it,
+            then read it. You stay in control of categories and accounts at
+            every step.
           </p>
         </div>
 
         <div className="grid gap-5 md:grid-cols-3">
-          {features.map((f) => (
-            <div key={f.title} className="aurex-card-marketing p-6">
-              <div
-                className="mb-5 inline-grid size-11 place-items-center rounded-[12px] text-white"
-                style={{
-                  background:
-                    'linear-gradient(135deg, rgba(99,102,241,0.4), rgba(34,211,238,0.25))',
-                  boxShadow: 'inset 0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.18)',
-                }}
-              >
-                <f.icon className="size-5" />
+          {steps.map((s, i) => (
+            <div
+              key={s.n}
+              className="aurex-card-marketing aurex-reveal p-6"
+              data-reveal
+              style={{ ['--reveal-delay']: `${i * 120}ms` } as React.CSSProperties}
+            >
+              <div className="mb-5 flex items-center justify-between">
+                <div
+                  className="inline-grid size-11 place-items-center rounded-[12px] text-white"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, rgba(99,102,241,0.4), rgba(34,211,238,0.25))',
+                    boxShadow:
+                      'inset 0 0 0 1px rgba(99,102,241,0.4), 0 8px 24px rgba(99,102,241,0.18)',
+                  }}
+                >
+                  <s.icon className="size-5" />
+                </div>
+                <span className="bg-gradient-to-br from-[#a5b4fc] to-[#22d3ee] bg-clip-text font-mono text-[13px] font-semibold tracking-[0.08em] text-transparent">
+                  {s.n}
+                </span>
               </div>
               <h3 className="text-[17px] font-semibold tracking-tight text-[var(--aurex-text-1)]">
-                {f.title}
+                {s.title}
               </h3>
               <p className="mt-2.5 text-[14.5px] leading-[1.6] text-[var(--aurex-text-2)]">
-                {f.desc}
+                {s.desc}
               </p>
             </div>
           ))}
@@ -586,104 +506,51 @@ function SectionEyebrow({
 
 function InsightsSection() {
   return (
-    <section id="insights" className="relative border-b border-[var(--aurex-border)] py-24">
-      <div className={SECTION}>
-        <SectionEyebrow icon={LineChart} label="Insights" />
-        <h2 className="max-w-[680px] text-[34px] font-semibold leading-[1.1] tracking-[-0.02em] text-[var(--aurex-text-1)] sm:text-[44px]">
-          Income, expenses,
-          <br /> and the gap between.
-        </h2>
-        <p className="mt-5 max-w-[520px] text-[16px] leading-[1.65] text-[var(--aurex-text-2)]">
-          Aurex renders every chart with Recharts and a finance-tuned palette —
-          emerald for income, rose for expenses, indigo for everything in
-          between. Toggle the visualization without losing your filter.
-        </p>
-      </div>
-
-      <div className={`${SECTION_WIDE} mt-12`}>
-        <div className="aurex-card-marketing relative overflow-hidden p-6 sm:p-7">
-          <div className="flex items-center justify-between border-b border-[var(--aurex-border)] pb-4">
-            <div className="flex items-center gap-2.5">
-              <TrendingUp className="size-4 text-[#a5b4fc]" />
-              <span className="text-[14px] font-semibold text-[var(--aurex-text-1)]">
-                Cash flow · Last 90 days
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              {['Area', 'Line', 'Bar'].map((r, i) => (
-                <span
-                  key={r}
-                  className={`rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors ${
-                    i === 0
-                      ? 'bg-[var(--aurex-surface-hover)] text-[var(--aurex-text-1)] ring-1 ring-[var(--aurex-border-strong)]'
-                      : 'text-[var(--aurex-text-3)] hover:text-[var(--aurex-text-1)]'
-                  }`}
-                >
-                  {r}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div className="pt-6">
-            <svg viewBox="0 0 1200 280" className="h-[260px] w-full">
-              <defs>
-                <linearGradient id="bigIncome" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#34d399" stopOpacity="0.45" />
-                  <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
-                </linearGradient>
-                <linearGradient id="bigExpense" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#fb7185" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#fb7185" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              {[...Array(6)].map((_, i) => (
-                <line
-                  key={i}
-                  x1="0"
-                  x2="1200"
-                  y1={40 * (i + 1)}
-                  y2={40 * (i + 1)}
-                  stroke="rgba(148,163,255,0.08)"
-                />
-              ))}
-              <path
-                d="M0,210 C100,200 180,180 260,186 C340,194 420,160 500,170 C580,180 660,200 740,180 C820,160 900,170 980,160 C1060,150 1140,170 1200,158 L1200,280 L0,280 Z"
-                fill="url(#bigExpense)"
-              />
-              <path
-                d="M0,210 C100,200 180,180 260,186 C340,194 420,160 500,170 C580,180 660,200 740,180 C820,160 900,170 980,160 C1060,150 1140,170 1200,158"
-                fill="none"
-                stroke="#fb7185"
-                strokeWidth="2"
-              />
-              <path
-                d="M0,180 C100,160 180,90 260,108 C340,128 420,60 500,80 C580,100 660,150 740,118 C820,90 900,40 980,68 C1060,98 1140,50 1200,30 L1200,280 L0,280 Z"
-                fill="url(#bigIncome)"
-              />
-              <path
-                d="M0,180 C100,160 180,90 260,108 C340,128 420,60 500,80 C580,100 660,150 740,118 C820,90 900,40 980,68 C1060,98 1140,50 1200,30"
-                fill="none"
-                stroke="#34d399"
-                strokeWidth="2.5"
-              />
-            </svg>
-          </div>
+    <section id="insights" className="aurex-hairline relative overflow-hidden py-16 sm:py-20 lg:py-24">
+      <div
+        aria-hidden
+        className="aurex-aurora aurex-aurora-violet left-1/2 top-1/3 h-[520px] w-[820px] -translate-x-1/2 opacity-25"
+      />
+      <div className={`${SECTION} relative z-10`}>
+        <div className="aurex-reveal" data-reveal>
+          <SectionEyebrow icon={LineChart} label="Insights" />
+          <h2 className="max-w-[680px] text-[34px] font-semibold leading-[1.1] tracking-[-0.02em] text-[var(--aurex-text-1)] sm:text-[44px]">
+            Income, expenses,
+            <br /> and the gap between.
+          </h2>
+          <p className="mt-5 max-w-[520px] text-[16px] leading-[1.65] text-[var(--aurex-text-2)]">
+            Aurex renders every chart with Recharts and a finance-tuned palette —
+            emerald for income, rose for expenses, indigo for everything in
+            between. Toggle the visualization without losing your filter.
+          </p>
         </div>
       </div>
 
-      <div className={`${SECTION} mt-14 grid gap-10 md:grid-cols-2`}>
-        <SmallFeature
-          icon={PieChart}
-          tag="Spending breakdown"
-          title="See where the money went"
-          desc="A pie of expenses by category — plus radar and radial alternatives so the chart matches the question you're asking."
-        />
-        <SmallFeature
-          icon={ShieldCheck}
-          tag="Filter & focus"
-          title="Account and date filters"
-          desc="Narrow the dashboard to a single account or a custom date range. The charts and totals update together — no stale numbers."
-        />
+      <div className={`${SECTION_WIDE} relative z-10 mt-8`}>
+        <PreviewFlowChartLarge />
+      </div>
+
+      <div className={`${SECTION} relative z-10 mt-8 grid gap-10 md:grid-cols-2`}>
+        <div className="aurex-reveal" data-reveal>
+          <SmallFeature
+            icon={PieChart}
+            tag="Spending breakdown"
+            title="See where the money went"
+            desc="A pie of expenses by category — plus radar and radial alternatives so the chart matches the question you're asking."
+          />
+        </div>
+        <div
+          className="aurex-reveal"
+          data-reveal
+          style={{ ['--reveal-delay']: '120ms' } as React.CSSProperties}
+        >
+          <SmallFeature
+            icon={ShieldCheck}
+            tag="Filter & focus"
+            title="Account and date filters"
+            desc="Narrow the dashboard to a single account or a custom date range. The charts and totals update together — no stale numbers."
+          />
+        </div>
       </div>
     </section>
   );
@@ -720,9 +587,16 @@ function SmallFeature({
 
 function ImportSection() {
   return (
-    <section id="import" className="relative border-b border-[var(--aurex-border)] py-24">
-      <div className={SECTION}>
-        <div className="aurex-card-marketing relative overflow-hidden p-10 sm:p-14">
+    <section id="import" className="aurex-hairline relative overflow-hidden py-16 sm:py-20 lg:py-24">
+      <div
+        aria-hidden
+        className="aurex-aurora aurex-aurora-indigo -bottom-20 -left-32 h-[420px] w-[520px]"
+      />
+      <div className={`${SECTION} relative z-10`}>
+        <div
+          className="aurex-card-marketing aurex-reveal relative overflow-hidden p-8 sm:p-10 lg:p-12"
+          data-reveal
+        >
           <div
             aria-hidden
             className="pointer-events-none absolute -right-24 -top-24 h-[360px] w-[360px] rounded-full opacity-50 blur-[100px]"
@@ -750,13 +624,18 @@ function ImportSection() {
               browser — your data stays with you.
             </p>
           </div>
-          <div className="relative mt-12 grid gap-8 border-t border-[var(--aurex-border)] pt-10 md:grid-cols-3">
+          <div className="relative mt-10 grid gap-8 border-t border-[var(--aurex-border)] pt-8 md:grid-cols-3">
             {[
               { stat: 'Drop', label: 'A CSV from any bank', icon: Upload },
               { stat: 'Map', label: 'Pick which columns mean what', icon: Wand2 },
               { stat: 'Review', label: 'Confirm rows before saving', icon: ShieldCheck },
-            ].map((s) => (
-              <div key={s.label} className="flex items-start gap-3">
+            ].map((s, i) => (
+              <div
+                key={s.label}
+                className="aurex-reveal flex items-start gap-3"
+                data-reveal
+                style={{ ['--reveal-delay']: `${i * 120}ms` } as React.CSSProperties}
+              >
                 <span className="mt-1 grid size-8 place-items-center rounded-md bg-[var(--aurex-surface)] ring-1 ring-[var(--aurex-border)]">
                   <s.icon className="size-4 text-[#a5b4fc]" />
                 </span>
@@ -779,24 +658,33 @@ function ImportSection() {
 
 function TrustBand() {
   const items = [
-    { icon: Lock, label: 'Auth handled by Clerk' },
-    { icon: ShieldCheck, label: 'Per-user data isolation' },
-    { icon: Zap, label: 'Built on Next.js 15' },
-    { icon: TrendingUp, label: 'Recharts + Tailwind v4' },
+    { icon: Lock, label: 'Secure sign-in by Clerk' },
+    { icon: ShieldCheck, label: 'Per-user workspace' },
+    { icon: Upload, label: 'CSV parsed in your browser' },
+    { icon: WalletCards, label: 'No automatic bank link' },
   ];
   return (
-    <section id="trust" className="border-b border-[var(--aurex-border)] py-14">
-      <div className={`${SECTION} flex flex-wrap items-center justify-between gap-6`}>
+    <section id="trust" className="aurex-hairline relative overflow-hidden bg-[rgba(255,255,255,0.012)] py-14">
+      <div
+        aria-hidden
+        className="aurex-aurora aurex-aurora-indigo left-1/2 top-1/2 h-[120px] w-[1100px] -translate-x-1/2 -translate-y-1/2 opacity-25"
+        style={{ filter: 'blur(80px)' }}
+      />
+      <div className={`${SECTION} relative z-10 flex flex-wrap items-center justify-between gap-6`}>
         <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--aurex-text-3)]">
-          Built on a stack you trust
+          Built around your privacy
         </span>
         <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
-          {items.map((it) => (
+          {items.map((it, i) => (
             <span
               key={it.label}
-              className="inline-flex items-center gap-2 text-[13.5px] text-[var(--aurex-text-2)]"
+              className="aurex-reveal inline-flex items-center gap-2.5 text-[13.5px] text-[var(--aurex-text-2)]"
+              data-reveal
+              style={{ ['--reveal-delay']: `${i * 80}ms` } as React.CSSProperties}
             >
-              <it.icon className="size-4 text-[#a5b4fc]" />
+              <span className="grid size-7 place-items-center rounded-md bg-[var(--aurex-surface)] ring-1 ring-[var(--aurex-border)]">
+                <it.icon className="size-3.5 text-[#a5b4fc]" />
+              </span>
               {it.label}
             </span>
           ))}
@@ -808,7 +696,7 @@ function TrustBand() {
 
 function CtaBand() {
   return (
-    <section className="relative overflow-hidden py-24">
+    <section className="relative overflow-hidden py-16 sm:py-20 lg:py-24">
       <div
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-50 blur-[140px]"
@@ -817,14 +705,29 @@ function CtaBand() {
             'radial-gradient(closest-side, rgba(99,102,241,0.45), rgba(34,211,238,0.18) 60%, transparent)',
         }}
       />
-      <div className={`${SECTION} relative text-center`}>
-        <h2 className="mx-auto max-w-[640px] text-[36px] font-semibold leading-[1.08] tracking-[-0.02em] text-[var(--aurex-text-1)] sm:text-[48px]">
+      <div
+        aria-hidden
+        className="aurex-aurora aurex-aurora-cyan right-1/3 top-0 h-[260px] w-[420px] opacity-30"
+      />
+      <div className={`${SECTION} relative z-10 text-center`}>
+        <h2
+          className="aurex-reveal mx-auto max-w-[640px] text-[36px] font-semibold leading-[1.08] tracking-[-0.02em] text-[var(--aurex-text-1)] sm:text-[48px]"
+          data-reveal
+        >
           Get a clearer picture of your money — today.
         </h2>
-        <p className="mx-auto mt-5 max-w-[520px] text-[16px] leading-[1.65] text-[var(--aurex-text-2)]">
+        <p
+          className="aurex-reveal mx-auto mt-5 max-w-[520px] text-[16px] leading-[1.65] text-[var(--aurex-text-2)]"
+          data-reveal
+          style={{ ['--reveal-delay']: '120ms' } as React.CSSProperties}
+        >
           Free to try. No credit card. Your data is yours and only yours.
         </p>
-        <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div
+          className="aurex-reveal mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
+          data-reveal
+          style={{ ['--reveal-delay']: '240ms' } as React.CSSProperties}
+        >
           <Show when="signed-in">
             <Link href="/dashboard" className="aurex-button-primary">
               Open dashboard
@@ -852,12 +755,14 @@ function Footer() {
       <div
         className={`${SECTION} flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between`}
       >
-        <div className="flex items-center gap-2.5">
-          <BrandMark size={26} />
-          <span className="text-[15px] font-semibold tracking-tight text-[var(--aurex-text-1)]">
+        <Link href="/" className="group flex items-center gap-2.5">
+          <span className="inline-block transition-shadow duration-300 rounded-[12px] group-hover:shadow-[0_0_24px_rgba(99,102,241,0.5)]">
+            <BrandMark size={26} />
+          </span>
+          <span className="text-[15px] font-semibold tracking-tight text-[var(--aurex-text-1)] transition-colors duration-200 group-hover:text-white">
             Aurex
           </span>
-        </div>
+        </Link>
         <span className="text-[12.5px] text-[var(--aurex-text-3)]">
           © {new Date().getFullYear()} Aurex — Money, in clear view.
         </span>
@@ -869,9 +774,10 @@ function Footer() {
 export default function HomePage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-[var(--aurex-bg)] text-[var(--aurex-text-1)] antialiased">
+      <ScrollReveal />
       <NavBar />
       <Hero />
-      <FeatureRow />
+      <HowItWorks />
       <InsightsSection />
       <ImportSection />
       <TrustBand />
