@@ -15,7 +15,8 @@ import { useOpenAccount } from '@/features/accounts/hooks/use-open-account';
 import { AccountForm } from '@/features/accounts/components/account-form';
 import { useGetAccount } from '@/features/accounts/api/use-get-account';
 import { useEditAccount } from '@/features/accounts/api/use-edit-account';
-import { useDeleteAccount } from '@/features/accounts/api/use-delete-account';
+import { useArchiveAccount } from '@/features/accounts/api/use-archive-account';
+import { useRestoreAccount } from '@/features/accounts/api/use-restore-account';
 import { useConfirm } from '@/hooks/use-confirm';
 
 const formSchema = insertAccountSchema.pick({ name: true });
@@ -23,32 +24,44 @@ type FormValues = z.input<typeof formSchema>;
 
 export function EditAccountSheet() {
   const { isOpen, onClose, id } = useOpenAccount();
-  const [ConfirmDialog, confirm] = useConfirm(
-    'Delete account?',
-    'This will permanently delete the account and all transactions tied to it.',
+  const [ArchiveDialog, confirmArchive] = useConfirm(
+    'Archive account?',
+    'This hides the account from new transactions and account lists. Existing transactions stay intact.',
+  );
+  const [RestoreDialog, confirmRestore] = useConfirm(
+    'Restore account?',
+    'This makes the account available in account lists and new transaction forms again.',
   );
 
   const accountQuery = useGetAccount(id);
   const editMutation = useEditAccount(id);
-  const deleteMutation = useDeleteAccount(id);
+  const archiveMutation = useArchiveAccount(id);
+  const restoreMutation = useRestoreAccount(id);
 
-  const isPending = editMutation.isPending || deleteMutation.isPending;
+  const isPending =
+    editMutation.isPending || archiveMutation.isPending || restoreMutation.isPending;
   const isLoading = accountQuery.isLoading;
 
   const onSubmit = (values: FormValues) => {
     editMutation.mutate(values, { onSuccess: () => onClose() });
   };
 
-  const onDelete = async () => {
-    const ok = await confirm();
-    if (ok) deleteMutation.mutate(undefined, { onSuccess: () => onClose() });
+  const onArchive = async () => {
+    const ok = await confirmArchive();
+    if (ok) archiveMutation.mutate(undefined, { onSuccess: () => onClose() });
+  };
+
+  const onRestore = async () => {
+    const ok = await confirmRestore();
+    if (ok) restoreMutation.mutate(undefined, { onSuccess: () => onClose() });
   };
 
   const defaultValues = accountQuery.data ? { name: accountQuery.data.name } : { name: '' };
 
   return (
     <>
-      <ConfirmDialog />
+      <ArchiveDialog />
+      <RestoreDialog />
       <Sheet open={isOpen} onOpenChange={onClose}>
         <SheetContent className="space-y-4">
           <SheetHeader>
@@ -65,7 +78,9 @@ export function EditAccountSheet() {
               onSubmit={onSubmit}
               disabled={isPending}
               defaultValues={defaultValues}
-              onDelete={onDelete}
+              archived={!!accountQuery.data?.archivedAt}
+              onArchive={onArchive}
+              onRestore={onRestore}
             />
           )}
         </SheetContent>

@@ -1,7 +1,7 @@
 'use client';
 
 import { z } from 'zod';
-import { Trash } from 'lucide-react';
+import { Archive, ArchiveRestore } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -22,11 +22,21 @@ type Props = {
   id?: string;
   defaultValues?: FormValues;
   onSubmit: (values: FormValues) => void;
-  onDelete?: () => void;
+  onArchive?: () => void;
+  onRestore?: () => void;
+  archived?: boolean;
   disabled?: boolean;
 };
 
-export function AccountForm({ id, defaultValues, onSubmit, onDelete, disabled }: Props) {
+export function AccountForm({
+  id,
+  defaultValues,
+  onSubmit,
+  onArchive,
+  onRestore,
+  archived,
+  disabled,
+}: Props) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
@@ -53,10 +63,16 @@ export function AccountForm({ id, defaultValues, onSubmit, onDelete, disabled }:
         <Button className="w-full" disabled={disabled}>
           {id ? 'Save changes' : 'Create account'}
         </Button>
-        {!!id && (
-          <Button type="button" disabled={disabled} onClick={onDelete} className="w-full" variant="outline">
-            <Trash className="size-4 mr-2" />
-            Delete account
+        {!!id && archived && (
+          <Button type="button" disabled={disabled} onClick={onRestore} className="w-full" variant="outline">
+            <ArchiveRestore className="size-4 mr-2" />
+            Restore account
+          </Button>
+        )}
+        {!!id && !archived && (
+          <Button type="button" disabled={disabled} onClick={onArchive} className="w-full" variant="outline">
+            <Archive className="size-4 mr-2" />
+            Archive account
           </Button>
         )}
       </form>

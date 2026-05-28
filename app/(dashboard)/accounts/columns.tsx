@@ -41,9 +41,24 @@ export const columns: ColumnDef<ResponseType>[] = [
         Name <ArrowUpDown className="ml-2 size-4" />
       </Button>
     ),
+    cell: ({ row }) => {
+      const archived = !!row.original.archivedAt;
+      return (
+        <div className={`flex items-center gap-2 ${archived ? 'text-[var(--aurex-text-3)]' : ''}`}>
+          <span>{row.original.name}</span>
+          {archived ? (
+            <span className="rounded border border-[var(--aurex-border)] bg-[var(--aurex-surface)] px-1.5 py-0.5 text-[10.5px] font-medium uppercase tracking-[0.08em] text-[var(--aurex-text-3)]">
+              Archived
+            </span>
+          ) : null}
+        </div>
+      );
+    },
   },
   {
     id: 'actions',
-    cell: ({ row }) => <Actions id={row.original.id} />,
+    cell: ({ row }) => (
+      <Actions id={row.original.id} archived={!!row.original.archivedAt} />
+    ),
   },
 ];

@@ -13,7 +13,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Search, Trash } from 'lucide-react';
+import { type LucideIcon, ChevronLeft, ChevronRight, Search, Trash } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useConfirm } from '@/hooks/use-confirm';
+import { cn } from '@/lib/utils';
 
 type Props<TData, TValue> = {
   columns: ColumnDef<TData, TValue>[];
@@ -33,6 +34,11 @@ type Props<TData, TValue> = {
   filterKey: string;
   onDelete: (rows: Row<TData>[]) => void;
   disabled?: boolean;
+  bulkActionIcon?: LucideIcon;
+  bulkActionLabel?: (count: number) => string;
+  bulkActionTitle?: string;
+  bulkActionDescription?: string;
+  bulkActionTone?: 'danger' | 'neutral';
 };
 
 export function DataTable<TData, TValue>({
@@ -41,14 +47,16 @@ export function DataTable<TData, TValue>({
   filterKey,
   onDelete,
   disabled,
+  bulkActionIcon: BulkActionIcon = Trash,
+  bulkActionLabel = (count) => `Delete ${count} selected`,
+  bulkActionTitle = 'Delete selected rows?',
+  bulkActionDescription = 'You are about to perform a bulk delete. This cannot be undone.',
+  bulkActionTone = 'danger',
 }: Props<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
-  const [ConfirmDialog, confirm] = useConfirm(
-    'Delete selected rows?',
-    'You are about to perform a bulk delete. This cannot be undone.',
-  );
+  const [ConfirmDialog, confirm] = useConfirm(bulkActionTitle, bulkActionDescription);
 
   const table = useReactTable({
     data,
@@ -89,7 +97,12 @@ export function DataTable<TData, TValue>({
             disabled={disabled}
             size="sm"
             variant="outline"
-            className="h-9 border-[rgba(251,113,133,0.32)] bg-[rgba(251,113,133,0.08)] text-[#fb7185] hover:bg-[rgba(251,113,133,0.14)] hover:text-[#fb7185] sm:ml-auto"
+            className={cn(
+              'h-9 sm:ml-auto',
+              bulkActionTone === 'danger'
+                ? 'border-[rgba(251,113,133,0.32)] bg-[rgba(251,113,133,0.08)] text-[#fb7185] hover:bg-[rgba(251,113,133,0.14)] hover:text-[#fb7185]'
+                : 'border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] hover:bg-[var(--aurex-surface-hover)] hover:text-[var(--aurex-text-1)]',
+            )}
             onClick={async () => {
               const ok = await confirm();
               if (ok) {
@@ -98,8 +111,8 @@ export function DataTable<TData, TValue>({
               }
             }}
           >
-            <Trash className="size-3.5 mr-2" />
-            Delete {selectedCount} selected
+            <BulkActionIcon className="size-3.5 mr-2" />
+            {bulkActionLabel(selectedCount)}
           </Button>
         ) : null}
       </div>

@@ -1,23 +1,26 @@
 'use client';
 
-import { Loader2, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { Archive, Loader2, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DataTable } from '@/components/data-table';
 
 import { columns } from './columns';
 import { useNewAccount } from '@/features/accounts/hooks/use-new-account';
 import { useGetAccounts } from '@/features/accounts/api/use-get-accounts';
-import { useBulkDeleteAccounts } from '@/features/accounts/api/use-bulk-delete-accounts';
+import { useBulkArchiveAccounts } from '@/features/accounts/api/use-bulk-archive-accounts';
 
 export default function AccountsPage() {
+  const [showArchived, setShowArchived] = useState(false);
   const newAccount = useNewAccount();
-  const accountsQuery = useGetAccounts();
-  const deleteAccounts = useBulkDeleteAccounts();
+  const accountsQuery = useGetAccounts({ includeArchived: showArchived });
+  const archiveAccounts = useBulkArchiveAccounts();
   const accounts = accountsQuery.data || [];
 
-  const isDisabled = accountsQuery.isLoading || deleteAccounts.isPending;
+  const isDisabled = accountsQuery.isLoading || archiveAccounts.isPending;
 
   if (accountsQuery.isLoading) {
     return (
@@ -44,9 +47,19 @@ export default function AccountsPage() {
       </div>
       <div className="aurex-card p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <h2 className="text-[15px] font-semibold text-[var(--aurex-text-1)]">
-            Your accounts
-          </h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-[15px] font-semibold text-[var(--aurex-text-1)]">
+              Your accounts
+            </h2>
+            <label className="flex cursor-pointer items-center gap-2 text-[12.5px] text-[var(--aurex-text-3)]">
+              <Checkbox
+                checked={showArchived}
+                onCheckedChange={(value) => setShowArchived(!!value)}
+                aria-label="Show archived accounts"
+              />
+              Show archived
+            </label>
+          </div>
           <Button
             onClick={newAccount.onOpen}
             size="sm"
@@ -61,8 +74,19 @@ export default function AccountsPage() {
             filterKey="name"
             columns={columns}
             data={accounts}
-            onDelete={(rows) => deleteAccounts.mutate({ ids: rows.map((r) => r.original.id) })}
+            onDelete={(rows) => {
+              const ids = rows
+                .filter((r) => !r.original.archivedAt)
+                .map((r) => r.original.id);
+              if (ids.length === 0) return;
+              archiveAccounts.mutate({ ids });
+            }}
             disabled={isDisabled}
+            bulkActionIcon={Archive}
+            bulkActionLabel={(count) => `Archive ${count} selected`}
+            bulkActionTitle="Archive selected accounts?"
+            bulkActionDescription="This hides the selected accounts from new transactions and account lists. Existing transactions stay intact. Already-archived selections are skipped."
+            bulkActionTone="neutral"
           />
         </div>
       </div>

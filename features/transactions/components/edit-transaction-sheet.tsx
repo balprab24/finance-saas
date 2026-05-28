@@ -36,7 +36,7 @@ export function EditTransactionSheet() {
   const editMutation = useEditTransaction(id);
   const deleteMutation = useDeleteTransaction(id);
 
-  const accountQuery = useGetAccounts();
+  const accountQuery = useGetAccounts({ includeArchived: true });
   const accountMutation = useCreateAccount();
   const categoryQuery = useGetCategories();
   const categoryMutation = useCreateCategory();
