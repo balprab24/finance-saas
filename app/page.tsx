@@ -100,7 +100,7 @@ function Hero() {
       <div className="aurex-mesh" aria-hidden />
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-32 -z-0 h-[520px] w-[820px] -translate-x-1/2 rounded-full opacity-60 blur-[160px]"
+        className="pointer-events-none absolute left-1/2 top-32 -z-0 h-[520px] w-[820px] -translate-x-1/2 rounded-full opacity-50 blur-[160px]"
         style={{
           background:
             'radial-gradient(closest-side, rgba(139,92,246,0.45), rgba(34,211,238,0.18) 60%, transparent 80%)',
@@ -664,7 +664,7 @@ function TrustBand() {
     { icon: WalletCards, label: 'No automatic bank link' },
   ];
   return (
-    <section id="trust" className="aurex-hairline relative overflow-hidden bg-[rgba(255,255,255,0.012)] py-14">
+    <section id="privacy" className="aurex-hairline relative overflow-hidden bg-[rgba(255,255,255,0.012)] py-14">
       <div
         aria-hidden
         className="aurex-aurora aurex-aurora-indigo left-1/2 top-1/2 h-[120px] w-[1100px] -translate-x-1/2 -translate-y-1/2 opacity-25"

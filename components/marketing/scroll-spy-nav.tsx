@@ -6,7 +6,7 @@ const SECTIONS = [
   { href: '#preview', label: 'Product' },
   { href: '#insights', label: 'Insights' },
   { href: '#import', label: 'Import' },
-  { href: '#trust', label: 'Security' },
+  { href: '#privacy', label: 'Privacy' },
 ] as const;
 
 type Variant = 'desktop' | 'mobile';
@@ -29,7 +29,7 @@ export function ScrollSpyNav({ variant }: { variant: Variant }) {
         )[0];
         setActive(`#${top.target.id}`);
       },
-      { rootMargin: '-30% 0px -45% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] },
+      { rootMargin: '-30% 0px -40% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] },
     );
 
     targets.forEach((t) => io.observe(t));
@@ -46,7 +46,7 @@ export function ScrollSpyNav({ variant }: { variant: Variant }) {
               key={s.href}
               href={s.href}
               aria-current={isActive ? 'true' : undefined}
-              className={`group relative inline-flex items-center rounded-full px-3.5 py-1.5 text-[15px] font-medium tracking-[-0.005em] transition-colors duration-200 ${
+              className={`group relative inline-flex items-center rounded-full px-3.5 py-1.5 text-[15px] font-semibold tracking-[-0.005em] transition-colors duration-200 ${
                 isActive
                   ? 'bg-[var(--aurex-surface)] text-[var(--aurex-text-1)]'
                   : 'text-[var(--aurex-text-1)]/85 hover:bg-[var(--aurex-surface)] hover:text-[var(--aurex-text-1)]'

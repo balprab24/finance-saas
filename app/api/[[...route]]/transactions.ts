@@ -46,8 +46,14 @@ const app = new Hono<AuthEnv>()
           accountId: transactions.accountId,
         })
         .from(transactions)
-        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-        .leftJoin(categories, eq(transactions.categoryId, categories.id))
+        .innerJoin(
+          accounts,
+          and(eq(transactions.accountId, accounts.id), eq(accounts.userId, userId)),
+        )
+        .leftJoin(
+          categories,
+          and(eq(transactions.categoryId, categories.id), eq(categories.userId, userId)),
+        )
         .where(
           and(
             eq(transactions.userId, userId),
@@ -206,7 +212,13 @@ const app = new Hono<AuthEnv>()
       const [account] = await db
         .select({ id: accounts.id })
         .from(accounts)
-        .where(and(eq(accounts.userId, userId), eq(accounts.id, values.accountId)));
+        .where(
+          and(
+            eq(accounts.userId, userId),
+            eq(accounts.id, values.accountId),
+            isNull(accounts.archivedAt),
+          ),
+        );
       if (!account) return jsonError(c, 400, 'Invalid account');
 
       if (values.categoryId) {

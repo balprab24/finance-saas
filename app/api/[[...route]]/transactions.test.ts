@@ -100,4 +100,12 @@ describe('PATCH /transactions/:id ownership checks', () => {
     expect(body.error).toBe('Invalid category');
     expect(state.updateCalls).toBe(0);
   });
+
+  it('rejects a payload that targets an archived account', async () => {
+    state.selectResults.push([]); // archived-aware account lookup returns no row
+    const { status, body } = await patchTransaction(validPatchBody);
+    expect(status).toBe(400);
+    expect(body.error).toBe('Invalid account');
+    expect(state.updateCalls).toBe(0);
+  });
 });

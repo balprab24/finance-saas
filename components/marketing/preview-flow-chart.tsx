@@ -117,11 +117,11 @@ function SmallBar() {
       <defs>
         <linearGradient id="smBarInc" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="#34d399" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#34d399" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#34d399" stopOpacity="0.45" />
         </linearGradient>
         <linearGradient id="smBarExp" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="#fb7185" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#fb7185" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#fb7185" stopOpacity="0.45" />
         </linearGradient>
       </defs>
       <GridLines rows={4} width={600} />
@@ -240,11 +240,11 @@ function LargeBar() {
       <defs>
         <linearGradient id="lgBarInc" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="#34d399" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#34d399" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#34d399" stopOpacity="0.4" />
         </linearGradient>
         <linearGradient id="lgBarExp" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="#fb7185" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#fb7185" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#fb7185" stopOpacity="0.4" />
         </linearGradient>
       </defs>
       <GridLines rows={6} width={1200} />

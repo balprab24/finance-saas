@@ -29,6 +29,13 @@
       "when": 1779946894127,
       "tag": "0003_wakeful_jamie_braddock",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1780071728830,
+      "tag": "0004_tenant_fk_hardening",
+      "breakpoints": true
     }
   ]
 }

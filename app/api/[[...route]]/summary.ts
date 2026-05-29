@@ -75,7 +75,10 @@ const app = new Hono<AuthEnv>().get(
         value: sql<number>`SUM(ABS(${transactions.amount}))`.mapWith(Number),
       })
       .from(transactions)
-      .innerJoin(categories, eq(transactions.categoryId, categories.id))
+      .innerJoin(
+        categories,
+        and(eq(transactions.categoryId, categories.id), eq(categories.userId, userId)),
+      )
       .where(
         and(
           eq(transactions.userId, userId),
