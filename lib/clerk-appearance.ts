@@ -15,7 +15,7 @@ export const clerkAppearance: Appearance = {
     colorSuccess: '#34d399',
     colorWarning: '#fbbf24',
     borderRadius: '10px',
-    fontFamily: 'var(--font-geist-sans), system-ui, sans-serif',
+    fontFamily: 'var(--font-sans), system-ui, sans-serif',
     fontSize: '14px',
   },
   elements: {
@@ -33,7 +33,7 @@ export const clerkAppearance: Appearance = {
     footerActionLink:
       'text-[var(--aurex-brand-text)] hover:text-[#c4cbff] font-medium',
     formButtonPrimary:
-      'bg-[var(--aurex-brand)] hover:bg-[#7a7df7] text-sm font-medium normal-case shadow-none h-10 rounded-[10px]',
+      'bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] hover:from-[#6d6ff5] hover:to-[#9560f8] text-white text-sm font-medium normal-case h-10 rounded-[10px] shadow-[0_8px_24px_rgba(99,102,241,0.35)] transition-colors',
     socialButtonsBlockButton:
       'border-[var(--aurex-border)] bg-[var(--aurex-surface)] hover:bg-[var(--aurex-surface-hover)] text-[var(--aurex-text-1)] normal-case h-10 rounded-[10px]',
     socialButtonsBlockButtonText: 'text-[var(--aurex-text-1)] font-medium',
@@ -43,8 +43,12 @@ export const clerkAppearance: Appearance = {
     formFieldInputShowPasswordButton:
       'text-[var(--aurex-text-3)] hover:text-[var(--aurex-text-1)]',
     formFieldErrorText: 'text-[#fb7185] text-[12.5px]',
+    formFieldSuccessText: 'text-[var(--aurex-income)] text-[12.5px]',
+    formFieldAction:
+      'text-[var(--aurex-brand-text)] hover:text-[#c4cbff] font-medium',
     formResendCodeLink:
       'text-[var(--aurex-brand-text)] hover:text-[#c4cbff]',
+    spinner: 'text-[var(--aurex-brand-text)]',
     dividerLine: 'bg-[var(--aurex-border)]',
     dividerText: 'text-[var(--aurex-text-3)] text-[12px]',
     identityPreview:
