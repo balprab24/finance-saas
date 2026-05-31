@@ -14,9 +14,11 @@ const state: {
     itemRemove: ReturnType<typeof vi.fn>;
   };
   syncByUser: ReturnType<typeof vi.fn>;
-  syncByPlaidItemId: ReturnType<typeof vi.fn>;
   upsertAccounts: ReturnType<typeof vi.fn>;
   verifyWebhook: ReturnType<typeof vi.fn>;
+  enqueueSyncJob: ReturnType<typeof vi.fn>;
+  enqueueSyncJobByPlaidItemId: ReturnType<typeof vi.fn>;
+  kickSyncWorker: ReturnType<typeof vi.fn>;
 } = {
   auth: { userId: 'user_alice' },
   selectResults: [],
@@ -30,14 +32,18 @@ const state: {
     itemRemove: vi.fn(),
   },
   syncByUser: vi.fn(),
-  syncByPlaidItemId: vi.fn(),
   upsertAccounts: vi.fn(),
   verifyWebhook: vi.fn(),
+  enqueueSyncJob: vi.fn(),
+  enqueueSyncJobByPlaidItemId: vi.fn(),
+  kickSyncWorker: vi.fn(),
 };
 
 vi.mock('@/db/drizzle', () => {
   const selectChain: Record<string, unknown> = {};
-  for (const m of ['from', 'where']) selectChain[m] = () => selectChain;
+  for (const m of ['from', 'leftJoin', 'where', 'groupBy', 'orderBy', 'limit']) {
+    selectChain[m] = () => selectChain;
+  }
   (selectChain as { then: (resolve: (v: unknown[]) => void) => void }).then = (resolve) =>
     resolve((state.selectResults.shift() as unknown[]) ?? []);
 
@@ -95,9 +101,14 @@ vi.mock('@/lib/plaid-sync', () => ({
       errorMessage: data?.error_message ?? (err instanceof Error ? err.message : 'Plaid failed'),
     };
   },
-  syncPlaidItemByPlaidItemId: (itemId: string) => state.syncByPlaidItemId(itemId),
   syncPlaidItemForUser: (itemId: string, userId: string) => state.syncByUser(itemId, userId),
   upsertPlaidAccountsForItem: (values: unknown) => state.upsertAccounts(values),
+}));
+
+vi.mock('@/lib/plaid-sync-jobs', () => ({
+  enqueuePlaidSyncJob: (values: unknown) => state.enqueueSyncJob(values),
+  enqueuePlaidSyncJobByPlaidItemId: (values: unknown) => state.enqueueSyncJobByPlaidItemId(values),
+  kickPlaidSyncWorker: () => state.kickSyncWorker(),
 }));
 
 async function request(path: string, init?: RequestInit) {
@@ -150,16 +161,21 @@ beforeEach(() => {
     removed: 0,
     cursor: 'cursor-next',
   });
-  state.syncByPlaidItemId.mockResolvedValue({
-    itemId: 'local-item-id',
-    accountsCreated: 0,
-    added: 1,
-    modified: 0,
-    removed: 0,
-    cursor: 'cursor-next',
-  });
   state.upsertAccounts.mockResolvedValue({ created: 2, accountIdByPlaidId: new Map() });
   state.verifyWebhook.mockResolvedValue({ request_body_sha256: sha256('{}') });
+  state.enqueueSyncJob.mockResolvedValue({
+    jobId: 'job_1',
+    itemId: 'item_1',
+    status: 'queued',
+    reason: 'manual',
+  });
+  state.enqueueSyncJobByPlaidItemId.mockResolvedValue({
+    jobId: 'job_webhook_1',
+    itemId: 'local-item-id',
+    status: 'queued',
+    reason: 'webhook',
+  });
+  state.kickSyncWorker.mockResolvedValue({ processed: 0 });
 });
 
 afterEach(() => {
@@ -302,6 +318,36 @@ describe('Plaid route', () => {
     expect(result.status).toBe(404);
   });
 
+  it('queues manual syncs for owned active items', async () => {
+    state.selectResults = [
+      [{ id: 'item_1', userId: 'user_alice', status: 'active' }],
+    ];
+
+    const { status, body } = await request('/items/item_1/sync', { method: 'POST' });
+
+    expect(status).toBe(200);
+    expect(body.data).toMatchObject({ jobId: 'job_1', itemId: 'item_1', status: 'queued' });
+    expect(state.enqueueSyncJob).toHaveBeenCalledWith({
+      itemId: 'item_1',
+      userId: 'user_alice',
+      reason: 'manual',
+    });
+    expect(state.kickSyncWorker).toHaveBeenCalled();
+  });
+
+  it('returns 404 when queueing sync for missing or removed items', async () => {
+    let result = await request('/items/item_1/sync', { method: 'POST' });
+    expect(result.status).toBe(404);
+    expect(state.enqueueSyncJob).not.toHaveBeenCalled();
+
+    state.selectResults = [
+      [{ id: 'item_1', userId: 'user_alice', status: 'removed' }],
+    ];
+    result = await request('/items/item_1/sync', { method: 'POST' });
+    expect(result.status).toBe(404);
+    expect(state.enqueueSyncJob).not.toHaveBeenCalled();
+  });
+
   it('removes an owned item and archives its linked accounts', async () => {
     state.selectResults = [
       [{ id: 'item_1', userId: 'user_alice', status: 'active', accessToken: 'encrypted:access-1' }],
@@ -374,7 +420,7 @@ describe('Plaid route', () => {
     expect(body.error).toBe('Missing Plaid verification token');
   });
 
-  it('runs sync for valid transaction update webhooks', async () => {
+  it('queues sync for valid transaction update webhooks', async () => {
     const { status } = await webhookRequest({
       webhook_type: 'TRANSACTIONS',
       webhook_code: 'SYNC_UPDATES_AVAILABLE',
@@ -383,7 +429,11 @@ describe('Plaid route', () => {
 
     expect(status).toBe(200);
     expect(state.verifyWebhook).toHaveBeenCalledWith('jwt-token');
-    expect(state.syncByPlaidItemId).toHaveBeenCalledWith('item-sandbox-123');
+    expect(state.enqueueSyncJobByPlaidItemId).toHaveBeenCalledWith({
+      plaidItemId: 'item-sandbox-123',
+      reason: 'webhook',
+    });
+    expect(state.kickSyncWorker).toHaveBeenCalled();
   });
 
   it('rejects webhooks when the body hash does not match the verified token claim', async () => {
@@ -405,6 +455,6 @@ describe('Plaid route', () => {
     expect(status).toBe(401);
     expect(body.error).toBe('Invalid Plaid verification token');
     expect(state.verifyWebhook).toHaveBeenCalledWith('jwt-token');
-    expect(state.syncByPlaidItemId).not.toHaveBeenCalled();
+    expect(state.enqueueSyncJobByPlaidItemId).not.toHaveBeenCalled();
   });
 });

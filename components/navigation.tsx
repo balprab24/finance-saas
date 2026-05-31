@@ -13,6 +13,7 @@ const routes = [
   { href: '/dashboard', label: 'Overview' },
   { href: '/transactions', label: 'Transactions' },
   { href: '/accounts', label: 'Accounts' },
+  { href: '/banks', label: 'Banks' },
   { href: '/categories', label: 'Categories' },
 ];
 

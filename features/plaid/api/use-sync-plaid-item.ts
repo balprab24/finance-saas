@@ -23,8 +23,9 @@ export const useSyncPlaidItem = () => {
       return await response.json();
     },
     onSuccess: () => {
-      toast.success('Bank transactions refreshed');
+      toast.success('Bank sync queued');
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['plaid-items'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['summary'] });
       queryClient.invalidateQueries({ queryKey: ['onboarding-status'] });

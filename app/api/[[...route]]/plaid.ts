@@ -2,11 +2,11 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { clerkMiddleware } from '@clerk/hono';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import { createHash, timingSafeEqual } from 'crypto';
 
 import { db } from '@/db/drizzle';
-import { accounts, plaidItems } from '@/db/schema';
+import { accounts, plaidItems, plaidSyncJobs } from '@/db/schema';
 import { exchangePublicTokenSchema } from '@/lib/api-schemas';
 import {
   AuthEnv,
@@ -23,12 +23,15 @@ import {
 } from '@/lib/plaid';
 import { encryptSecret, decryptSecret } from '@/lib/server-crypto';
 import {
-  PlaidItemNotFoundError,
   getPlaidErrorDetails,
-  syncPlaidItemByPlaidItemId,
   syncPlaidItemForUser,
   upsertPlaidAccountsForItem,
 } from '@/lib/plaid-sync';
+import {
+  enqueuePlaidSyncJob,
+  enqueuePlaidSyncJobByPlaidItemId,
+  kickPlaidSyncWorker,
+} from '@/lib/plaid-sync-jobs';
 import { verifyPlaidWebhookToken } from '@/lib/plaid-webhook';
 
 const itemParamSchema = z.object({
@@ -204,6 +207,73 @@ const app = new Hono<AuthEnv>()
       }
     },
   )
+  .get('/items', clerkMiddleware(), requireAuth, async (c) => {
+    const userId = getUserId(c);
+
+    const items = await db
+      .select({
+        id: plaidItems.id,
+        institutionName: plaidItems.institutionName,
+        status: plaidItems.status,
+        errorCode: plaidItems.errorCode,
+        errorMessage: plaidItems.errorMessage,
+        lastSyncedAt: plaidItems.lastSyncedAt,
+        lastWebhookAt: plaidItems.lastWebhookAt,
+        createdAt: plaidItems.createdAt,
+        accountCount: sql<number>`count(${accounts.id})`.mapWith(Number),
+        archivedAccountCount:
+          sql<number>`count(${accounts.id}) filter (where ${accounts.archivedAt} is not null)`.mapWith(
+            Number,
+          ),
+      })
+      .from(plaidItems)
+      .leftJoin(
+        accounts,
+        and(eq(accounts.plaidItemId, plaidItems.id), eq(accounts.userId, userId)),
+      )
+      .where(and(eq(plaidItems.userId, userId), ne(plaidItems.status, 'removed')))
+      .groupBy(
+        plaidItems.id,
+        plaidItems.institutionName,
+        plaidItems.status,
+        plaidItems.errorCode,
+        plaidItems.errorMessage,
+        plaidItems.lastSyncedAt,
+        plaidItems.lastWebhookAt,
+        plaidItems.createdAt,
+      )
+      .orderBy(desc(plaidItems.createdAt));
+
+    const itemIds = items.map((item) => item.id);
+    const jobs =
+      itemIds.length > 0
+        ? await db
+            .select({
+              id: plaidSyncJobs.id,
+              itemId: plaidSyncJobs.itemId,
+              status: plaidSyncJobs.status,
+              reason: plaidSyncJobs.reason,
+              lastError: plaidSyncJobs.lastError,
+              updatedAt: plaidSyncJobs.updatedAt,
+              finishedAt: plaidSyncJobs.finishedAt,
+            })
+            .from(plaidSyncJobs)
+            .where(and(eq(plaidSyncJobs.userId, userId), inArray(plaidSyncJobs.itemId, itemIds)))
+            .orderBy(desc(plaidSyncJobs.updatedAt))
+        : [];
+
+    const latestJobByItemId = new Map<string, (typeof jobs)[number]>();
+    for (const job of jobs) {
+      if (!latestJobByItemId.has(job.itemId)) latestJobByItemId.set(job.itemId, job);
+    }
+
+    return c.json({
+      data: items.map((item) => ({
+        ...item,
+        latestSyncJob: latestJobByItemId.get(item.id) ?? null,
+      })),
+    });
+  })
   .post(
     '/items/:itemId/sync',
     clerkMiddleware(),
@@ -214,11 +284,17 @@ const app = new Hono<AuthEnv>()
       const { itemId } = c.req.valid('param');
 
       try {
-        const result = await syncPlaidItemForUser(itemId, userId);
-        return c.json({ data: result });
+        const [item] = await db
+          .select({ id: plaidItems.id, status: plaidItems.status })
+          .from(plaidItems)
+          .where(and(eq(plaidItems.id, itemId), eq(plaidItems.userId, userId)));
+        if (!item || item.status === 'removed') return jsonError(c, 404, 'Not found');
+
+        const job = await enqueuePlaidSyncJob({ itemId, userId, reason: 'manual' });
+        void kickPlaidSyncWorker();
+        return c.json({ data: job });
       } catch (err) {
-        if (err instanceof PlaidItemNotFoundError) return jsonError(c, 404, 'Not found');
-        return jsonError(c, 502, plaidFailureMessage(err, 'Unable to refresh bank transactions'));
+        return jsonError(c, 502, plaidFailureMessage(err, 'Unable to queue bank sync'));
       }
     },
   )
@@ -337,9 +413,10 @@ const app = new Hono<AuthEnv>()
     }
 
     if (webhookType === 'TRANSACTIONS' && webhookCode === 'SYNC_UPDATES_AVAILABLE') {
-      await syncPlaidItemByPlaidItemId(plaidItemId).catch((err) => {
+      await enqueuePlaidSyncJobByPlaidItemId({ plaidItemId, reason: 'webhook' }).catch((err) => {
         if (process.env.NODE_ENV !== 'production') console.error('[plaid webhook sync]', err);
       });
+      void kickPlaidSyncWorker();
     }
 
     return c.json({ ok: true });

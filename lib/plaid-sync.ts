@@ -411,25 +411,34 @@ async function markPlaidItemError(database: DbLike, item: PlaidItem, err: unknow
     .where(and(eq(plaidItems.id, item.id), eq(plaidItems.userId, item.userId)));
 }
 
-async function syncPlaidItem(item: PlaidItem, options?: SyncOptions) {
-  if (item.status === 'removed') throw new PlaidItemNotFoundError();
-
+async function syncPlaidItem(itemId: string, userId: string, options?: SyncOptions) {
   const database = options?.database ?? db;
   const plaidClient = options?.plaidClient ?? getPlaidClient();
+  let lockedItem: PlaidItem | null = null;
 
   try {
-    const updates = await collectUpdatesWithRetry(
-      plaidClient,
-      decryptSecret(item.accessToken),
-      item.cursor,
-    );
-
     return await withTransaction(database, async (tx) => {
-      await acquireItemLock(tx, item.id);
+      await acquireItemLock(tx, itemId);
+      const [item] = await tx
+        .select()
+        .from(plaidItems)
+        .where(and(eq(plaidItems.id, itemId), eq(plaidItems.userId, userId)));
+
+      if (!item || item.status === 'removed') throw new PlaidItemNotFoundError();
+      lockedItem = item;
+
+      const updates = await collectUpdatesWithRetry(
+        plaidClient,
+        decryptSecret(item.accessToken),
+        item.cursor,
+      );
+
       return applyUpdates(tx, item, updates);
     });
   } catch (err) {
-    await markPlaidItemError(database, item, err);
+    if (lockedItem && !(err instanceof PlaidItemNotFoundError)) {
+      await markPlaidItemError(database, lockedItem, err);
+    }
     throw err;
   }
 }
@@ -439,14 +448,7 @@ export async function syncPlaidItemForUser(
   userId: string,
   options?: SyncOptions,
 ) {
-  const database = options?.database ?? db;
-  const [item] = await database
-    .select()
-    .from(plaidItems)
-    .where(and(eq(plaidItems.id, itemId), eq(plaidItems.userId, userId)));
-
-  if (!item) throw new PlaidItemNotFoundError();
-  return await syncPlaidItem(item, options);
+  return await syncPlaidItem(itemId, userId, options);
 }
 
 export async function syncPlaidItemByPlaidItemId(plaidItemId: string, options?: SyncOptions) {
@@ -464,5 +466,5 @@ export async function syncPlaidItemByPlaidItemId(plaidItemId: string, options?: 
     .set({ lastWebhookAt: new Date(), updatedAt: new Date() })
     .where(eq(plaidItems.id, item.id));
 
-  return await syncPlaidItem(item, options);
+  return await syncPlaidItem(item.id, item.userId, options);
 }

@@ -23,6 +23,7 @@ export const useRemovePlaidItem = () => {
     onSuccess: () => {
       toast.success('Bank connection removed');
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['plaid-items'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['summary'] });
       queryClient.invalidateQueries({ queryKey: ['onboarding-status'] });

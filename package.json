@@ -12,6 +12,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx scripts/seed.ts",
+    "plaid:rotate-key": "tsx scripts/rotate-plaid-token-key.ts",
     "screenshot": "tsx scripts/screenshot.ts",
     "screenshot:auth": "tsx scripts/screenshot-auth-cdp.ts",
     "test": "vitest run"

@@ -4,6 +4,7 @@ import {
   text,
   bigint,
   boolean,
+  integer,
   timestamp,
   index,
   uniqueIndex,
@@ -40,6 +41,43 @@ export const plaidItems = pgTable(
 
 export const plaidItemsRelations = relations(plaidItems, ({ many }) => ({
   accounts: many(accounts),
+  syncJobs: many(plaidSyncJobs),
+}));
+
+export const plaidSyncJobs = pgTable(
+  'plaid_sync_jobs',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull(),
+    itemId: text('item_id').notNull(),
+    reason: text('reason').notNull().default('manual'),
+    status: text('status').notNull().default('queued'),
+    attempts: integer('attempts').notNull().default(0),
+    lastError: text('last_error'),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
+    startedAt: timestamp('started_at', { mode: 'date' }),
+    finishedAt: timestamp('finished_at', { mode: 'date' }),
+  },
+  (table) => [
+    index('plaid_sync_jobs_user_status_idx').on(table.userId, table.status),
+    index('plaid_sync_jobs_item_idx').on(table.itemId),
+    uniqueIndex('plaid_sync_jobs_active_item_uq')
+      .on(table.userId, table.itemId)
+      .where(sql`${table.status} in ('queued', 'running')`),
+    foreignKey({
+      name: 'plaid_sync_jobs_item_user_fk',
+      columns: [table.itemId, table.userId],
+      foreignColumns: [plaidItems.id, plaidItems.userId],
+    }).onDelete('cascade'),
+  ],
+);
+
+export const plaidSyncJobsRelations = relations(plaidSyncJobs, ({ one }) => ({
+  item: one(plaidItems, {
+    fields: [plaidSyncJobs.itemId],
+    references: [plaidItems.id],
+  }),
 }));
 
 export const accounts = pgTable(

@@ -25,6 +25,7 @@ type Capture = {
   updates: { table: string; values: Row }[];
   deletes: { table: string; condition: SQL }[];
   locks: unknown[];
+  events: string[];
 };
 
 type RunConfig = {
@@ -123,6 +124,7 @@ function createFakeDb(config: Required<RunConfig>, capture: Capture) {
   return {
     execute: (query: unknown) => {
       capture.locks.push(query);
+      capture.events.push('lock');
       return Promise.resolve([]);
     },
     select: () => selectChain,
@@ -165,7 +167,14 @@ function createFakeDb(config: Required<RunConfig>, capture: Capture) {
 }
 
 function run(config: RunConfig, transactionsSync: ReturnType<typeof vi.fn>) {
-  const capture: Capture = { inserts: [], upserts: [], updates: [], deletes: [], locks: [] };
+  const capture: Capture = {
+    inserts: [],
+    upserts: [],
+    updates: [],
+    deletes: [],
+    locks: [],
+    events: [],
+  };
   const fullConfig: Required<RunConfig> = {
     insertedFlags: [],
     deletedReturning: [],
@@ -237,6 +246,37 @@ describe('syncPlaidItemForUser', () => {
       errorCode: null,
       errorMessage: null,
     });
+  });
+
+  it('takes the item lock before fetching from Plaid so cursor reads cannot go stale', async () => {
+    const holder: { capture?: Capture } = {};
+    const transactionsSync = vi.fn().mockImplementation((request) => {
+      holder.capture?.events.push(`plaid:${request.cursor}`);
+      return Promise.resolve(
+        syncPage({
+          added: [plaidTransaction({ transaction_id: 'txn_p_1' })],
+          next_cursor: 'cursor-after-lock',
+        }),
+      );
+    });
+
+    const setup = run(
+      {
+        selectQueue: [
+          [{ ...PLAID_ITEM, cursor: 'cursor-current' }],
+          [LOCAL_ACCOUNT],
+        ],
+      },
+      transactionsSync,
+    );
+    holder.capture = setup.capture;
+
+    await syncPlaidItemForUser(PLAID_ITEM.id, PLAID_ITEM.userId, setup.options);
+
+    expect(setup.capture.events.slice(0, 2)).toEqual(['lock', 'plaid:cursor-current']);
+    expect(transactionsSync).toHaveBeenCalledWith(
+      expect.objectContaining({ cursor: 'cursor-current' }),
+    );
   });
 
   it('updates an existing transaction without overwriting user notes or category', async () => {

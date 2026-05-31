@@ -43,6 +43,13 @@
       "when": 1780249061181,
       "tag": "0005_known_penance",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780254684547,
+      "tag": "0006_clever_synch",
+      "breakpoints": true
     }
   ]
 }
