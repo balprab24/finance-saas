@@ -36,6 +36,13 @@
       "when": 1780071728830,
       "tag": "0004_tenant_fk_hardening",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780249061181,
+      "tag": "0005_known_penance",
+      "breakpoints": true
     }
   ]
 }

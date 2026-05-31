@@ -54,6 +54,22 @@ export const updateAccountSchema = createAccountSchema;
 export const createCategorySchema = z.object({ name: nameString });
 export const updateCategorySchema = createCategorySchema;
 
+export const exchangePublicTokenSchema = z.object({
+  publicToken: z.string().trim().min(1, 'Public token is required'),
+  metadata: z
+    .object({
+      institution: z
+        .object({
+          name: z.string().trim().nullable().optional(),
+          institution_id: z.string().trim().nullable().optional(),
+        })
+        .nullable()
+        .optional(),
+    })
+    .passthrough()
+    .optional(),
+});
+
 export const createTransactionSchema = z.object({
   amount: amountInteger,
   payee: payeeString,

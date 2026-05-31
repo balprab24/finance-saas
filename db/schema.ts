@@ -3,6 +3,7 @@ import {
   pgTable,
   text,
   bigint,
+  boolean,
   timestamp,
   index,
   uniqueIndex,
@@ -12,11 +13,43 @@ import {
 import { createInsertSchema } from 'drizzle-zod';
 import { relations, sql } from 'drizzle-orm';
 
+export const plaidItems = pgTable(
+  'plaid_items',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull(),
+    plaidItemId: text('plaid_item_id').notNull(),
+    accessToken: text('access_token').notNull(),
+    institutionId: text('institution_id'),
+    institutionName: text('institution_name'),
+    cursor: text('cursor'),
+    status: text('status').notNull().default('active'),
+    lastSyncedAt: timestamp('last_synced_at', { mode: 'date' }),
+    lastWebhookAt: timestamp('last_webhook_at', { mode: 'date' }),
+    errorCode: text('error_code'),
+    errorMessage: text('error_message'),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('plaid_items_user_id_idx').on(table.userId),
+    uniqueIndex('plaid_items_plaid_item_id_uq').on(table.plaidItemId),
+    unique('plaid_items_id_user_id_key').on(table.id, table.userId),
+  ],
+);
+
+export const plaidItemsRelations = relations(plaidItems, ({ many }) => ({
+  accounts: many(accounts),
+}));
+
 export const accounts = pgTable(
   'accounts',
   {
     id: text('id').primaryKey(),
     plaidId: text('plaid_id'),
+    // DB migration 0005 adds a composite tenant FK with
+    // `ON DELETE SET NULL (plaid_item_id)`, which drizzle-kit cannot model.
+    plaidItemId: text('plaid_item_id'),
     name: text('name').notNull(),
     userId: text('user_id').notNull(),
     archivedAt: timestamp('archived_at', { mode: 'date' }),
@@ -25,11 +58,18 @@ export const accounts = pgTable(
     index('accounts_user_id_idx').on(table.userId),
     index('accounts_user_archived_idx').on(table.userId, table.archivedAt),
     uniqueIndex('accounts_user_id_name_uq').on(table.userId, sql`lower(${table.name})`),
+    uniqueIndex('accounts_user_plaid_id_uq')
+      .on(table.userId, table.plaidId)
+      .where(sql`${table.plaidId} is not null`),
     unique('accounts_id_user_id_key').on(table.id, table.userId),
   ],
 );
 
-export const accountsRelations = relations(accounts, ({ many }) => ({
+export const accountsRelations = relations(accounts, ({ many, one }) => ({
+  plaidItem: one(plaidItems, {
+    fields: [accounts.plaidItemId],
+    references: [plaidItems.id],
+  }),
   transactions: many(transactions),
 }));
 
@@ -63,12 +103,18 @@ export const transactions = pgTable(
     // Stored as bigint so milliunit amounts up to ±1e12 (see lib/api-schemas.ts)
     // fit without overflow. JS `number` is safe up to 2^53.
     amount: bigint('amount', { mode: 'number' }).notNull(),
+    plaidId: text('plaid_id'),
+    pendingPlaidId: text('pending_plaid_id'),
+    plaidAccountId: text('plaid_account_id'),
     payee: text('payee').notNull(),
+    merchantName: text('merchant_name'),
+    paymentChannel: text('payment_channel'),
     notes: text('notes'),
     date: timestamp('date', { mode: 'date' }).notNull(),
     userId: text('user_id').notNull(),
     accountId: text('account_id').notNull(),
     categoryId: text('category_id'),
+    pending: boolean('pending').notNull().default(false),
   },
   (table) => [
     index('transactions_user_id_idx').on(table.userId),
@@ -76,6 +122,11 @@ export const transactions = pgTable(
     index('transactions_category_id_idx').on(table.categoryId),
     index('transactions_user_date_idx').on(table.userId, table.date),
     index('transactions_account_date_idx').on(table.accountId, table.date),
+    index('transactions_user_plaid_id_idx').on(table.userId, table.plaidId),
+    index('transactions_user_plaid_account_id_idx').on(table.userId, table.plaidAccountId),
+    uniqueIndex('transactions_user_plaid_id_uq')
+      .on(table.userId, table.plaidId)
+      .where(sql`${table.plaidId} is not null`),
     // Composite tenant FKs. Migration drizzle/0004_*.sql is the source of truth:
     // the category FK uses `ON DELETE SET NULL (category_id)` (Postgres 15+) so
     // deleting a category nulls only category_id, not the NOT NULL user_id.

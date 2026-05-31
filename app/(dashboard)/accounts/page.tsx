@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Archive, Loader2, Plus } from 'lucide-react';
+import { Archive, Loader2, Plus, RefreshCw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -12,15 +12,32 @@ import { columns } from './columns';
 import { useNewAccount } from '@/features/accounts/hooks/use-new-account';
 import { useGetAccounts } from '@/features/accounts/api/use-get-accounts';
 import { useBulkArchiveAccounts } from '@/features/accounts/api/use-bulk-archive-accounts';
+import { PlaidLinkButton } from '@/features/plaid/components/plaid-link-button';
+import { useSyncPlaidItem } from '@/features/plaid/api/use-sync-plaid-item';
 
 export default function AccountsPage() {
   const [showArchived, setShowArchived] = useState(false);
   const newAccount = useNewAccount();
   const accountsQuery = useGetAccounts({ includeArchived: showArchived });
   const archiveAccounts = useBulkArchiveAccounts();
+  const syncPlaidItem = useSyncPlaidItem();
   const accounts = accountsQuery.data || [];
+  const plaidItemIds = Array.from(
+    new Set(
+      accounts
+        .filter((account) => account.plaidStatus !== 'removed')
+        .map((account) => account.plaidItemId)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0),
+    ),
+  );
 
-  const isDisabled = accountsQuery.isLoading || archiveAccounts.isPending;
+  const isDisabled = accountsQuery.isLoading || archiveAccounts.isPending || syncPlaidItem.isPending;
+
+  const onSyncLinked = async () => {
+    for (const itemId of plaidItemIds) {
+      await syncPlaidItem.mutateAsync({ itemId });
+    }
+  };
 
   if (accountsQuery.isLoading) {
     return (
@@ -60,14 +77,31 @@ export default function AccountsPage() {
               Show archived
             </label>
           </div>
-          <Button
-            onClick={newAccount.onOpen}
-            size="sm"
-            className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[#7a7df7]"
-          >
-            <Plus className="mr-2 size-3.5" />
-            Add account
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Button
+              onClick={onSyncLinked}
+              size="sm"
+              variant="outline"
+              disabled={isDisabled || plaidItemIds.length === 0}
+              className="h-9 border-[var(--aurex-border)] bg-[var(--aurex-surface-2)] text-[var(--aurex-text-1)] hover:bg-[var(--aurex-surface-hover)]"
+            >
+              {syncPlaidItem.isPending ? (
+                <Loader2 className="mr-2 size-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 size-3.5" />
+              )}
+              Sync linked
+            </Button>
+            <PlaidLinkButton disabled={isDisabled} />
+            <Button
+              onClick={newAccount.onOpen}
+              size="sm"
+              className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[#7a7df7]"
+            >
+              <Plus className="mr-2 size-3.5" />
+              Add account
+            </Button>
+          </div>
         </div>
         <div className="mt-4">
           <DataTable
