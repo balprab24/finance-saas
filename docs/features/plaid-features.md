@@ -9,8 +9,8 @@ work before it is production-ready.
 
 What has been validated in this repo:
 
-- `npm test` — 94 tests pass, including Plaid route (link/exchange/remove/webhook,
-  orphan recovery, idempotent removal), normalization, crypto, and the
+- `npm test` — Plaid route tests cover link/exchange/remove/webhook/update-mode,
+  orphan recovery, and idempotent removal; normalization, crypto, and the
   `lib/plaid-sync.ts` integration tests (mocked paginated `/transactions/sync`,
   on-conflict dedupe, advisory-lock, relink, tenant-scoped delete).
 - `npm run build` — compiles, type-checks, and lints clean.
@@ -38,6 +38,7 @@ onSuccess ── POST /exchange-public-token ▶ itemPublicTokenExchange ──�
                                           accountsGet → upsert accounts
                                           transactionsSync(cursor) → upsert txns
 Sync linked ── POST /items/:id/sync ─────▶ transactionsSync(cursor=stored) ──▶ added/modified/removed
+Reconnect ── POST /items/:id/update-link-token ─▶ linkTokenCreate(update mode) ─▶ sync
                                           (webhook) POST /webhook ◀── SYNC_UPDATES_AVAILABLE
 Remove ── DELETE /items/:id ─────────────▶ itemRemove; archive linked accounts
 ```
@@ -110,7 +111,7 @@ deletes and the unique index.
 | `lib/server-crypto.ts`  | `encryptSecret`/`decryptSecret` (AES-256-GCM). Payload format `v1:iv:tag:ciphertext` (base64url). Key from `PLAID_TOKEN_ENCRYPTION_KEY` (32 bytes, base64). |
 | `lib/plaid-normalize.ts`| Amount sign + milliunits, calendar-date normalization (noon UTC, no day shift), payee/account-name selection and truncation. |
 | `lib/plaid-sync.ts`     | Paginated `/transactions/sync`, account + transaction upserts, removed-row deletion, cursor/status/error bookkeeping, item removal helpers. |
-| `lib/plaid-webhook.ts`  | Verifies the `Plaid-Verification` JWT (ES256) via `webhookVerificationKeyGet`, with a `kid` cache and a 5-minute max token age. |
+| `lib/plaid-webhook.ts`  | Verifies the `Plaid-Verification` JWT (ES256) via `webhookVerificationKeyGet`, with a `kid` cache and a 5-minute max token age; the route also compares `request_body_sha256` to the raw body hash. |
 
 ### Money & date normalization (critical)
 
@@ -138,8 +139,9 @@ All except the webhook run Clerk middleware + `requireAuth` and are tenant-scope
 | `POST /api/plaid/link-token`         | —                              | `{ data: { linkToken } }`. Requests `transactions`, `days_requested: 730`, embeds webhook. |
 | `POST /api/plaid/exchange-public-token` | `{ publicToken, metadata? }` (`exchangePublicTokenSchema`) | `{ data: { itemId, status, accountsCreated, transactionsCreated, transactionsModified, transactionsRemoved, errorCode } }`. Encrypts + stores the access token, upserts accounts, runs the first sync. On persistence failure it revokes the Plaid Item (no orphan); if only the first sync fails it returns `status: "error"`. |
 | `POST /api/plaid/items/:itemId/sync` | `itemId` param                 | `{ data: PlaidSyncResult }` (`accountsCreated`, `added`, `modified`, `removed`, `cursor`). |
-| `DELETE /api/plaid/items/:itemId`    | `itemId` param                 | `{ data: { itemId } }`. Idempotent: best-effort `itemRemove` (already-gone errors are benign), then always cleans up locally — sets `status='removed'` and archives linked accounts. |
-| `POST /api/plaid/webhook`            | Plaid webhook JSON + `Plaid-Verification` header | `{ ok: true }`. JWT-verified; on `TRANSACTIONS / SYNC_UPDATES_AVAILABLE` triggers a sync; on error payloads records `error_code`/`error_message`. |
+| `POST /api/plaid/items/:itemId/update-link-token` | `itemId` param | `{ data: { linkToken } }`. Creates a Link token in update mode using the existing encrypted access token; omits `products`/`transactions`. |
+| `DELETE /api/plaid/items/:itemId`    | `itemId` param                 | `{ data: { itemId } }`. Calls `itemRemove`; known already-gone errors are benign and continue local cleanup, but unknown/transient Plaid errors return `502` without local removal. Cleanup sets `status='removed'` and archives linked accounts. |
+| `POST /api/plaid/webhook`            | Raw Plaid webhook body + `Plaid-Verification` header | `{ ok: true }`. JWT-verified and raw-body SHA-256 matched against `request_body_sha256`; on `TRANSACTIONS / SYNC_UPDATES_AVAILABLE` triggers a sync; on error payloads records `error_code`/`error_message`. |
 
 Errors are normalized through `getPlaidErrorDetails`; in non-production the real
 Plaid message is surfaced, in production a generic message is returned. A duplicate
@@ -153,7 +155,8 @@ The webhook is the only public Plaid route. It is allowlisted in `middleware.ts`
 ## Client / UI
 
 - `features/plaid/api/` — React Query hooks: `use-create-link-token`,
-  `use-exchange-public-token`, `use-sync-plaid-item`, `use-remove-plaid-item`.
+  `use-exchange-public-token`, `use-sync-plaid-item`, `use-remove-plaid-item`,
+  `use-update-link-token`.
   All use `readApiError` so server errors surface in toasts, and invalidate
   `['accounts']`, `['transactions']`, `['summary']`, `['onboarding-status']`.
 - `features/plaid/components/plaid-link-button.tsx` — **Connect bank**; opens Plaid
@@ -163,8 +166,9 @@ The webhook is the only public Plaid route. It is allowlisted in `middleware.ts`
 - `app/(dashboard)/accounts/columns.tsx` — `Linked`, `Attention`, and `Archived`
   badges; when a connection is in `error` state it shows the Plaid
   `error_message` (or a generic repair hint) under the account name.
-- `app/(dashboard)/accounts/actions.tsx` — per-row menu includes **Remove bank
-  connection** (confirm dialog) for linked, non-removed accounts.
+- `app/(dashboard)/accounts/actions.tsx` — per-row menu includes **Reconnect bank**
+  for errored linked accounts and **Remove bank connection** (confirm dialog) for
+  linked, non-removed accounts.
 
 ---
 
@@ -198,11 +202,15 @@ These are asserted by `lib/plaid-sync.test.ts` / `plaid.test.ts` and/or enforced
    `itemRemove` and rolls back (skipping `itemRemove` only on an already-linked
    conflict). If just the *initial sync* fails, the Item stays linked and the
    response reports `status: "error"` so the UI can surface a repair path.
-7. **Removal is idempotent and preserves history.** `DELETE /items/:itemId` does a
-   best-effort `itemRemove` (treating already-gone errors as benign) and then
-   *always* cleans up locally for an owned Item — marking it `removed` and
-   archiving linked accounts — so a retry after a partial failure can't get stuck.
-   Transactions keep their `account_id` (restricted FK) and stay queryable.
+7. **Removal is idempotent without hiding Plaid revoke failures.**
+   `DELETE /items/:itemId` proceeds to local cleanup after successful `itemRemove`
+   or known already-gone Plaid errors, which lets a retry finish after a partial
+   revoke. Unknown/transient Plaid removal failures return `502` and leave local
+   rows unchanged so the user can retry. Cleanup marks the Item `removed` and
+   archives linked accounts; transactions keep their `account_id` and stay queryable.
+8. **Webhook payloads are bound to the signed body.** The route reads the raw body,
+   verifies the Plaid JWT, and compares the JWT `request_body_sha256` claim to the
+   SHA-256 of those exact body bytes before parsing JSON.
 
 ---
 
@@ -298,7 +306,8 @@ is the way to pull updates.
   decrypted server-side. They are never returned to the client.
 - Every Plaid query is scoped by Clerk `userId`; the composite tenant FK keeps a
   Plaid Item and its accounts in the same tenant.
-- The webhook authenticates via Plaid's signed JWT, not a shared secret.
+- The webhook authenticates via Plaid's signed JWT and verifies
+  `request_body_sha256` against the raw request body before JSON parsing.
 - Do not log decrypted tokens or full keys. `PLAID_TOKEN_ENCRYPTION_KEY` lives only
   in `.env.local`.
 
@@ -308,10 +317,11 @@ is the way to pull updates.
 
 - `lib/plaid-normalize.test.ts` — amount sign/milliunits and date normalization.
 - `lib/server-crypto.test.ts` — encrypt/decrypt round trip, random IV.
-- `app/api/[[...route]]/plaid.test.ts` — auth, link-token shape, exchange storing
-  an encrypted token, webhook verification + sync dispatch, orphan recovery on
-  persistence failure (revoke), already-linked (no revoke), sync-failure `error`
-  status, and idempotent removal (already-gone Plaid error still cleans up).
+- `app/api/[[...route]]/plaid.test.ts` — auth, link-token and update-token shapes,
+  exchange storing an encrypted token, webhook JWT + raw-body hash verification,
+  orphan recovery on persistence failure (revoke), already-linked (no revoke),
+  sync-failure `error` status, and removal semantics (already-gone Plaid error
+  cleans up; unknown Plaid error does not).
 - `lib/plaid-sync.test.ts` — mocked paginated `/transactions/sync`: page
   aggregation + cursor persistence, on-conflict dedupe (re-sent row updates, never
   duplicates), notes/category preservation on modify, tenant- and plaid-id-scoped
@@ -328,9 +338,6 @@ npm test
 
 - **Local credentials not yet configured** (`PLAID_CLIENT_ID`, `PLAID_SECRET`,
   `PLAID_TOKEN_ENCRYPTION_KEY`) — live flow unverified.
-- **No Link update mode.** A connection that hits `ITEM_LOGIN_REQUIRED` shows the
-  Attention badge + message, but repair today means **Remove bank connection** and
-  re-linking. An in-place "Reconnect" (Link update mode) is not implemented yet.
 - **Parser scope.** `PLAID_PRODUCTS` and `PLAID_COUNTRY_CODES` only accept
   `transactions` and `US`; other values throw by design until explicitly supported.
 - **Synchronous sync.** Syncs run inside the request/webhook; a very large initial
@@ -362,9 +369,10 @@ Prioritized:
 2. **Verify webhooks end to end** over an HTTPS tunnel: `NEXT_PUBLIC_APP_URL` set to
    the tunnel, re-link, confirm `SYNC_UPDATES_AVAILABLE` reaches `/api/plaid/webhook`
    and runs a sync.
-3. **Link update mode for `ITEM_LOGIN_REQUIRED`.** Add an endpoint that mints a link
-   token with the existing `access_token` (update mode) and a "Reconnect" action on
-   the Attention state; after success, re-sync without exchanging a new token.
+3. **Sandbox reconnect QA.** With Plaid Sandbox credentials and a webhook tunnel,
+   force `ITEM_LOGIN_REQUIRED` via Plaid's `/sandbox/item/reset_login`, confirm the
+   Attention state, complete **Reconnect bank**, and confirm the Item returns to
+   active after sync.
 4. **Dedicated linked-banks management surface** (list Items, per-Item status,
    last synced, reconnect/remove) instead of per-account actions.
 5. **Background/queued sync** for large initial pulls and webhook fan-out, so the

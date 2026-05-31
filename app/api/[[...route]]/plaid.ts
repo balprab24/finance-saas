@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { clerkMiddleware } from '@clerk/hono';
 import { and, eq } from 'drizzle-orm';
+import { createHash, timingSafeEqual } from 'crypto';
 
 import { db } from '@/db/drizzle';
 import { accounts, plaidItems } from '@/db/schema';
@@ -46,6 +47,20 @@ function plaidFailureMessage(err: unknown, fallback: string) {
   const { errorMessage } = getPlaidErrorDetails(err);
   if (process.env.NODE_ENV !== 'production') return errorMessage || fallback;
   return fallback;
+}
+
+function verifyWebhookBodyHash(rawBody: string, expectedHash: unknown) {
+  if (
+    typeof expectedHash !== 'string' ||
+    !/^[a-f0-9]{64}$/i.test(expectedHash)
+  ) {
+    return false;
+  }
+
+  const actualHash = createHash('sha256').update(rawBody, 'utf8').digest('hex');
+  const expected = Buffer.from(expectedHash, 'hex');
+  const actual = Buffer.from(actualHash, 'hex');
+  return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
 
 async function markWebhookItemError(itemId: string, error: unknown) {
@@ -207,6 +222,37 @@ const app = new Hono<AuthEnv>()
       }
     },
   )
+  .post(
+    '/items/:itemId/update-link-token',
+    clerkMiddleware(),
+    requireAuth,
+    zValidator('param', itemParamSchema),
+    async (c) => {
+      const userId = getUserId(c);
+      const { itemId } = c.req.valid('param');
+
+      const [item] = await db
+        .select()
+        .from(plaidItems)
+        .where(and(eq(plaidItems.id, itemId), eq(plaidItems.userId, userId)));
+      if (!item || item.status === 'removed') return jsonError(c, 404, 'Not found');
+
+      try {
+        const response = await getPlaidClient().linkTokenCreate({
+          client_name: 'Aurex',
+          language: 'en',
+          country_codes: getPlaidCountryCodes(),
+          user: { client_user_id: userId },
+          webhook: getPlaidWebhookUrl(),
+          access_token: decryptSecret(item.accessToken),
+        });
+
+        return c.json({ data: { linkToken: response.data.link_token } });
+      } catch (err) {
+        return jsonError(c, 502, plaidFailureMessage(err, 'Unable to start bank reconnection'));
+      }
+    },
+  )
   .delete(
     '/items/:itemId',
     clerkMiddleware(),
@@ -222,17 +268,18 @@ const app = new Hono<AuthEnv>()
         .where(and(eq(plaidItems.id, itemId), eq(plaidItems.userId, userId)));
       if (!item || item.status === 'removed') return jsonError(c, 404, 'Not found');
 
-      // Best-effort revoke at Plaid. "Already gone" errors are expected on a
-      // retry (a prior attempt may have revoked but failed local cleanup), and no
-      // Plaid error may block local cleanup — otherwise removal gets permanently
-      // stuck. Local cleanup is always allowed for an owned Item.
+      // "Already gone" errors are expected on a retry (a prior attempt may have
+      // revoked but failed local cleanup). Unknown/transient Plaid errors must not
+      // mark the Item removed locally because Plaid may still have an active Item.
       try {
         await getPlaidClient().itemRemove({ access_token: decryptSecret(item.accessToken) });
       } catch (err) {
         const { errorCode } = getPlaidErrorDetails(err);
-        if ((!errorCode || !REMOVABLE_PLAID_ERROR_CODES.has(errorCode)) &&
-          process.env.NODE_ENV !== 'production') {
-          console.error('[plaid item remove]', errorCode || err);
+        if (!errorCode || !REMOVABLE_PLAID_ERROR_CODES.has(errorCode)) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.error('[plaid item remove]', errorCode || err);
+          }
+          return jsonError(c, 502, plaidFailureMessage(err, 'Unable to remove bank connection'));
         }
       }
 
@@ -255,13 +302,25 @@ const app = new Hono<AuthEnv>()
     const token = c.req.header('plaid-verification');
     if (!token) return jsonError(c, 401, 'Missing Plaid verification token');
 
+    const rawBody = await c.req.text();
+    let claims: Awaited<ReturnType<typeof verifyPlaidWebhookToken>>;
     try {
-      await verifyPlaidWebhookToken(token);
+      claims = await verifyPlaidWebhookToken(token);
     } catch {
       return jsonError(c, 401, 'Invalid Plaid verification token');
     }
 
-    const payload = await c.req.json().catch(() => null);
+    if (!verifyWebhookBodyHash(rawBody, claims.request_body_sha256)) {
+      return jsonError(c, 401, 'Invalid Plaid verification token');
+    }
+
+    const payload = (() => {
+      try {
+        return JSON.parse(rawBody) as unknown;
+      } catch {
+        return null;
+      }
+    })();
     if (!payload || typeof payload !== 'object') {
       return jsonError(c, 400, 'Invalid Plaid webhook payload');
     }

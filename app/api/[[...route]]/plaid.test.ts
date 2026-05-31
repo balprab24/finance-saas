@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createHash } from 'crypto';
 
 const state: {
   auth: { userId: string } | null;
@@ -105,6 +106,28 @@ async function request(path: string, init?: RequestInit) {
   return { status: res.status, body: (await res.json()) as Record<string, unknown> };
 }
 
+function sha256(value: string) {
+  return createHash('sha256').update(value, 'utf8').digest('hex');
+}
+
+async function webhookRequest(
+  payload: Record<string, unknown>,
+  options?: { signedPayload?: Record<string, unknown> },
+) {
+  const body = JSON.stringify(payload);
+  const signedBody = JSON.stringify(options?.signedPayload ?? payload);
+  state.verifyWebhook.mockResolvedValueOnce({ request_body_sha256: sha256(signedBody) });
+
+  return await request('/webhook', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'plaid-verification': 'jwt-token',
+    },
+    body,
+  });
+}
+
 beforeEach(() => {
   state.auth = { userId: 'user_alice' };
   state.selectResults = [];
@@ -136,7 +159,7 @@ beforeEach(() => {
     cursor: 'cursor-next',
   });
   state.upsertAccounts.mockResolvedValue({ created: 2, accountIdByPlaidId: new Map() });
-  state.verifyWebhook.mockResolvedValue(undefined);
+  state.verifyWebhook.mockResolvedValue({ request_body_sha256: sha256('{}') });
 });
 
 afterEach(() => {
@@ -246,6 +269,39 @@ describe('Plaid route', () => {
     expect(state.plaidClient.itemRemove).not.toHaveBeenCalled();
   });
 
+  it('creates an update-mode Link token for an owned errored item', async () => {
+    state.selectResults = [
+      [{ id: 'item_1', userId: 'user_alice', status: 'error', accessToken: 'encrypted:access-1' }],
+    ];
+
+    const { status, body } = await request('/items/item_1/update-link-token', { method: 'POST' });
+
+    expect(status).toBe(200);
+    expect(body.data).toMatchObject({ linkToken: 'link-sandbox-123' });
+    const requestArg = state.plaidClient.linkTokenCreate.mock.calls.at(-1)?.[0];
+    expect(requestArg).toMatchObject({
+      client_name: 'Aurex',
+      language: 'en',
+      country_codes: ['US'],
+      user: { client_user_id: 'user_alice' },
+      webhook: 'https://aurex.test/api/plaid/webhook',
+      access_token: 'access-1',
+    });
+    expect(requestArg).not.toHaveProperty('products');
+    expect(requestArg).not.toHaveProperty('transactions');
+  });
+
+  it('returns 404 for update-mode Link token requests on missing or removed items', async () => {
+    let result = await request('/items/item_1/update-link-token', { method: 'POST' });
+    expect(result.status).toBe(404);
+
+    state.selectResults = [
+      [{ id: 'item_1', userId: 'user_alice', status: 'removed', accessToken: 'encrypted:access-1' }],
+    ];
+    result = await request('/items/item_1/update-link-token', { method: 'POST' });
+    expect(result.status).toBe(404);
+  });
+
   it('removes an owned item and archives its linked accounts', async () => {
     state.selectResults = [
       [{ id: 'item_1', userId: 'user_alice', status: 'active', accessToken: 'encrypted:access-1' }],
@@ -278,6 +334,25 @@ describe('Plaid route', () => {
     ).toBe(true);
   });
 
+  it('does not clean up locally when Plaid removal fails with an unknown error', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    state.selectResults = [
+      [{ id: 'item_1', userId: 'user_alice', status: 'active', accessToken: 'encrypted:access-1' }],
+    ];
+    state.plaidClient.itemRemove.mockRejectedValue(new Error('Plaid unavailable'));
+
+    const { status, body } = await request('/items/item_1', { method: 'DELETE' });
+
+    expect(status).toBe(502);
+    expect(body.error).toBe('Plaid unavailable');
+    expect(
+      state.updatedValues.some((v) => (v as { status?: string }).status === 'removed'),
+    ).toBe(false);
+    expect(state.updatedValues.some((v) => 'archivedAt' in (v as object))).toBe(false);
+    expect(consoleError).toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
   it('returns 404 when removing an already-removed item', async () => {
     state.selectResults = [
       [{ id: 'item_1', userId: 'user_alice', status: 'removed', accessToken: 'encrypted:access-1' }],
@@ -300,21 +375,36 @@ describe('Plaid route', () => {
   });
 
   it('runs sync for valid transaction update webhooks', async () => {
-    const { status } = await request('/webhook', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'plaid-verification': 'jwt-token',
-      },
-      body: JSON.stringify({
-        webhook_type: 'TRANSACTIONS',
-        webhook_code: 'SYNC_UPDATES_AVAILABLE',
-        item_id: 'item-sandbox-123',
-      }),
+    const { status } = await webhookRequest({
+      webhook_type: 'TRANSACTIONS',
+      webhook_code: 'SYNC_UPDATES_AVAILABLE',
+      item_id: 'item-sandbox-123',
     });
 
     expect(status).toBe(200);
     expect(state.verifyWebhook).toHaveBeenCalledWith('jwt-token');
     expect(state.syncByPlaidItemId).toHaveBeenCalledWith('item-sandbox-123');
+  });
+
+  it('rejects webhooks when the body hash does not match the verified token claim', async () => {
+    const { status, body } = await webhookRequest(
+      {
+        webhook_type: 'TRANSACTIONS',
+        webhook_code: 'SYNC_UPDATES_AVAILABLE',
+        item_id: 'item-sandbox-123',
+      },
+      {
+        signedPayload: {
+          webhook_type: 'TRANSACTIONS',
+          webhook_code: 'SYNC_UPDATES_AVAILABLE',
+          item_id: 'different-item',
+        },
+      },
+    );
+
+    expect(status).toBe(401);
+    expect(body.error).toBe('Invalid Plaid verification token');
+    expect(state.verifyWebhook).toHaveBeenCalledWith('jwt-token');
+    expect(state.syncByPlaidItemId).not.toHaveBeenCalled();
   });
 });

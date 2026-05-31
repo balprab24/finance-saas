@@ -1,8 +1,12 @@
-import { decodeProtectedHeader, importJWK, jwtVerify, type JWK } from 'jose';
+import { decodeProtectedHeader, importJWK, jwtVerify, type JWK, type JWTPayload } from 'jose';
 
 import { getPlaidClient } from '@/lib/plaid';
 
 const keyCache = new Map<string, { key: JWK; alg: string; expiredAt: number | null }>();
+
+export type PlaidWebhookClaims = JWTPayload & {
+  request_body_sha256?: string;
+};
 
 export async function verifyPlaidWebhookToken(token: string) {
   const header = decodeProtectedHeader(token);
@@ -30,5 +34,6 @@ export async function verifyPlaidWebhookToken(token: string) {
   }
 
   const publicKey = await importJWK(cached.key, cached.alg);
-  await jwtVerify(token, publicKey, { maxTokenAge: '5 min' });
+  const { payload } = await jwtVerify(token, publicKey, { maxTokenAge: '5 min' });
+  return payload as PlaidWebhookClaims;
 }
