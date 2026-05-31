@@ -22,7 +22,7 @@ const state: {
 
 vi.mock('@/db/drizzle', () => {
   const selectChain: Record<string, unknown> = {};
-  for (const m of ['from', 'where']) selectChain[m] = () => selectChain;
+  for (const m of ['from', 'where', 'leftJoin']) selectChain[m] = () => selectChain;
   (selectChain as { then: (resolve: (v: unknown[]) => void) => void }).then = (resolve) =>
     resolve(state.selectResults.shift() ?? []);
 

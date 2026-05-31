@@ -4,7 +4,7 @@ import { clerkMiddleware } from '@clerk/hono';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
-import { accounts, transactions } from '@/db/schema';
+import { accounts, plaidItems, transactions } from '@/db/schema';
 import {
   bulkIdsSchema,
   createAccountSchema,
@@ -35,8 +35,23 @@ const app = new Hono<AuthEnv>()
     const includeArchived = c.req.query('includeArchived') === 'true';
 
     const data = await db
-      .select({ id: accounts.id, name: accounts.name, archivedAt: accounts.archivedAt })
+      .select({
+        id: accounts.id,
+        name: accounts.name,
+        archivedAt: accounts.archivedAt,
+        plaidId: accounts.plaidId,
+        plaidItemId: accounts.plaidItemId,
+        institutionName: plaidItems.institutionName,
+        plaidStatus: plaidItems.status,
+        plaidErrorCode: plaidItems.errorCode,
+        plaidErrorMessage: plaidItems.errorMessage,
+        lastSyncedAt: plaidItems.lastSyncedAt,
+      })
       .from(accounts)
+      .leftJoin(
+        plaidItems,
+        and(eq(accounts.plaidItemId, plaidItems.id), eq(plaidItems.userId, userId)),
+      )
       .where(
         includeArchived
           ? eq(accounts.userId, userId)
@@ -56,8 +71,23 @@ const app = new Hono<AuthEnv>()
       if (!id) return jsonError(c, 400, 'Missing id');
 
       const [data] = await db
-        .select({ id: accounts.id, name: accounts.name, archivedAt: accounts.archivedAt })
+        .select({
+          id: accounts.id,
+          name: accounts.name,
+          archivedAt: accounts.archivedAt,
+          plaidId: accounts.plaidId,
+          plaidItemId: accounts.plaidItemId,
+          institutionName: plaidItems.institutionName,
+          plaidStatus: plaidItems.status,
+          plaidErrorCode: plaidItems.errorCode,
+          plaidErrorMessage: plaidItems.errorMessage,
+          lastSyncedAt: plaidItems.lastSyncedAt,
+        })
         .from(accounts)
+        .leftJoin(
+          plaidItems,
+          and(eq(accounts.plaidItemId, plaidItems.id), eq(plaidItems.userId, userId)),
+        )
         .where(and(eq(accounts.userId, userId), eq(accounts.id, id)));
 
       if (!data) return jsonError(c, 404, 'Not found');

@@ -6,6 +6,7 @@ import categories from './categories';
 import onboarding from './onboarding';
 import transactions from './transactions';
 import summary from './summary';
+import plaid from './plaid';
 
 export const runtime = 'nodejs';
 
@@ -16,6 +17,7 @@ const app = new Hono()
   .route('/onboarding', onboarding)
   .route('/transactions', transactions)
   .route('/summary', summary)
+  .route('/plaid', plaid)
   .onError((err, c) => {
     if (process.env.NODE_ENV !== 'production') {
       console.error('[api error]', err);
