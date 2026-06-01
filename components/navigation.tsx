@@ -15,6 +15,7 @@ const routes = [
   { href: '/accounts', label: 'Accounts' },
   { href: '/banks', label: 'Banks' },
   { href: '/categories', label: 'Categories' },
+  { href: '/budgets', label: 'Budgets' },
 ];
 
 export function Navigation() {

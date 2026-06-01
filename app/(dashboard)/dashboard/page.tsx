@@ -1,5 +1,6 @@
 'use client';
 
+import { BudgetSummaryCard } from '@/components/budget-summary-card';
 import { DataCharts } from '@/components/data-charts';
 import { DataGrid } from '@/components/data-grid';
 import { DashboardEmptyState } from '@/components/dashboard-empty-state';
@@ -22,6 +23,7 @@ export default function DashboardPage() {
       ) : (
         <>
           <DataGrid />
+          <BudgetSummaryCard />
           <DataCharts />
         </>
       )}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseRange } from './date-range';
+import { parseMonth, parseRange } from './date-range';
 
 describe('parseRange', () => {
   it('treats `to` as inclusive by returning an exclusive next-day boundary', () => {
@@ -30,5 +30,31 @@ describe('parseRange', () => {
     const lateTx = new Date('2026-04-30T23:30:00Z');
     expect(start.getTime() <= lateTx.getTime()).toBe(true);
     expect(lateTx.getTime() < endExclusive.getTime()).toBe(true);
+  });
+});
+
+describe('parseMonth', () => {
+  it('resolves a YYYY-MM string to a [first-of-month, next-month) window', () => {
+    const { start, endExclusive, monthKey } = parseMonth('2026-06');
+    expect(start.getFullYear()).toBe(2026);
+    expect(start.getMonth()).toBe(5); // June (0-indexed)
+    expect(start.getDate()).toBe(1);
+    expect(endExclusive.getMonth()).toBe(6); // July
+    expect(endExclusive.getDate()).toBe(1);
+    expect(monthKey).toBe('2026-06-01');
+  });
+
+  it('rolls the exclusive boundary across a year end', () => {
+    const { endExclusive, monthKey } = parseMonth('2026-12');
+    expect(monthKey).toBe('2026-12-01');
+    expect(endExclusive.getFullYear()).toBe(2027);
+    expect(endExclusive.getMonth()).toBe(0); // January
+  });
+
+  it('defaults to the current month when undefined', () => {
+    const now = new Date();
+    const { monthKey } = parseMonth(undefined);
+    const expected = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    expect(monthKey).toBe(expected);
   });
 });
