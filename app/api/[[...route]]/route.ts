@@ -7,6 +7,7 @@ import onboarding from './onboarding';
 import transactions from './transactions';
 import summary from './summary';
 import plaid from './plaid';
+import { reportApiRouteError } from '@/lib/observability';
 
 export const runtime = 'nodejs';
 
@@ -19,6 +20,7 @@ const app = new Hono()
   .route('/summary', summary)
   .route('/plaid', plaid)
   .onError((err, c) => {
+    reportApiRouteError(err, { method: c.req.method, path: c.req.path });
     if (process.env.NODE_ENV !== 'production') {
       console.error('[api error]', err);
     }
