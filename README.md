@@ -197,6 +197,12 @@ Bank syncs run as background jobs (`plaid_sync_jobs`) rather than inside the req
 
 Generate `CRON_SECRET` with `openssl rand -hex 32` and set it in the host environment.
 
+### Plaid API hardening
+
+Authenticated Plaid actions are DB-rate-limited per Clerk user, and the public Plaid webhook is DB-rate-limited per forwarded client IP before JWT verification. Over-limit requests return `429` with `Retry-After` and `X-RateLimit-*` headers.
+
+Verified Plaid webhook bodies are recorded by `request_body_sha256` in `plaid_webhook_events`. Duplicate deliveries or replayed signed bodies are acknowledged with `{ ok: true }` but are not reprocessed, so they cannot enqueue repeated sync work or repeat item-error transitions. Run `npm run db:migrate` before deploying this stage so `drizzle/0008_misty_energizer.sql` creates `rate_limits` and `plaid_webhook_events`.
+
 ### Sentry observability
 
 Stage 3 observability is wired through `@sentry/nextjs`:

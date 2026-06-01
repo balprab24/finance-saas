@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { clerkMiddleware } from '@clerk/hono';
@@ -33,6 +33,8 @@ import {
 } from '@/lib/plaid-sync-jobs';
 import { scheduleWarmDrain } from '@/lib/after-drain';
 import { verifyPlaidWebhookToken } from '@/lib/plaid-webhook';
+import { checkRateLimit, clientIpFromHeaders, type RateLimitResult } from '@/lib/rate-limit';
+import { recordPlaidWebhookEvent } from '@/lib/plaid-webhook-replay';
 
 const itemParamSchema = z.object({
   itemId: z.string().trim().min(1).max(64),
@@ -46,10 +48,40 @@ const REMOVABLE_PLAID_ERROR_CODES = new Set([
   'ITEM_NO_LONGER_SUPPORTED',
 ]);
 
+const RATE_LIMITS = {
+  linkToken: { limit: 10, windowMs: 60_000 },
+  exchangePublicToken: { limit: 5, windowMs: 5 * 60_000 },
+  manualSync: { limit: 10, windowMs: 60_000 },
+  updateLinkToken: { limit: 10, windowMs: 60_000 },
+  removeItem: { limit: 5, windowMs: 60_000 },
+  webhook: { limit: 300, windowMs: 60_000 },
+};
+
 function plaidFailureMessage(err: unknown, fallback: string) {
   const { errorMessage } = getPlaidErrorDetails(err);
   if (process.env.NODE_ENV !== 'production') return errorMessage || fallback;
   return fallback;
+}
+
+function rateLimitedResponse(c: Context, result: RateLimitResult) {
+  c.header('Retry-After', String(result.retryAfterSeconds));
+  c.header('X-RateLimit-Limit', String(result.limit));
+  c.header('X-RateLimit-Remaining', String(result.remaining));
+  c.header('X-RateLimit-Reset', result.resetAt.toISOString());
+  return jsonError(c, 429, 'Too many requests');
+}
+
+async function enforcePlaidRateLimit(
+  c: Context,
+  key: string,
+  config: { limit: number; windowMs: number },
+) {
+  const result = await checkRateLimit({ key, ...config });
+  if (!result.allowed) return rateLimitedResponse(c, result);
+  c.header('X-RateLimit-Limit', String(result.limit));
+  c.header('X-RateLimit-Remaining', String(result.remaining));
+  c.header('X-RateLimit-Reset', result.resetAt.toISOString());
+  return null;
 }
 
 function verifyWebhookBodyHash(rawBody: string, expectedHash: unknown) {
@@ -92,6 +124,12 @@ async function markWebhookItemError(itemId: string, error: unknown) {
 const app = new Hono<AuthEnv>()
   .post('/link-token', clerkMiddleware(), requireAuth, async (c) => {
     const userId = getUserId(c);
+    const rateLimit = await enforcePlaidRateLimit(
+      c,
+      `plaid:link-token:user:${userId}`,
+      RATE_LIMITS.linkToken,
+    );
+    if (rateLimit) return rateLimit;
 
     try {
       const response = await getPlaidClient().linkTokenCreate({
@@ -117,6 +155,13 @@ const app = new Hono<AuthEnv>()
     async (c) => {
       const userId = getUserId(c);
       const values = c.req.valid('json');
+      const rateLimit = await enforcePlaidRateLimit(
+        c,
+        `plaid:exchange-public-token:user:${userId}`,
+        RATE_LIMITS.exchangePublicToken,
+      );
+      if (rateLimit) return rateLimit;
+
       const plaidClient = getPlaidClient();
       const institution = values.metadata?.institution;
 
@@ -282,6 +327,12 @@ const app = new Hono<AuthEnv>()
     async (c) => {
       const userId = getUserId(c);
       const { itemId } = c.req.valid('param');
+      const rateLimit = await enforcePlaidRateLimit(
+        c,
+        `plaid:manual-sync:user:${userId}`,
+        RATE_LIMITS.manualSync,
+      );
+      if (rateLimit) return rateLimit;
 
       try {
         const [item] = await db
@@ -306,6 +357,12 @@ const app = new Hono<AuthEnv>()
     async (c) => {
       const userId = getUserId(c);
       const { itemId } = c.req.valid('param');
+      const rateLimit = await enforcePlaidRateLimit(
+        c,
+        `plaid:update-link-token:user:${userId}`,
+        RATE_LIMITS.updateLinkToken,
+      );
+      if (rateLimit) return rateLimit;
 
       const [item] = await db
         .select()
@@ -337,6 +394,12 @@ const app = new Hono<AuthEnv>()
     async (c) => {
       const userId = getUserId(c);
       const { itemId } = c.req.valid('param');
+      const rateLimit = await enforcePlaidRateLimit(
+        c,
+        `plaid:remove-item:user:${userId}`,
+        RATE_LIMITS.removeItem,
+      );
+      if (rateLimit) return rateLimit;
 
       const [item] = await db
         .select()
@@ -375,6 +438,13 @@ const app = new Hono<AuthEnv>()
     },
   )
   .post('/webhook', async (c) => {
+    const rateLimit = await enforcePlaidRateLimit(
+      c,
+      `plaid:webhook:ip:${clientIpFromHeaders(c.req.raw.headers)}`,
+      RATE_LIMITS.webhook,
+    );
+    if (rateLimit) return rateLimit;
+
     const token = c.req.header('plaid-verification');
     if (!token) return jsonError(c, 401, 'Missing Plaid verification token');
 
@@ -386,7 +456,12 @@ const app = new Hono<AuthEnv>()
       return jsonError(c, 401, 'Invalid Plaid verification token');
     }
 
-    if (!verifyWebhookBodyHash(rawBody, claims.request_body_sha256)) {
+    const requestBodySha256 =
+      typeof claims.request_body_sha256 === 'string'
+        ? claims.request_body_sha256.toLowerCase()
+        : null;
+
+    if (!verifyWebhookBodyHash(rawBody, requestBodySha256)) {
       return jsonError(c, 401, 'Invalid Plaid verification token');
     }
 
@@ -401,9 +476,24 @@ const app = new Hono<AuthEnv>()
       return jsonError(c, 400, 'Invalid Plaid webhook payload');
     }
 
-    const webhookType = 'webhook_type' in payload ? payload.webhook_type : undefined;
-    const webhookCode = 'webhook_code' in payload ? payload.webhook_code : undefined;
+    const webhookType =
+      'webhook_type' in payload && typeof payload.webhook_type === 'string'
+        ? payload.webhook_type
+        : null;
+    const webhookCode =
+      'webhook_code' in payload && typeof payload.webhook_code === 'string'
+        ? payload.webhook_code
+        : null;
     const plaidItemId = 'item_id' in payload ? payload.item_id : undefined;
+    const plaidItemIdValue = typeof plaidItemId === 'string' ? plaidItemId : null;
+
+    const event = await recordPlaidWebhookEvent({
+      requestBodySha256: requestBodySha256 as string,
+      plaidItemId: plaidItemIdValue,
+      webhookType,
+      webhookCode,
+    });
+    if (event.isReplay) return c.json({ ok: true });
 
     if (typeof plaidItemId !== 'string') return c.json({ ok: true });
 
