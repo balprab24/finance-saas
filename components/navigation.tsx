@@ -16,6 +16,7 @@ const routes = [
   { href: '/banks', label: 'Banks' },
   { href: '/categories', label: 'Categories' },
   { href: '/budgets', label: 'Budgets' },
+  { href: '/insights', label: 'Insights' },
 ];
 
 export function Navigation() {

@@ -131,6 +131,14 @@ export const budgetMonthQuerySchema = z.object({
   month: z.preprocess(emptyToUndef, monthString.optional()),
 });
 
+export const ignoreRecurringSchema = z.object({
+  merchantKey: z
+    .string()
+    .trim()
+    .min(1, 'Merchant is required')
+    .max(PAYEE_MAX, `Merchant must be ${PAYEE_MAX} characters or fewer`),
+});
+
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
 export type DateRangeQuery = z.infer<typeof dateRangeQuerySchema>;
 export type UpsertBudgetInput = z.infer<typeof upsertBudgetSchema>;

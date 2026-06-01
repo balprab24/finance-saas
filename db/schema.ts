@@ -266,3 +266,20 @@ export const budgetsRelations = relations(budgets, ({ one }) => ({
 }));
 
 export const insertBudgetSchema = createInsertSchema(budgets);
+
+export const recurringIgnores = pgTable(
+  'recurring_ignores',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull(),
+    // Normalized merchant identifier: lower(coalesce(merchant_name, payee)).
+    // A derived string, not a row reference, so there is no foreign key.
+    merchantKey: text('merchant_key').notNull(),
+  },
+  (table) => [
+    index('recurring_ignores_user_id_idx').on(table.userId),
+    uniqueIndex('recurring_ignores_user_merchant_uq').on(table.userId, table.merchantKey),
+  ],
+);
+
+export const insertRecurringIgnoreSchema = createInsertSchema(recurringIgnores);
