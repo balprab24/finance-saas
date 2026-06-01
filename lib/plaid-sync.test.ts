@@ -393,4 +393,26 @@ describe('syncPlaidItemForUser', () => {
     });
     expect(String(itemUpdate?.values.errorMessage)).toContain('login details');
   });
+
+  it('does NOT flag the item on a transient Plaid failure so retries can recover', async () => {
+    const transactionsSync = vi.fn().mockRejectedValue({
+      response: {
+        status: 503,
+        data: { error_code: 'INTERNAL_SERVER_ERROR', error_message: 'plaid is temporarily down' },
+      },
+    });
+
+    const { capture, options } = run({ selectQueue: [[PLAID_ITEM]] }, transactionsSync);
+
+    await expect(
+      syncPlaidItemForUser(PLAID_ITEM.id, PLAID_ITEM.userId, options),
+    ).rejects.toBeDefined();
+
+    // The bank is healthy — Plaid had a blip — so the Item must stay usable and
+    // never be switched to 'error' (which the UI surfaces as "reconnect needed").
+    const erroredUpdate = onTable(capture.updates, 'plaidItems').find(
+      (update) => update.values.status === 'error',
+    );
+    expect(erroredUpdate).toBeUndefined();
+  });
 });

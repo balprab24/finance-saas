@@ -53,6 +53,8 @@ export const plaidSyncJobs = pgTable(
     reason: text('reason').notNull().default('manual'),
     status: text('status').notNull().default('queued'),
     attempts: integer('attempts').notNull().default(0),
+    maxAttempts: integer('max_attempts').notNull().default(5),
+    nextAttemptAt: timestamp('next_attempt_at', { mode: 'date' }).defaultNow().notNull(),
     lastError: text('last_error'),
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
@@ -62,6 +64,7 @@ export const plaidSyncJobs = pgTable(
   (table) => [
     index('plaid_sync_jobs_user_status_idx').on(table.userId, table.status),
     index('plaid_sync_jobs_item_idx').on(table.itemId),
+    index('plaid_sync_jobs_due_idx').on(table.status, table.nextAttemptAt),
     uniqueIndex('plaid_sync_jobs_active_item_uq')
       .on(table.userId, table.itemId)
       .where(sql`${table.status} in ('queued', 'running')`),
