@@ -115,7 +115,8 @@ export async function enqueuePlaidSyncJobByPlaidItemId({
 // of colliding. A job is actionable when it is queued and due (next_attempt_at
 // has passed), or when it is a stale 'running' row left behind by a crashed
 // worker. The row lock makes the read-then-claim atomic across workers.
-async function claimNextDueJob() {
+// Exported for the integration test; called only from drainPlaidSyncJobs.
+export async function claimNextDueJob() {
   return await db.transaction(async (tx) => {
     const now = new Date();
     const staleBefore = new Date(now.getTime() - STALE_MS);
