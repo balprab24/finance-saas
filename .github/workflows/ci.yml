@@ -27,7 +27,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_live_Y2ktY2xlcmsuZXhhbXBsZS5jb20k
       CLERK_SECRET_KEY: sk_test_ci
       NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
       NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
