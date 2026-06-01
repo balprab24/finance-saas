@@ -16,6 +16,8 @@ const state: {
   syncByUser: ReturnType<typeof vi.fn>;
   upsertAccounts: ReturnType<typeof vi.fn>;
   verifyWebhook: ReturnType<typeof vi.fn>;
+  checkRateLimit: ReturnType<typeof vi.fn>;
+  recordWebhookEvent: ReturnType<typeof vi.fn>;
   enqueueSyncJob: ReturnType<typeof vi.fn>;
   enqueueSyncJobByPlaidItemId: ReturnType<typeof vi.fn>;
   scheduleWarmDrain: ReturnType<typeof vi.fn>;
@@ -34,6 +36,8 @@ const state: {
   syncByUser: vi.fn(),
   upsertAccounts: vi.fn(),
   verifyWebhook: vi.fn(),
+  checkRateLimit: vi.fn(),
+  recordWebhookEvent: vi.fn(),
   enqueueSyncJob: vi.fn(),
   enqueueSyncJobByPlaidItemId: vi.fn(),
   scheduleWarmDrain: vi.fn(),
@@ -91,6 +95,21 @@ vi.mock('@/lib/plaid-webhook', () => ({
   verifyPlaidWebhookToken: (token: string) => state.verifyWebhook(token),
 }));
 
+vi.mock('@/lib/rate-limit', () => ({
+  checkRateLimit: (values: unknown) => state.checkRateLimit(values),
+  clientIpFromHeaders: (headers: Headers) =>
+    headers
+      .get('x-forwarded-for')
+      ?.split(',')[0]
+      ?.trim() ||
+    headers.get('x-real-ip')?.trim() ||
+    'unknown',
+}));
+
+vi.mock('@/lib/plaid-webhook-replay', () => ({
+  recordPlaidWebhookEvent: (values: unknown) => state.recordWebhookEvent(values),
+}));
+
 vi.mock('@/lib/plaid-sync', () => ({
   PlaidItemNotFoundError: class PlaidItemNotFoundError extends Error {},
   getPlaidErrorDetails: (err: unknown) => {
@@ -117,7 +136,11 @@ vi.mock('@/lib/after-drain', () => ({
 async function request(path: string, init?: RequestInit) {
   const { default: app } = await import('./plaid');
   const res = await app.fetch(new Request(`http://localhost${path}`, init));
-  return { status: res.status, body: (await res.json()) as Record<string, unknown> };
+  return {
+    status: res.status,
+    headers: res.headers,
+    body: (await res.json()) as Record<string, unknown>,
+  };
 }
 
 function sha256(value: string) {
@@ -166,6 +189,14 @@ beforeEach(() => {
   });
   state.upsertAccounts.mockResolvedValue({ created: 2, accountIdByPlaidId: new Map() });
   state.verifyWebhook.mockResolvedValue({ request_body_sha256: sha256('{}') });
+  state.checkRateLimit.mockResolvedValue({
+    allowed: true,
+    limit: 10,
+    remaining: 9,
+    resetAt: new Date('2026-01-01T00:01:00Z'),
+    retryAfterSeconds: 60,
+  });
+  state.recordWebhookEvent.mockResolvedValue({ isReplay: false });
   state.enqueueSyncJob.mockResolvedValue({
     jobId: 'job_1',
     itemId: 'item_1',
@@ -194,6 +225,23 @@ describe('Plaid route', () => {
 
     expect(status).toBe(401);
     expect(body.error).toBe('Unauthorized');
+  });
+
+  it('rate limits authenticated Plaid actions before calling Plaid', async () => {
+    state.checkRateLimit.mockResolvedValueOnce({
+      allowed: false,
+      limit: 10,
+      remaining: 0,
+      resetAt: new Date('2026-01-01T00:01:00Z'),
+      retryAfterSeconds: 42,
+    });
+
+    const { status, body, headers } = await request('/link-token', { method: 'POST' });
+
+    expect(status).toBe(429);
+    expect(body.error).toBe('Too many requests');
+    expect(headers.get('retry-after')).toBe('42');
+    expect(state.plaidClient.linkTokenCreate).not.toHaveBeenCalled();
   });
 
   it('creates Link tokens with Transactions settings and the Clerk user id', async () => {
@@ -432,6 +480,18 @@ describe('Plaid route', () => {
 
     expect(status).toBe(200);
     expect(state.verifyWebhook).toHaveBeenCalledWith('jwt-token');
+    expect(state.recordWebhookEvent).toHaveBeenCalledWith({
+      requestBodySha256: sha256(
+        JSON.stringify({
+          webhook_type: 'TRANSACTIONS',
+          webhook_code: 'SYNC_UPDATES_AVAILABLE',
+          item_id: 'item-sandbox-123',
+        }),
+      ),
+      plaidItemId: 'item-sandbox-123',
+      webhookType: 'TRANSACTIONS',
+      webhookCode: 'SYNC_UPDATES_AVAILABLE',
+    });
     expect(state.enqueueSyncJobByPlaidItemId).toHaveBeenCalledWith({
       plaidItemId: 'item-sandbox-123',
       reason: 'webhook',
@@ -459,5 +519,46 @@ describe('Plaid route', () => {
     expect(body.error).toBe('Invalid Plaid verification token');
     expect(state.verifyWebhook).toHaveBeenCalledWith('jwt-token');
     expect(state.enqueueSyncJobByPlaidItemId).not.toHaveBeenCalled();
+  });
+
+  it('rate limits Plaid webhooks before verifying the token', async () => {
+    state.checkRateLimit.mockResolvedValueOnce({
+      allowed: false,
+      limit: 300,
+      remaining: 0,
+      resetAt: new Date('2026-01-01T00:01:00Z'),
+      retryAfterSeconds: 60,
+    });
+
+    const { status, body } = await request('/webhook', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-forwarded-for': '203.0.113.10',
+        'plaid-verification': 'jwt-token',
+      },
+      body: JSON.stringify({ webhook_type: 'TRANSACTIONS' }),
+    });
+
+    expect(status).toBe(429);
+    expect(body.error).toBe('Too many requests');
+    expect(state.checkRateLimit).toHaveBeenCalledWith(
+      expect.objectContaining({ key: 'plaid:webhook:ip:203.0.113.10' }),
+    );
+    expect(state.verifyWebhook).not.toHaveBeenCalled();
+  });
+
+  it('acknowledges replayed Plaid webhooks without reprocessing them', async () => {
+    state.recordWebhookEvent.mockResolvedValueOnce({ isReplay: true });
+
+    const { status } = await webhookRequest({
+      webhook_type: 'TRANSACTIONS',
+      webhook_code: 'SYNC_UPDATES_AVAILABLE',
+      item_id: 'item-sandbox-123',
+    });
+
+    expect(status).toBe(200);
+    expect(state.enqueueSyncJobByPlaidItemId).not.toHaveBeenCalled();
+    expect(state.scheduleWarmDrain).not.toHaveBeenCalled();
   });
 });
