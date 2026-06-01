@@ -1,6 +1,7 @@
 'use client';
 
 import { BudgetSummaryCard } from '@/components/budget-summary-card';
+import { InsightsTeaserCard } from '@/components/insights-teaser-card';
 import { DataCharts } from '@/components/data-charts';
 import { DataGrid } from '@/components/data-grid';
 import { DashboardEmptyState } from '@/components/dashboard-empty-state';
@@ -23,7 +24,10 @@ export default function DashboardPage() {
       ) : (
         <>
           <DataGrid />
-          <BudgetSummaryCard />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <BudgetSummaryCard />
+            <InsightsTeaserCard />
+          </div>
           <DataCharts />
         </>
       )}
