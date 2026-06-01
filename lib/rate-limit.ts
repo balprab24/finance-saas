@@ -30,6 +30,8 @@ export async function checkRateLimit({
   if (windowMs < 1000) throw new Error('Rate limit window must be at least 1 second');
 
   const resetAt = new Date(now.getTime() + windowMs);
+  const nowSql = now.toISOString();
+  const resetAtSql = resetAt.toISOString();
   const [row] = await database
     .insert(rateLimits)
     .values({
@@ -41,8 +43,8 @@ export async function checkRateLimit({
     .onConflictDoUpdate({
       target: rateLimits.key,
       set: {
-        count: sql<number>`case when ${rateLimits.resetAt} <= ${now} then 1 else ${rateLimits.count} + 1 end`,
-        resetAt: sql<Date>`case when ${rateLimits.resetAt} <= ${now} then ${resetAt} else ${rateLimits.resetAt} end`,
+        count: sql<number>`case when ${rateLimits.resetAt} <= ${nowSql}::timestamp then 1 else ${rateLimits.count} + 1 end`,
+        resetAt: sql<Date>`case when ${rateLimits.resetAt} <= ${nowSql}::timestamp then ${resetAtSql}::timestamp else ${rateLimits.resetAt} end`,
         updatedAt: now,
       },
     })
