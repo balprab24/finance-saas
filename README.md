@@ -101,6 +101,7 @@ npm run build        # Build for production
 npm run start        # Start the production server
 npm run lint         # Run Next linting
 npm run test         # Run Vitest tests
+npm run e2e          # Build/start the app and run deterministic Playwright tests
 npm run db:generate  # Generate Drizzle migrations
 npm run db:migrate   # Apply Drizzle migrations
 npm run db:push      # Push schema changes
