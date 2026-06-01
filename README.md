@@ -151,7 +151,13 @@ All variables must be set in the host's environment (or `.env.local` for local r
 | `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` | Where Clerk redirects after a successful sign-in (`/dashboard`). |
 | `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL` | Where Clerk redirects after a successful sign-up (`/dashboard`). |
 | `DATABASE_URL` | Postgres connection string. Required at runtime and build time — `db/drizzle.ts` throws on startup if unset. |
-| `NEXT_PUBLIC_APP_URL` | Public origin of the deployment, e.g. `https://finance.example.com`. Used as the canonical origin and by the visual-QA scripts. |
+| `NEXT_PUBLIC_APP_URL` | Public origin of the deployment, e.g. `https://finance.example.com`. Used as the canonical origin, for Plaid webhook URLs, and by the visual-QA scripts. |
+| `PLAID_CLIENT_ID` / `PLAID_SECRET` | Plaid API credentials for the environment named by `PLAID_ENV`. |
+| `PLAID_ENV` | `sandbox` or `production`; must match the credentials above. |
+| `PLAID_PRODUCTS` / `PLAID_COUNTRY_CODES` | Comma-separated Plaid products (default `transactions`) and country codes (default `US`). |
+| `PLAID_TOKEN_ENCRYPTION_KEY` | Base64-encoded 32-byte key that encrypts Plaid access tokens at rest. Required wherever tokens are written or read. |
+| `PLAID_TOKEN_ENCRYPTION_KEYS` / `PLAID_TOKEN_ENCRYPTION_KEY_VERSION` | Optional rotation keyring (`v1=<base64>,v2=<base64>`) plus the active version. See `npm run plaid:rotate-key`. |
+| `CRON_SECRET` | Bearer secret for the `/api/cron/plaid-sync` drain endpoint. Vercel injects it as the cron `Authorization` header; set it in the project env. |
 
 ### Local DB vs hosted Postgres
 
@@ -173,6 +179,17 @@ The command is safe to re-run — Drizzle tracks applied migrations and skips on
 `npm audit --omit=dev` (the production dependency tree that ships to users) reports **0 vulnerabilities**.
 
 The full `npm audit` reports a handful of **moderate, dev-only** advisories that are all the same esbuild dev-server issue ([GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99)), reached through two dev toolchains: `vitest` → `vite` → `esbuild`, and `drizzle-kit` → `@esbuild-kit` → `esbuild`. The advisory concerns esbuild's local **dev server**, which neither tool ever starts — `vitest` uses esbuild only to transpile tests and `drizzle-kit` only to transpile `drizzle.config.ts`. The vulnerable code path is not reachable in production or CI. The available upgrades are disproportionate (a `vitest` 2→4 major bump that regresses test-file types, and `drizzle-kit` fixes it only in `1.0.0-rc` pre-releases), so these are accepted and tracked; revisit when bumping `vitest` / `drizzle-kit` is low-risk.
+
+### Plaid sync drain (cron)
+
+Bank syncs run as background jobs (`plaid_sync_jobs`) rather than inside the request that triggered them. Two things drain the queue:
+
+- **Vercel Cron** (the reliability backbone) calls `GET /api/cron/plaid-sync` on the schedule in `vercel.json` (every 5 minutes). The endpoint authenticates with `CRON_SECRET` (Vercel injects it as the `Authorization: Bearer` header), claims due jobs with `FOR UPDATE SKIP LOCKED`, and retries transient failures with exponential backoff. Crashed-worker jobs stuck in `running` are reclaimed after a few minutes.
+- **A warm-path drain** runs immediately after a manual sync or a Plaid webhook (via Next's `after()`), so users usually don't wait for the next tick.
+
+> **Vercel plan note:** the Hobby plan runs cron jobs **once per day** only — the `*/5 * * * *` cadence requires **Pro**. On Hobby the warm path still drains the happy path, but a job that fails and backs off won't be retried until the daily run.
+
+Generate `CRON_SECRET` with `openssl rand -hex 32` and set it in the host environment.
 
 ### Clerk URLs and callbacks
 
