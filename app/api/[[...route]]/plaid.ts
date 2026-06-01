@@ -30,8 +30,8 @@ import {
 import {
   enqueuePlaidSyncJob,
   enqueuePlaidSyncJobByPlaidItemId,
-  kickPlaidSyncWorker,
 } from '@/lib/plaid-sync-jobs';
+import { scheduleWarmDrain } from '@/lib/after-drain';
 import { verifyPlaidWebhookToken } from '@/lib/plaid-webhook';
 
 const itemParamSchema = z.object({
@@ -291,7 +291,7 @@ const app = new Hono<AuthEnv>()
         if (!item || item.status === 'removed') return jsonError(c, 404, 'Not found');
 
         const job = await enqueuePlaidSyncJob({ itemId, userId, reason: 'manual' });
-        void kickPlaidSyncWorker();
+        scheduleWarmDrain();
         return c.json({ data: job });
       } catch (err) {
         return jsonError(c, 502, plaidFailureMessage(err, 'Unable to queue bank sync'));
@@ -416,7 +416,7 @@ const app = new Hono<AuthEnv>()
       await enqueuePlaidSyncJobByPlaidItemId({ plaidItemId, reason: 'webhook' }).catch((err) => {
         if (process.env.NODE_ENV !== 'production') console.error('[plaid webhook sync]', err);
       });
-      void kickPlaidSyncWorker();
+      scheduleWarmDrain();
     }
 
     return c.json({ ok: true });

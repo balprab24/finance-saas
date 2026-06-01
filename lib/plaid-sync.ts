@@ -11,6 +11,7 @@ import {
   plaidTransactionPayee,
 } from '@/lib/plaid-normalize';
 import { getPlaidClient } from '@/lib/plaid';
+import { classifyPlaidFailure } from '@/lib/plaid-error-classification';
 
 type DbLike = Pick<typeof db, 'select' | 'insert' | 'update' | 'delete' | 'execute'>;
 type DbWithTransaction = DbLike & {
@@ -436,7 +437,14 @@ async function syncPlaidItem(itemId: string, userId: string, options?: SyncOptio
       return applyUpdates(tx, item, updates);
     });
   } catch (err) {
-    if (lockedItem && !(err instanceof PlaidItemNotFoundError)) {
+    // Only flag the Item for reconnection on genuine item-auth/config errors.
+    // Transient failures (rate limits, Plaid 5xx, network blips) are retried by
+    // the sync queue and must not tell the user to reconnect a healthy bank.
+    if (
+      lockedItem &&
+      !(err instanceof PlaidItemNotFoundError) &&
+      classifyPlaidFailure(err).isItemError
+    ) {
       await markPlaidItemError(database, lockedItem, err);
     }
     throw err;

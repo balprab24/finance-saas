@@ -18,7 +18,7 @@ const state: {
   verifyWebhook: ReturnType<typeof vi.fn>;
   enqueueSyncJob: ReturnType<typeof vi.fn>;
   enqueueSyncJobByPlaidItemId: ReturnType<typeof vi.fn>;
-  kickSyncWorker: ReturnType<typeof vi.fn>;
+  scheduleWarmDrain: ReturnType<typeof vi.fn>;
 } = {
   auth: { userId: 'user_alice' },
   selectResults: [],
@@ -36,7 +36,7 @@ const state: {
   verifyWebhook: vi.fn(),
   enqueueSyncJob: vi.fn(),
   enqueueSyncJobByPlaidItemId: vi.fn(),
-  kickSyncWorker: vi.fn(),
+  scheduleWarmDrain: vi.fn(),
 };
 
 vi.mock('@/db/drizzle', () => {
@@ -108,7 +108,10 @@ vi.mock('@/lib/plaid-sync', () => ({
 vi.mock('@/lib/plaid-sync-jobs', () => ({
   enqueuePlaidSyncJob: (values: unknown) => state.enqueueSyncJob(values),
   enqueuePlaidSyncJobByPlaidItemId: (values: unknown) => state.enqueueSyncJobByPlaidItemId(values),
-  kickPlaidSyncWorker: () => state.kickSyncWorker(),
+}));
+
+vi.mock('@/lib/after-drain', () => ({
+  scheduleWarmDrain: () => state.scheduleWarmDrain(),
 }));
 
 async function request(path: string, init?: RequestInit) {
@@ -175,7 +178,7 @@ beforeEach(() => {
     status: 'queued',
     reason: 'webhook',
   });
-  state.kickSyncWorker.mockResolvedValue({ processed: 0 });
+  state.scheduleWarmDrain.mockReturnValue(undefined);
 });
 
 afterEach(() => {
@@ -332,7 +335,7 @@ describe('Plaid route', () => {
       userId: 'user_alice',
       reason: 'manual',
     });
-    expect(state.kickSyncWorker).toHaveBeenCalled();
+    expect(state.scheduleWarmDrain).toHaveBeenCalled();
   });
 
   it('returns 404 when queueing sync for missing or removed items', async () => {
@@ -433,7 +436,7 @@ describe('Plaid route', () => {
       plaidItemId: 'item-sandbox-123',
       reason: 'webhook',
     });
-    expect(state.kickSyncWorker).toHaveBeenCalled();
+    expect(state.scheduleWarmDrain).toHaveBeenCalled();
   });
 
   it('rejects webhooks when the body hash does not match the verified token claim', async () => {
