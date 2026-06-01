@@ -109,5 +109,28 @@ export const dateRangeQuerySchema = z
     { message: '`from` must be on or before `to`', path: ['from'] },
   );
 
+const monthString = z
+  .string()
+  .regex(/^\d{4}-\d{2}$/, 'Month must be in YYYY-MM format');
+
+// Budget limits are positive integer milliunits; a budget of $0 is meaningless,
+// so clearing a budget is done via DELETE rather than POSTing amount 0.
+const budgetAmount = z
+  .number({ message: 'Amount must be a number' })
+  .int('Amount must be an integer (milliunits)')
+  .min(1, 'Amount must be greater than zero')
+  .max(AMOUNT_MAX);
+
+export const upsertBudgetSchema = z.object({
+  categoryId: idString,
+  month: monthString,
+  amount: budgetAmount,
+});
+
+export const budgetMonthQuerySchema = z.object({
+  month: z.preprocess(emptyToUndef, monthString.optional()),
+});
+
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
 export type DateRangeQuery = z.infer<typeof dateRangeQuerySchema>;
+export type UpsertBudgetInput = z.infer<typeof upsertBudgetSchema>;

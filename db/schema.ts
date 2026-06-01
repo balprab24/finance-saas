@@ -6,6 +6,7 @@ import {
   boolean,
   integer,
   timestamp,
+  date,
   index,
   uniqueIndex,
   unique,
@@ -226,3 +227,42 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
 export const insertTransactionSchema = createInsertSchema(transactions, {
   date: z.coerce.date(),
 });
+
+export const budgets = pgTable(
+  'budgets',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull(),
+    categoryId: text('category_id').notNull(),
+    // Normalized first-of-month key as 'yyyy-MM-dd' (e.g. '2026-06-01'). Stored
+    // as a string to avoid timezone shifts that a JS Date round-trip can cause.
+    month: date('month', { mode: 'string' }).notNull(),
+    // Positive monthly spending limit, stored as integer milliunits ($1 = 1000).
+    amount: bigint('amount', { mode: 'number' }).notNull(),
+  },
+  (table) => [
+    index('budgets_user_month_idx').on(table.userId, table.month),
+    // One budget per category per month; drives the POST upsert.
+    uniqueIndex('budgets_user_category_month_uq').on(
+      table.userId,
+      table.categoryId,
+      table.month,
+    ),
+    // Composite tenant FK: deleting a category drops its budgets. Mirrors the
+    // migration-0004 composite-FK pattern (references categories(id, user_id)).
+    foreignKey({
+      name: 'budgets_category_user_fk',
+      columns: [table.categoryId, table.userId],
+      foreignColumns: [categories.id, categories.userId],
+    }).onDelete('cascade'),
+  ],
+);
+
+export const budgetsRelations = relations(budgets, ({ one }) => ({
+  category: one(categories, {
+    fields: [budgets.categoryId],
+    references: [categories.id],
+  }),
+}));
+
+export const insertBudgetSchema = createInsertSchema(budgets);
