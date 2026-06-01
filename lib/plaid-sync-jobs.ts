@@ -1,10 +1,14 @@
+import * as Sentry from '@sentry/nextjs';
 import { and, asc, eq, lte, or, sql } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
 import { plaidItems, plaidSyncJobs } from '@/db/schema';
 import { getPlaidErrorDetails, syncPlaidItemForUser } from '@/lib/plaid-sync';
 import { classifyPlaidFailure } from '@/lib/plaid-error-classification';
-import { reportPlaidSyncJobTerminal } from '@/lib/plaid-sync-observability';
+import {
+  reportPlaidSyncJobTerminal,
+  reportPlaidSyncWorkerFailure,
+} from '@/lib/plaid-sync-observability';
 
 export type PlaidSyncJobReason = 'manual' | 'webhook' | 'reconnect';
 export type PlaidSyncJobStatus = 'queued' | 'running' | 'succeeded' | 'failed';
@@ -218,38 +222,55 @@ export async function handleJobFailure(job: PlaidSyncJob, err: unknown) {
 
 export async function drainPlaidSyncJobs(options: { maxJobs?: number; deadline?: number } = {}) {
   const { maxJobs = DEFAULT_MAX_JOBS, deadline = Infinity } = options;
-  let processed = 0;
-  let succeeded = 0;
-  let failed = 0;
 
-  // Claim one job at a time (SKIP LOCKED) until the queue is drained, the job
-  // budget is spent, or the time budget (used by the cron endpoint) runs out.
-  while (processed < maxJobs && Date.now() < deadline) {
-    const job = await claimNextDueJob();
-    if (!job) break;
-    processed += 1;
+  return await Sentry.startSpan(
+    {
+      name: 'plaid sync queue drain',
+      op: 'queue.process',
+      attributes: {
+        'plaid_sync.max_jobs': maxJobs,
+        'plaid_sync.has_deadline': Number.isFinite(deadline),
+      },
+    },
+    async (span) => {
+      let processed = 0;
+      let succeeded = 0;
+      let failed = 0;
 
-    try {
-      await syncPlaidItemForUser(job.itemId, job.userId);
-      if (await requeueIfRequestedDuringRun(job)) continue;
+      // Claim one job at a time (SKIP LOCKED) until the queue is drained, the job
+      // budget is spent, or the time budget (used by the cron endpoint) runs out.
+      while (processed < maxJobs && Date.now() < deadline) {
+        const job = await claimNextDueJob();
+        if (!job) break;
+        processed += 1;
 
-      await db
-        .update(plaidSyncJobs)
-        .set({
-          status: 'succeeded',
-          lastError: null,
-          finishedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(plaidSyncJobs.id, job.id));
-      succeeded += 1;
-    } catch (err) {
-      await handleJobFailure(job, err);
-      failed += 1;
-    }
-  }
+        try {
+          await syncPlaidItemForUser(job.itemId, job.userId);
+          if (await requeueIfRequestedDuringRun(job)) continue;
 
-  return { processed, succeeded, failed };
+          await db
+            .update(plaidSyncJobs)
+            .set({
+              status: 'succeeded',
+              lastError: null,
+              finishedAt: new Date(),
+              updatedAt: new Date(),
+            })
+            .where(eq(plaidSyncJobs.id, job.id));
+          succeeded += 1;
+        } catch (err) {
+          await handleJobFailure(job, err);
+          failed += 1;
+        }
+      }
+
+      span.setAttribute('plaid_sync.processed', processed);
+      span.setAttribute('plaid_sync.succeeded', succeeded);
+      span.setAttribute('plaid_sync.failed', failed);
+
+      return { processed, succeeded, failed };
+    },
+  );
 }
 
 export function kickPlaidSyncWorker() {
@@ -259,6 +280,7 @@ export function kickPlaidSyncWorker() {
     workerPromise = drainPlaidSyncJobs({ maxJobs: 5, deadline: Date.now() + 8_000 })
       .then(() => undefined)
       .catch((err) => {
+        reportPlaidSyncWorkerFailure(err);
         if (process.env.NODE_ENV !== 'production') {
           console.error('[plaid sync worker]', err);
         }

@@ -32,6 +32,7 @@ The Insights section ships with a real Area / Line / Bar toggle backed by the fi
 - Hono for typed API routes under `/api`
 - Drizzle ORM with PostgreSQL
 - TanStack Query for client data fetching
+- Sentry for production error monitoring, cron check-ins, and traces
 - React Hook Form, Zod, and drizzle-zod for forms and validation
 - Vitest for focused unit/API tests
 
@@ -100,6 +101,7 @@ npm run build        # Build for production
 npm run start        # Start the production server
 npm run lint         # Run Next linting
 npm run test         # Run Vitest tests
+npm run e2e          # Build/start the app and run deterministic Playwright tests
 npm run db:generate  # Generate Drizzle migrations
 npm run db:migrate   # Apply Drizzle migrations
 npm run db:push      # Push schema changes
@@ -158,6 +160,11 @@ All variables must be set in the host's environment (or `.env.local` for local r
 | `PLAID_TOKEN_ENCRYPTION_KEY` | Base64-encoded 32-byte key that encrypts Plaid access tokens at rest. Required wherever tokens are written or read. |
 | `PLAID_TOKEN_ENCRYPTION_KEYS` / `PLAID_TOKEN_ENCRYPTION_KEY_VERSION` | Optional rotation keyring (`v1=<base64>,v2=<base64>`) plus the active version. See `npm run plaid:rotate-key`. |
 | `CRON_SECRET` | Bearer secret for the `/api/cron/plaid-sync` drain endpoint. Vercel injects it as the cron `Authorization` header; set it in the project env. |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | Sentry DSNs for server and browser reporting. These may be the same public DSN. Leave blank locally to disable sending. |
+| `SENTRY_ENVIRONMENT` / `NEXT_PUBLIC_SENTRY_ENVIRONMENT` | Sentry environment names, e.g. `production`, `preview`, or `development`. |
+| `SENTRY_TRACES_SAMPLE_RATE` / `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE` | Trace sample rates from `0` to `1`; defaults are intentionally low for production. |
+| `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_AUTH_TOKEN` | Optional source-map upload configuration for CI/Vercel builds. Keep the auth token server-side only. |
+| `SENTRY_PLAID_SYNC_MONITOR_SLUG` / `SENTRY_PLAID_SYNC_MONITOR_SCHEDULE` | Optional Sentry Cron monitor settings for `/api/cron/plaid-sync`; default slug is `plaid-sync-cron` and default schedule is `*/5 * * * *`. |
 
 ### Local DB vs hosted Postgres
 
@@ -190,6 +197,25 @@ Bank syncs run as background jobs (`plaid_sync_jobs`) rather than inside the req
 > **Vercel plan note:** the Hobby plan runs cron jobs **once per day** only — the `*/5 * * * *` cadence requires **Pro**. On Hobby the warm path still drains the happy path, but a job that fails and backs off won't be retried until the daily run.
 
 Generate `CRON_SECRET` with `openssl rand -hex 32` and set it in the host environment.
+
+### Plaid API hardening
+
+Authenticated Plaid actions are DB-rate-limited per Clerk user, and the public Plaid webhook is DB-rate-limited per forwarded client IP before JWT verification. Over-limit requests return `429` with `Retry-After` and `X-RateLimit-*` headers.
+
+Verified Plaid webhook bodies are recorded by `request_body_sha256` in `plaid_webhook_events`. Duplicate deliveries or replayed signed bodies are acknowledged with `{ ok: true }` but are not reprocessed, so they cannot enqueue repeated sync work or repeat item-error transitions. Run `npm run db:migrate` before deploying this stage so `drizzle/0008_misty_energizer.sql` creates `rate_limits` and `plaid_webhook_events`.
+
+### Sentry observability
+
+Stage 3 observability is wired through `@sentry/nextjs`:
+
+- Next.js request errors are captured through `instrumentation.ts` and App Router render errors through `app/global-error.tsx`.
+- The Hono API catch-all reports uncaught API handler errors with method/path tags before returning the generic 500 response.
+- The Plaid sync queue drain is wrapped in a custom Sentry span with processed/succeeded/failed counts.
+- Terminal Plaid sync job failures are captured as Sentry messages tagged by `plaid_sync.item_id`, `plaid.error_code`, failure class, and whether the failure requires user item repair.
+- The cron drain endpoint sends Sentry Cron check-ins using the `plaid-sync-cron` monitor by default and records failures separately.
+- The browser SDK has Session Replay disabled by default because this app handles financial data; enable it only after reviewing masking/privacy settings.
+
+For production source maps, set `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` in Vercel/CI. Do not expose `SENTRY_AUTH_TOKEN` to the browser. If the deployment is on Vercel Hobby, set `SENTRY_PLAID_SYNC_MONITOR_SCHEDULE` to the actual daily cadence to avoid false missed-check-in alerts.
 
 ### Clerk URLs and callbacks
 

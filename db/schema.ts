@@ -83,6 +83,32 @@ export const plaidSyncJobsRelations = relations(plaidSyncJobs, ({ one }) => ({
   }),
 }));
 
+export const rateLimits = pgTable(
+  'rate_limits',
+  {
+    key: text('key').primaryKey(),
+    count: integer('count').notNull().default(0),
+    resetAt: timestamp('reset_at', { mode: 'date' }).notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  (table) => [index('rate_limits_reset_at_idx').on(table.resetAt)],
+);
+
+export const plaidWebhookEvents = pgTable(
+  'plaid_webhook_events',
+  {
+    requestBodySha256: text('request_body_sha256').primaryKey(),
+    plaidItemId: text('plaid_item_id'),
+    webhookType: text('webhook_type'),
+    webhookCode: text('webhook_code'),
+    receivedAt: timestamp('received_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('plaid_webhook_events_item_idx').on(table.plaidItemId),
+    index('plaid_webhook_events_received_at_idx').on(table.receivedAt),
+  ],
+);
+
 export const accounts = pgTable(
   'accounts',
   {

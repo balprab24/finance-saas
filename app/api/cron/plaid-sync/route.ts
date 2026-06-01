@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 
 import { drainPlaidSyncJobs } from '@/lib/plaid-sync-jobs';
+import {
+  finishPlaidSyncCronCheckIn,
+  reportPlaidSyncCronDrainFailure,
+  startPlaidSyncCronCheckIn,
+} from '@/lib/plaid-sync-observability';
 
 // Dedicated, secret-protected drain endpoint hit by Vercel Cron. A concrete route
 // segment takes precedence over the [[...route]] Hono catch-all, so this bypasses
@@ -26,13 +31,18 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const checkInId = startPlaidSyncCronCheckIn();
+
   try {
     const result = await drainPlaidSyncJobs({
       maxJobs: CRON_MAX_JOBS,
       deadline: Date.now() + CRON_BUDGET_MS,
     });
+    finishPlaidSyncCronCheckIn({ checkInId, status: 'ok' });
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
+    reportPlaidSyncCronDrainFailure(err);
+    finishPlaidSyncCronCheckIn({ checkInId, status: 'error' });
     if (process.env.NODE_ENV !== 'production') {
       console.error('[cron plaid-sync]', err);
     }
