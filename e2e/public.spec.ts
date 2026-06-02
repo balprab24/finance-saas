@@ -3,8 +3,12 @@ import { expect, test } from '@playwright/test';
 test('landing page renders and the preview chart toggle is interactive', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page.getByRole('heading', { name: /money,\s*in\s*clear\s*view/i })).toBeVisible();
-  await expect(page.getByText(/Aurex turns every account, category, and transaction/i)).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: /every dollar,\s*accounted\s*for/i }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/Aurex pulls every account, category, and transaction/i),
+  ).toBeVisible();
   await expect(page.getByRole('link', { name: /see the dashboard/i }).first()).toHaveAttribute(
     'href',
     '#preview',
