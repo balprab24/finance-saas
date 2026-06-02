@@ -153,12 +153,12 @@
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.06);
   --ring: rgba(99, 102, 241, 0.5);
-  /* Editorial categorical palette: tonal indigos + income/expense + one neutral. */
+  /* Qualitative palette for category charts — distinct hues led by brand indigo. */
   --chart-1: #6366f1;
-  --chart-2: #818cf8;
-  --chart-3: #34d399;
+  --chart-2: #22d3ee;
+  --chart-3: #f59e0b;
   --chart-4: #fb7185;
-  --chart-5: #a5b4fc;
+  --chart-5: #a78bfa;
   --sidebar: #12141c;
   --sidebar-foreground: #eef0f6;
   --sidebar-primary: #6366f1;

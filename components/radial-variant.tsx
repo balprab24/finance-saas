@@ -3,8 +3,10 @@
 import { Legend, RadialBar, RadialBarChart, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 
-// Editorial categorical ramp: tonal indigos + income green + expense red.
-const COLORS = ['#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#34d399', '#fb7185'];
+// Qualitative palette for category breakdowns — distinct hues led by the brand
+// indigo. Categorical data needs separable colors; the decorative chrome stays
+// single-indigo elsewhere.
+const COLORS = ['#6366f1', '#22d3ee', '#f59e0b', '#fb7185', '#a78bfa', '#34d399'];
 
 type Props = { data: { name: string; value: number }[] };
 
@@ -14,15 +16,16 @@ export function RadialVariant({ data }: Props) {
       <ResponsiveContainer width="100%" height="100%">
         <RadialBarChart
         cx="50%"
-        cy="30%"
-        barSize={10}
-        innerRadius="90%"
-        outerRadius="40%"
+        cy="48%"
+        barSize={14}
+        innerRadius="28%"
+        outerRadius="92%"
         data={data.map((item, index) => ({ ...item, fill: COLORS[index % COLORS.length] }))}
       >
         <RadialBar
-          label={{ position: 'insideStart', fill: '#f5f7ff', fontSize: 12 }}
-          background={{ fill: 'rgba(148,163,255,0.1)' }}
+          label={{ position: 'insideStart', fill: '#f5f7ff', fontSize: 11 }}
+          background={{ fill: 'rgba(148,163,255,0.08)' }}
+          cornerRadius={4}
           dataKey="value"
         />
         <Legend
