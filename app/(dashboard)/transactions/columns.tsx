@@ -79,7 +79,7 @@ export const columns: ColumnDef<ResponseType>[] = [
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
       return (
-        <Badge variant={amount < 0 ? 'destructive' : 'default'} className="text-xs font-medium px-3.5 py-2.5">
+        <Badge variant={amount < 0 ? 'destructive' : 'default'} className="px-3.5 py-2.5 font-mono text-xs font-medium tabular-nums">
           {formatCurrency(amount)}
         </Badge>
       );

@@ -39,26 +39,13 @@ export default function AccountsPage() {
     }
   };
 
-  if (accountsQuery.isLoading) {
-    return (
-      <div className="mx-auto w-full max-w-screen-2xl pb-16 pt-6">
-        <div className="aurex-card p-5">
-          <Skeleton className="h-6 w-44 bg-white/8" />
-          <div className="mt-5 flex h-[420px] w-full items-center justify-center">
-            <Loader2 className="size-5 animate-spin text-[var(--aurex-text-3)]" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="mx-auto w-full max-w-screen-2xl space-y-5 pb-16 pt-6">
       <div className="flex flex-col gap-2">
         <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--aurex-text-3)]">
           Accounts
         </span>
-        <h1 className="text-[24px] font-semibold tracking-tight text-[var(--aurex-text-1)] lg:text-[28px]">
+        <h1 className="font-display text-[26px] font-medium tracking-[-0.01em] text-[var(--aurex-text-1)] lg:text-[30px]">
           Every wallet, in one place
         </h1>
       </div>
@@ -104,6 +91,13 @@ export default function AccountsPage() {
           </div>
         </div>
         <div className="mt-4">
+          {accountsQuery.isLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-11 w-full rounded-md bg-white/[0.06]" />
+              ))}
+            </div>
+          ) : (
           <DataTable
             filterKey="name"
             columns={columns}
@@ -122,6 +116,7 @@ export default function AccountsPage() {
             bulkActionDescription="This hides the selected accounts from new transactions and account lists. Existing transactions stay intact. Already-archived selections are skipped."
             bulkActionTone="neutral"
           />
+          )}
         </div>
       </div>
     </div>

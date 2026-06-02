@@ -25,8 +25,26 @@ export function LineVariant({ data }: Props) {
             tickMargin={16}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(99,102,241,0.4)', strokeWidth: 1 }} />
-          <Line dot={false} dataKey="income" stroke="#34d399" strokeWidth={2.4} />
-          <Line dot={false} dataKey="expenses" stroke="#fb7185" strokeWidth={2.4} />
+          <Line
+            type="monotone"
+            dot={false}
+            activeDot={{ r: 4, strokeWidth: 0, fill: '#34d399' }}
+            dataKey="income"
+            stroke="#34d399"
+            strokeWidth={2.4}
+            animationDuration={900}
+            animationEasing="ease-out"
+          />
+          <Line
+            type="monotone"
+            dot={false}
+            activeDot={{ r: 4, strokeWidth: 0, fill: '#fb7185' }}
+            dataKey="expenses"
+            stroke="#fb7185"
+            strokeWidth={2.4}
+            animationDuration={900}
+            animationEasing="ease-out"
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>

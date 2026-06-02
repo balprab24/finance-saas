@@ -22,7 +22,7 @@ export function WelcomeMsg() {
       <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--aurex-text-3)]">
         Dashboard · {today}
       </span>
-      <h2 className="flex items-center gap-x-2 text-[24px] font-semibold tracking-tight text-[var(--aurex-text-1)] lg:text-[28px]">
+      <h2 className="flex items-center gap-x-2 font-display text-[26px] font-medium tracking-[-0.01em] text-[var(--aurex-text-1)] lg:text-[30px]">
         {getGreeting()},{' '}
         {isLoaded ? (
           <span className="text-[var(--aurex-text-1)]">{user?.firstName ?? 'friend'}</span>

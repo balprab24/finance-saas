@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 
 import { client } from '@/lib/hono';
@@ -12,6 +12,7 @@ export const useGetTransactions = () => {
 
   return useQuery({
     queryKey: ['transactions', { from, to, accountId }],
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const response = await client.api.transactions.$get({
         query: { from, to, accountId },

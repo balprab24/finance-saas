@@ -25,8 +25,20 @@ export function BarVariant({ data }: Props) {
             tickMargin={16}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(99,102,241,0.08)' }} />
-          <Bar dataKey="income" fill="#34d399" radius={[6, 6, 0, 0]} />
-          <Bar dataKey="expenses" fill="#fb7185" radius={[6, 6, 0, 0]} />
+          <Bar
+            dataKey="income"
+            fill="#34d399"
+            radius={[6, 6, 0, 0]}
+            animationDuration={700}
+            animationEasing="ease-out"
+          />
+          <Bar
+            dataKey="expenses"
+            fill="#fb7185"
+            radius={[6, 6, 0, 0]}
+            animationDuration={700}
+            animationEasing="ease-out"
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>

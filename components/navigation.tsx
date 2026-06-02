@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useMedia } from '@/hooks/use-media';
 import { Menu } from 'lucide-react';
 
@@ -21,14 +22,8 @@ const routes = [
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
   const isMobile = useMedia('(max-width: 1024px)', false);
-
-  const onClick = (href: string) => {
-    router.push(href);
-    setIsOpen(false);
-  };
 
   if (isMobile) {
     return (
@@ -47,9 +42,10 @@ export function Navigation() {
             {routes.map((route) => {
               const active = route.href === pathname;
               return (
-                <button
+                <Link
                   key={route.href}
-                  onClick={() => onClick(route.href)}
+                  href={route.href}
+                  onClick={() => setIsOpen(false)}
                   className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[15px] font-medium transition-colors ${
                     active
                       ? 'bg-[var(--aurex-surface-hover)] text-[var(--aurex-text-1)] ring-1 ring-[var(--aurex-border-strong)]'
@@ -62,7 +58,7 @@ export function Navigation() {
                     }`}
                   />
                   {route.label}
-                </button>
+                </Link>
               );
             })}
           </nav>

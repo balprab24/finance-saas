@@ -3,7 +3,8 @@
 import { Legend, RadialBar, RadialBarChart, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 
-const COLORS = ['#6366f1', '#22d3ee', '#34d399', '#fb7185', '#fbbf24', '#a78bfa'];
+// Editorial categorical ramp: tonal indigos + income green + expense red.
+const COLORS = ['#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#34d399', '#fb7185'];
 
 type Props = { data: { name: string; value: number }[] };
 
@@ -35,7 +36,7 @@ export function RadialVariant({ data }: Props) {
                 <li key={`item-${index}`} className="flex items-center space-x-2">
                   <span
                     className="size-2 rounded-full"
-                    style={{ backgroundColor: entry.color, boxShadow: `0 0 8px ${entry.color}` }}
+                    style={{ backgroundColor: entry.color }}
                   />
                   <div className="space-x-1">
                     <span className="text-[13px] text-[var(--aurex-text-2)]">{entry.value}</span>
