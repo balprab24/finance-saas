@@ -4,8 +4,10 @@ import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recha
 import { CategoryTooltip } from '@/components/category-tooltip';
 import { formatPercentage } from '@/lib/utils';
 
-// Editorial categorical ramp: tonal indigos + income green + expense red.
-const COLORS = ['#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#34d399', '#fb7185'];
+// Qualitative palette for category breakdowns — distinct hues led by the brand
+// indigo. Categorical data needs separable colors; the decorative chrome stays
+// single-indigo elsewhere.
+const COLORS = ['#6366f1', '#22d3ee', '#f59e0b', '#fb7185', '#a78bfa', '#34d399'];
 
 type Props = { data: { name: string; value: number }[] };
 
