@@ -77,7 +77,7 @@ export function DataCard({
           <Icon className={cn(iconVariant({ variant }))} />
         </div>
       </div>
-      <div className="mt-4 text-[28px] font-semibold tracking-tight tabular-nums text-[var(--aurex-text-1)] line-clamp-1 break-all sm:text-[32px]">
+      <div className="mt-4 font-mono text-[26px] font-semibold tracking-tight tabular-nums text-[var(--aurex-text-1)] line-clamp-1 break-all sm:text-[30px]">
         <CountUp
           preserveValue
           start={0}

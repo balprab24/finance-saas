@@ -9,7 +9,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-heading: var(--font-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -152,11 +153,12 @@
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.06);
   --ring: rgba(99, 102, 241, 0.5);
+  /* Editorial categorical palette: tonal indigos + income/expense + one neutral. */
   --chart-1: #6366f1;
-  --chart-2: #22d3ee;
+  --chart-2: #818cf8;
   --chart-3: #34d399;
   --chart-4: #fb7185;
-  --chart-5: #fbbf24;
+  --chart-5: #a5b4fc;
   --sidebar: #12141c;
   --sidebar-foreground: #eef0f6;
   --sidebar-primary: #6366f1;
@@ -202,50 +204,25 @@
     border-color: var(--aurex-border-strong);
   }
 
-  /* Marketing-only: heavier card for the landing dashboard preview */
+  /* Marketing-only: solid elevated card for the landing dashboard preview.
+     Editorial: no glass blur, no indigo glow — a real surface + hairline. */
   .aurex-card-marketing {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
-    border: 1px solid var(--aurex-border-strong);
-    border-radius: 16px;
+    background: var(--aurex-bg-elev);
+    border: 1px solid var(--aurex-border);
+    border-radius: 14px;
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.04) inset,
-      0 24px 48px -24px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 24px 48px -30px rgba(0, 0, 0, 0.6);
     transition:
-      transform 380ms cubic-bezier(0.16, 1, 0.3, 1),
-      border-color 380ms cubic-bezier(0.16, 1, 0.3, 1),
-      box-shadow 380ms cubic-bezier(0.16, 1, 0.3, 1);
+      transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 240ms ease;
   }
   .aurex-card-marketing:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.18);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.06) inset,
-      0 28px 56px -22px rgba(99, 102, 241, 0.25),
-      0 0 0 1px rgba(99, 102, 241, 0.06);
+    transform: translateY(-1px);
+    border-color: var(--aurex-border-strong);
   }
 
-  /* Marketing-only: ambient aurora glows positioned per-section */
-  .aurex-aurora {
-    position: absolute;
-    pointer-events: none;
-    border-radius: 9999px;
-    filter: blur(140px);
-    opacity: 0.35;
-    z-index: 0;
-  }
-  .aurex-aurora-indigo {
-    background: radial-gradient(closest-side, rgba(99, 102, 241, 0.55), transparent 75%);
-  }
-  .aurex-aurora-cyan {
-    background: radial-gradient(closest-side, rgba(34, 211, 238, 0.45), transparent 75%);
-  }
-  .aurex-aurora-violet {
-    background: radial-gradient(closest-side, rgba(139, 92, 246, 0.45), transparent 75%);
-  }
-
-  /* Marketing-only: gradient hairline divider replacing flat border-b */
+  /* Marketing-only: a neutral hairline divider replacing the rainbow gradient. */
   .aurex-hairline {
     position: relative;
   }
@@ -259,43 +236,26 @@
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgba(99, 102, 241, 0.18) 25%,
-      rgba(34, 211, 238, 0.18) 50%,
-      rgba(139, 92, 246, 0.18) 75%,
+      rgba(255, 255, 255, 0.1) 50%,
       transparent 100%
     );
     pointer-events: none;
   }
 
-  /* Marketing-only: animated background mesh. NOT used inside the app shell. */
+  /* Marketing-only: a faint editorial grid that fades out near the edges.
+     Replaces the floating aurora blobs. Bespoke, calm, not template-blur. */
   .aurex-mesh {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 0;
     overflow: hidden;
-  }
-  .aurex-mesh::before,
-  .aurex-mesh::after {
-    content: "";
-    position: absolute;
-    width: 760px;
-    height: 760px;
-    border-radius: 9999px;
-    filter: blur(140px);
-    opacity: 0.45;
-  }
-  .aurex-mesh::before {
-    top: -240px;
-    left: -180px;
-    background: radial-gradient(closest-side, rgba(99, 102, 241, 0.5), rgba(99, 102, 241, 0));
-    animation: aurex-drift 28s ease-in-out infinite;
-  }
-  .aurex-mesh::after {
-    bottom: -260px;
-    right: -200px;
-    background: radial-gradient(closest-side, rgba(34, 211, 238, 0.35), rgba(34, 211, 238, 0));
-    animation: aurex-drift 36s ease-in-out infinite reverse;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+    background-size: 60px 60px;
+    -webkit-mask-image: radial-gradient(120% 75% at 50% 0%, #000 35%, transparent 78%);
+    mask-image: radial-gradient(120% 75% at 50% 0%, #000 35%, transparent 78%);
   }
 
   .aurex-pill {
@@ -372,11 +332,6 @@
   }
 }
 
-@keyframes aurex-drift {
-  0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.45; }
-  50% { transform: translate3d(40px, -30px, 0); opacity: 0.6; }
-}
-
 @keyframes aurex-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
@@ -402,18 +357,24 @@
   animation: aurex-draw 1200ms cubic-bezier(0.16, 1, 0.3, 1) 200ms forwards;
 }
 
+/* Gentle "breathing" used on chart area fills so the hero feels alive. */
+@keyframes aurex-breathe {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+.aurex-breathe { animation: aurex-breathe 4.5s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .aurex-reveal,
   .aurex-rise,
-  .aurex-float {
+  .aurex-float,
+  .aurex-breathe {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
     transform: none !important;
   }
-  .aurex-mesh::before,
-  .aurex-mesh::after { animation: none !important; }
   /* SVG path draw-in: render the line fully on first paint. */
   .aurex-draw-line {
     animation: none !important;

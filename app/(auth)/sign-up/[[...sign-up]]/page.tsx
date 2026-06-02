@@ -29,7 +29,7 @@ export default async function Page({
   return (
     <div className="space-y-5">
       <div className="space-y-1.5 text-center">
-        <h1 className="text-[22px] font-semibold tracking-tight text-[var(--aurex-text-1)]">
+        <h1 className="font-display text-[25px] font-medium tracking-[-0.01em] text-[var(--aurex-text-1)]">
           Create your account
         </h1>
         <p className="text-[13.5px] text-[var(--aurex-text-3)]">

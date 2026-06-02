@@ -23,10 +23,10 @@ export function CategoryTooltip({
       <div className="space-y-1.5 px-3 py-2.5">
         <div className="flex items-center justify-between gap-x-6">
           <div className="flex items-center gap-x-2">
-            <span className="size-1.5 rounded-full bg-[#fb7185] shadow-[0_0_8px_#fb7185]" />
+            <span className="size-1.5 rounded-full bg-[#fb7185]" />
             <p className="text-[13px] text-[var(--aurex-text-2)]">Expenses</p>
           </div>
-          <p className="text-right text-[13px] font-semibold tabular-nums text-[var(--aurex-text-1)]">
+          <p className="text-right font-mono text-[13px] font-semibold tabular-nums text-[var(--aurex-text-1)]">
             {formatCurrency(value * -1)}
           </p>
         </div>

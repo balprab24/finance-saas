@@ -38,8 +38,30 @@ export function AreaVariant({ data }: Props) {
           tickMargin={16}
         />
         <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(99,102,241,0.4)', strokeWidth: 1 }} />
-        <Area type="monotone" dataKey="income" stackId="income" strokeWidth={2.4} stroke="#34d399" fill="url(#income)" />
-        <Area type="monotone" dataKey="expenses" stackId="expenses" strokeWidth={2.4} stroke="#fb7185" fill="url(#expenses)" />
+        <Area
+          type="monotone"
+          dataKey="income"
+          stackId="income"
+          strokeWidth={2.4}
+          stroke="#34d399"
+          fill="url(#income)"
+          dot={false}
+          activeDot={{ r: 4, strokeWidth: 0, fill: '#34d399' }}
+          animationDuration={900}
+          animationEasing="ease-out"
+        />
+        <Area
+          type="monotone"
+          dataKey="expenses"
+          stackId="expenses"
+          strokeWidth={2.4}
+          stroke="#fb7185"
+          fill="url(#expenses)"
+          dot={false}
+          activeDot={{ r: 4, strokeWidth: 0, fill: '#fb7185' }}
+          animationDuration={900}
+          animationEasing="ease-out"
+        />
         </AreaChart>
       </ResponsiveContainer>
     </div>

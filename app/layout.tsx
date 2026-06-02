@@ -1,22 +1,34 @@
 import type { Metadata } from 'next';
-import { Inter, Geist_Mono } from 'next/font/google';
+import { Fraunces, Geist, Geist_Mono } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Toaster } from 'sonner';
 
 import './globals.css';
 import { QueryProvider } from '@/providers/query-provider';
 
-const inter = Inter({
-  variable: '--font-sans',
+// Editorial type system: a serif display face for headlines, a clean grotesk for
+// body/UI, and a mono for tabular figures. Deliberately not Inter.
+const geistSans = Geist({ variable: '--font-sans', subsets: ['latin'] });
+const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
+const fraunces = Fraunces({
+  variable: '--font-display',
   subsets: ['latin'],
   axes: ['opsz'],
 });
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Aurex — Money, in clear view',
+  metadataBase: new URL('https://aurex.app'),
+  title: {
+    default: 'Aurex',
+    template: '%s · Aurex',
+  },
   description:
-    'Aurex is a premium personal-finance workspace. Track accounts, categorize transactions, import CSVs, and understand cash flow with charts that tell the whole story.',
+    'Aurex is a personal-finance workspace for tracking accounts, categorizing transactions, importing CSVs, and reading your cash flow — exact to the cent.',
+  openGraph: {
+    title: 'Aurex',
+    description: 'A personal-finance workspace. Every dollar, accounted for.',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -28,7 +40,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       signUpFallbackRedirectUrl="/dashboard"
       afterSignOutUrl="/"
     >
-      <html lang="en" className={`dark ${inter.variable} ${geistMono.variable}`}>
+      <html
+        lang="en"
+        className={`dark ${geistSans.variable} ${geistMono.variable} ${fraunces.variable}`}
+      >
         <body suppressHydrationWarning className="antialiased">
           <QueryProvider>
             <Toaster theme="dark" />

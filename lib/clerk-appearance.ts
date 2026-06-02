@@ -33,7 +33,7 @@ export const clerkAppearance: Appearance = {
     footerActionLink:
       'text-[var(--aurex-brand-text)] hover:text-[#c4cbff] font-medium',
     formButtonPrimary:
-      'bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] hover:from-[#6d6ff5] hover:to-[#9560f8] text-white text-sm font-medium normal-case h-10 rounded-[10px] shadow-[0_8px_24px_rgba(99,102,241,0.35)] transition-colors',
+      'bg-[#6366f1] hover:bg-[#7a7df7] text-white text-sm font-medium normal-case h-10 rounded-[10px] transition-colors',
     socialButtonsBlockButton:
       'border-[var(--aurex-border)] bg-[var(--aurex-surface)] hover:bg-[var(--aurex-surface-hover)] text-[var(--aurex-text-1)] normal-case h-10 rounded-[10px]',
     socialButtonsBlockButtonText: 'text-[var(--aurex-text-1)] font-medium',

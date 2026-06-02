@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 
 import { client } from '@/lib/hono';
@@ -12,6 +12,7 @@ export const useGetSummary = () => {
 
   return useQuery({
     queryKey: ['summary', { from, to, accountId }],
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const response = await client.api.summary.$get({ query: { from, to, accountId } });
       if (!response.ok) throw new Error('Failed to fetch summary');

@@ -54,7 +54,7 @@ export function ScrollSpyNav({ variant }: { variant: Variant }) {
             >
               {s.label}
               <span
-                className={`pointer-events-none absolute -bottom-0.5 left-1/2 h-px -translate-x-1/2 bg-gradient-to-r from-[#a5b4fc] to-[#22d3ee] transition-all duration-300 ${
+                className={`pointer-events-none absolute -bottom-0.5 left-1/2 h-px -translate-x-1/2 bg-[var(--aurex-brand)] transition-all duration-300 ${
                   isActive ? 'w-6' : 'w-0 group-hover:w-6'
                 }`}
               />

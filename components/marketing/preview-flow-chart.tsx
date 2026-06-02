@@ -3,7 +3,37 @@
 import { useState } from "react";
 import { TrendingUp } from "lucide-react";
 
+import { useCountUp } from "@/hooks/use-count-up";
+
 type Variant = "Area" | "Line" | "Bar";
+
+function CountUpStat({
+  label,
+  value,
+  format,
+  tone,
+  delay,
+}: {
+  label: string;
+  value: number;
+  format: (n: number) => string;
+  tone: string;
+  delay: number;
+}) {
+  const current = useCountUp(value, { duration: 1100, delay });
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-[0.1em] text-[var(--aurex-text-3)]">
+        {label}
+      </div>
+      <div
+        className={`mt-0.5 text-[15px] font-semibold tabular-nums tracking-tight ${tone}`}
+      >
+        {format(current)}
+      </div>
+    </div>
+  );
+}
 
 function ToggleButtons({
   active,
@@ -83,13 +113,36 @@ function SmallLineOrArea({ filled }: { filled: boolean }) {
       </defs>
       <GridLines rows={4} width={600} />
       {filled && (
-        <path d={`${SMALL_EXPENSE} L600,180 L0,180 Z`} fill="url(#smExpense)" />
+        <path
+          d={`${SMALL_EXPENSE} L600,180 L0,180 Z`}
+          fill="url(#smExpense)"
+          className="aurex-breathe"
+        />
       )}
-      <path d={SMALL_EXPENSE} fill="none" stroke="#fb7185" strokeWidth="2" />
+      <path
+        d={SMALL_EXPENSE}
+        fill="none"
+        stroke="#fb7185"
+        strokeWidth="2"
+        pathLength={100}
+        className="aurex-draw-line"
+      />
       {filled && (
-        <path d={`${SMALL_INCOME} L600,180 L0,180 Z`} fill="url(#smIncome)" />
+        <path
+          d={`${SMALL_INCOME} L600,180 L0,180 Z`}
+          fill="url(#smIncome)"
+          className="aurex-breathe"
+        />
       )}
-      <path d={SMALL_INCOME} fill="none" stroke="#34d399" strokeWidth="2.2" />
+      <path
+        d={SMALL_INCOME}
+        fill="none"
+        stroke="#34d399"
+        strokeWidth="2.2"
+        pathLength={100}
+        className="aurex-draw-line"
+        style={{ animationDelay: '380ms' }}
+      />
       <circle cx="600" cy="18" r="4" fill="#34d399">
         <animate
           attributeName="r"
@@ -176,8 +229,12 @@ export function PreviewFlowChartSmall() {
     <div className="aurex-card-marketing relative flex flex-col overflow-hidden p-4">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-[13px] font-semibold text-[var(--aurex-text-1)]">
+          <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[var(--aurex-text-1)]">
             Cash flow
+            <span className="relative flex size-1.5">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#34d399] opacity-75" />
+              <span className="relative inline-flex size-1.5 rounded-full bg-[#34d399]" />
+            </span>
           </div>
           <div className="text-[11px] text-[var(--aurex-text-3)]">
             Income vs. expenses · daily
@@ -195,40 +252,37 @@ export function PreviewFlowChartSmall() {
       <div className="mt-2 flex items-center gap-4 text-[11px] text-[var(--aurex-text-2)]">
         <span
           className="inline-block size-2 rounded-full"
-          style={{ backgroundColor: "#34d399", boxShadow: "0 0 10px #34d399" }}
+          style={{ backgroundColor: "#34d399" }}
         />
         Income
         <span
           className="inline-block size-2 rounded-full"
-          style={{ backgroundColor: "#fb7185", boxShadow: "0 0 10px #fb7185" }}
+          style={{ backgroundColor: "#fb7185" }}
         />
         Expenses
       </div>
       <div className="mt-auto grid grid-cols-3 gap-2 border-t border-[var(--aurex-border)] pt-3">
-        {[
-          { label: "Net flow", value: "+$4,540", tone: "text-[#34d399]" },
-          {
-            label: "Savings rate",
-            value: "54%",
-            tone: "text-[var(--aurex-text-1)]",
-          },
-          {
-            label: "Avg / day",
-            value: "$281",
-            tone: "text-[var(--aurex-text-1)]",
-          },
-        ].map((s) => (
-          <div key={s.label}>
-            <div className="text-[10px] uppercase tracking-[0.1em] text-[var(--aurex-text-3)]">
-              {s.label}
-            </div>
-            <div
-              className={`mt-0.5 text-[15px] font-semibold tabular-nums tracking-tight ${s.tone}`}
-            >
-              {s.value}
-            </div>
-          </div>
-        ))}
+        <CountUpStat
+          label="Net flow"
+          value={4540}
+          delay={250}
+          tone="text-[#34d399]"
+          format={(n) => `+$${Math.round(n).toLocaleString()}`}
+        />
+        <CountUpStat
+          label="Savings rate"
+          value={54}
+          delay={400}
+          tone="text-[var(--aurex-text-1)]"
+          format={(n) => `${Math.round(n)}%`}
+        />
+        <CountUpStat
+          label="Avg / day"
+          value={281}
+          delay={550}
+          tone="text-[var(--aurex-text-1)]"
+          format={(n) => `$${Math.round(n)}`}
+        />
       </div>
     </div>
   );
@@ -257,13 +311,33 @@ function LargeLineOrArea({ filled }: { filled: boolean }) {
         <path
           d={`${LARGE_EXPENSE} L1200,280 L0,280 Z`}
           fill="url(#lgExpense)"
+          className="aurex-breathe"
         />
       )}
-      <path d={LARGE_EXPENSE} fill="none" stroke="#fb7185" strokeWidth="2" />
+      <path
+        d={LARGE_EXPENSE}
+        fill="none"
+        stroke="#fb7185"
+        strokeWidth="2"
+        pathLength={100}
+        className="aurex-draw-line"
+      />
       {filled && (
-        <path d={`${LARGE_INCOME} L1200,280 L0,280 Z`} fill="url(#lgIncome)" />
+        <path
+          d={`${LARGE_INCOME} L1200,280 L0,280 Z`}
+          fill="url(#lgIncome)"
+          className="aurex-breathe"
+        />
       )}
-      <path d={LARGE_INCOME} fill="none" stroke="#34d399" strokeWidth="2.5" />
+      <path
+        d={LARGE_INCOME}
+        fill="none"
+        stroke="#34d399"
+        strokeWidth="2.5"
+        pathLength={100}
+        className="aurex-draw-line"
+        style={{ animationDelay: '380ms' }}
+      />
     </svg>
   );
 }

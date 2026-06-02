@@ -1,6 +1,8 @@
 import Link from 'next/link';
-import { Loader2, CircleDollarSign, ShieldCheck } from 'lucide-react';
+import { Loader2, ShieldCheck } from 'lucide-react';
 import { ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
+
+import { LogoMark } from '@/components/brand/logo';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -8,9 +10,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="flex min-h-screen flex-col">
         <header className="flex items-center justify-between px-6 py-5 lg:px-10">
           <Link href="/" className="flex items-center gap-2 text-[var(--aurex-text-1)]">
-            <span className="grid size-8 place-items-center rounded-[8px] bg-[var(--aurex-brand)] text-white">
-              <CircleDollarSign className="size-[18px]" />
-            </span>
+            <LogoMark size={30} />
             <span className="text-[16px] font-semibold tracking-tight">Aurex</span>
           </Link>
           <Link
@@ -35,7 +35,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </div>
         </main>
         <footer className="px-6 py-5 text-center text-[12.5px] text-[var(--aurex-text-4)] lg:px-10">
-          &copy; {new Date().getFullYear()} Aurex — Money, in clear view.
+          &copy; {new Date().getFullYear()} Aurex
         </footer>
       </div>
     </div>
