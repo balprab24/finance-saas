@@ -1,9 +1,9 @@
-import { SignIn } from '@clerk/nextjs';
-import { auth } from '@clerk/nextjs/server';
-import { redirect } from 'next/navigation';
+import { SignIn } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
-import { clerkAppearance } from '@/lib/clerk-appearance';
-import { sanitizeRedirectPath } from '@/lib/auth-redirect';
+import { clerkAppearance } from "@/lib/clerk-appearance";
+import { sanitizeRedirectPath } from "@/lib/auth-redirect";
 
 export default async function Page({
   searchParams,
@@ -16,12 +16,12 @@ export default async function Page({
   const intended = sanitizeRedirectPath(params.redirect_url);
   // Returning users land in their data (or their intended page); new users with
   // no data see the dashboard's onboarding/empty-state automatically.
-  const destination = intended ?? '/dashboard';
+  const destination = intended ?? "/dashboard";
   // Preserve the intended destination across the sign-in -> sign-up toggle so the
   // person never loses where they were headed.
   const signUpUrl = intended
     ? `/sign-up?redirect_url=${encodeURIComponent(intended)}`
-    : '/sign-up';
+    : "/sign-up";
 
   // Already signed in: send them into the app instead of a redundant login form.
   if (userId) redirect(destination);

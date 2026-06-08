@@ -1,36 +1,36 @@
 'use client';
 
-import { BudgetSummaryCard } from '@/components/budget-summary-card';
-import { InsightsTeaserCard } from '@/components/insights-teaser-card';
+import { StatementMasthead } from '@/components/statement-masthead';
+import { CashPosition } from '@/components/cash-position';
 import { DataCharts } from '@/components/data-charts';
-import { DataGrid } from '@/components/data-grid';
+import { ThisMonthStrip } from '@/components/this-month-strip';
 import { DashboardEmptyState } from '@/components/dashboard-empty-state';
-import { Filters } from '@/components/filters';
-import { WelcomeMsg } from '@/components/welcome-msg';
 import { useGetOnboardingStatus } from '@/features/onboarding/api/use-get-onboarding-status';
 
+// The dashboard as one financial statement (Direction A, "The Statement"): a single
+// ruled sheet — masthead → cash position (In − Out = Net) → cash-flow / where-it-went
+// → a quiet this-month footer — instead of a stack of separate cards. Sections are
+// divided by hairlines, not enclosed in their own boxes.
 export default function DashboardPage() {
   const onboardingStatus = useGetOnboardingStatus();
   const showEmptyState = onboardingStatus.data?.isEmpty === true;
 
-  return (
-    <div className="mx-auto w-full max-w-screen-2xl space-y-6 pb-16 pt-6">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <WelcomeMsg />
-        <Filters />
-      </div>
-      {showEmptyState ? (
+  if (showEmptyState) {
+    return (
+      <div className="mx-auto w-full max-w-screen-2xl pb-16 pt-6">
         <DashboardEmptyState />
-      ) : (
-        <>
-          <DataGrid />
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <BudgetSummaryCard />
-            <InsightsTeaserCard />
-          </div>
-          <DataCharts />
-        </>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-screen-2xl pb-16 pt-6">
+      <div className="aurex-card overflow-hidden p-0">
+        <StatementMasthead />
+        <CashPosition />
+        <DataCharts />
+        <ThisMonthStrip />
+      </div>
     </div>
   );
 }

@@ -77,7 +77,7 @@ export function ScrollSpyNav({ variant }: { variant: Variant }) {
               aria-current={isActive ? 'true' : undefined}
               className={`inline-flex h-8 shrink-0 items-center rounded-full px-3 text-[13px] font-medium ring-1 transition-colors duration-200 ${
                 isActive
-                  ? 'bg-[rgba(99,102,241,0.18)] text-[var(--aurex-text-1)] ring-[rgba(99,102,241,0.4)]'
+                  ? 'bg-[rgba(22, 24, 29,0.18)] text-[var(--aurex-text-1)] ring-[rgba(22, 24, 29,0.4)]'
                   : 'bg-[var(--aurex-surface)] text-[var(--aurex-text-1)]/85 ring-[var(--aurex-border)]'
               }`}
             >

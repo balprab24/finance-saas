@@ -14,7 +14,7 @@ export function BarVariant({ data }: Props) {
     <div className="h-[350px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 10, right: 4, left: 4, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,255,0.1)" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" vertical={false} />
           <XAxis
             axisLine={false}
             tickLine={false}
@@ -24,17 +24,17 @@ export function BarVariant({ data }: Props) {
             tick={{ fill: 'var(--aurex-text-3)' }}
             tickMargin={16}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(99,102,241,0.08)' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(22, 24, 29,0.08)' }} />
           <Bar
             dataKey="income"
-            fill="#34d399"
+            fill="#117a4b"
             radius={[6, 6, 0, 0]}
             animationDuration={700}
             animationEasing="ease-out"
           />
           <Bar
             dataKey="expenses"
-            fill="#fb7185"
+            fill="#c0392b"
             radius={[6, 6, 0, 0]}
             animationDuration={700}
             animationEasing="ease-out"

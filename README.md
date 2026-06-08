@@ -8,9 +8,11 @@ The marketing landing page introduces the workspace at a glance — every accoun
 
 ![Aurex landing — hero and dashboard preview](docs/screenshots/hero.png)
 
-The Insights section ships with a real Area / Line / Bar toggle backed by the finance-tuned palette (emerald for income, rose for expenses).
+The Insights section ships with a real Area / Line / Bar toggle backed by the finance-tuned palette (green for income, red for expenses).
 
 ![Aurex landing — Insights chart panel](docs/screenshots/chart.png)
+
+The interface follows the **Light Counter** design system: a light, document-grade UI (graphite ink on near-white paper, with color reserved for financial meaning) — see [`DESIGN.md`](DESIGN.md).
 
 ## Features
 
@@ -18,7 +20,10 @@ The Insights section ships with a real Area / Line / Bar toggle backed by the fi
 - Account, category, and transaction CRUD
 - Bulk transaction import from CSV
 - Date and account filters for reports
-- Summary cards and charts built with Recharts
+- Statement-style dashboard: net cash position, a cash-flow chart, and a ranked category ledger (Recharts)
+- Monthly budgets with per-category tracking
+- Spending insights: recurring subscriptions, category movers, and unusual-spend detection
+- Optional Plaid bank linking with encrypted, rotatable access tokens and a cron-driven sync
 - Tenant-scoped API queries using the signed-in Clerk user id
 - Server and client validation with Zod and Drizzle schemas
 - Drizzle migrations for PostgreSQL

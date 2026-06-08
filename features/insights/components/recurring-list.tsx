@@ -63,7 +63,7 @@ export function RecurringList() {
               <span className="truncate text-[14px] font-medium text-[var(--aurex-text-1)]">
                 {item.displayName}
               </span>
-              <Badge className="shrink-0 border-0 bg-[rgba(99,102,241,0.12)] text-[11px] text-[#a5b4fc]">
+              <Badge className="shrink-0 border-0 bg-[var(--aurex-surface)] text-[11px] text-[var(--aurex-text-3)]">
                 {CADENCE_LABEL[item.cadence] ?? item.cadence}
               </Badge>
             </div>
@@ -85,7 +85,7 @@ export function RecurringList() {
               variant="ghost"
               disabled={ignore.isPending}
               onClick={() => onDismiss(item.merchantKey, item.displayName)}
-              className="size-8 p-0 text-[var(--aurex-text-3)] hover:bg-[var(--aurex-surface-hover)] hover:text-[#fb7185]"
+              className="size-8 p-0 text-[var(--aurex-text-3)] hover:bg-[var(--aurex-surface-hover)] hover:text-[#c0392b]"
               aria-label={`Dismiss ${item.displayName}`}
             >
               <X className="size-4" />

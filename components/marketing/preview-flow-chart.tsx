@@ -3,37 +3,7 @@
 import { useState } from "react";
 import { TrendingUp } from "lucide-react";
 
-import { useCountUp } from "@/hooks/use-count-up";
-
 type Variant = "Area" | "Line" | "Bar";
-
-function CountUpStat({
-  label,
-  value,
-  format,
-  tone,
-  delay,
-}: {
-  label: string;
-  value: number;
-  format: (n: number) => string;
-  tone: string;
-  delay: number;
-}) {
-  const current = useCountUp(value, { duration: 1100, delay });
-  return (
-    <div>
-      <div className="text-[10px] uppercase tracking-[0.1em] text-[var(--aurex-text-3)]">
-        {label}
-      </div>
-      <div
-        className={`mt-0.5 text-[15px] font-semibold tabular-nums tracking-tight ${tone}`}
-      >
-        {format(current)}
-      </div>
-    </div>
-  );
-}
 
 function ToggleButtons({
   active,
@@ -82,7 +52,7 @@ function GridLines({ rows, width }: { rows: number; width: number }) {
           x2={width}
           y1={step * (i + 1)}
           y2={step * (i + 1)}
-          stroke="rgba(148,163,255,0.08)"
+          stroke="rgba(0,0,0,0.08)"
         />
       ))}
     </>
@@ -96,54 +66,27 @@ const SMALL_EXPENSE =
 
 function SmallLineOrArea({ filled }: { filled: boolean }) {
   return (
-    <svg
-      viewBox="0 0 600 180"
-      preserveAspectRatio="none"
-      className="h-full w-full"
-    >
+    <svg viewBox="0 0 600 180" className="mt-3 h-[170px] w-full">
       <defs>
         <linearGradient id="smIncome" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#34d399" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+          <stop offset="0%" stopColor="#117a4b" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#117a4b" stopOpacity="0" />
         </linearGradient>
         <linearGradient id="smExpense" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#fb7185" stopOpacity="0.45" />
-          <stop offset="100%" stopColor="#fb7185" stopOpacity="0" />
+          <stop offset="0%" stopColor="#c0392b" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#c0392b" stopOpacity="0" />
         </linearGradient>
       </defs>
       <GridLines rows={4} width={600} />
       {filled && (
-        <path
-          d={`${SMALL_EXPENSE} L600,180 L0,180 Z`}
-          fill="url(#smExpense)"
-          className="aurex-breathe"
-        />
+        <path d={`${SMALL_EXPENSE} L600,180 L0,180 Z`} fill="url(#smExpense)" />
       )}
-      <path
-        d={SMALL_EXPENSE}
-        fill="none"
-        stroke="#fb7185"
-        strokeWidth="2"
-        pathLength={100}
-        className="aurex-draw-line"
-      />
+      <path d={SMALL_EXPENSE} fill="none" stroke="#c0392b" strokeWidth="2" />
       {filled && (
-        <path
-          d={`${SMALL_INCOME} L600,180 L0,180 Z`}
-          fill="url(#smIncome)"
-          className="aurex-breathe"
-        />
+        <path d={`${SMALL_INCOME} L600,180 L0,180 Z`} fill="url(#smIncome)" />
       )}
-      <path
-        d={SMALL_INCOME}
-        fill="none"
-        stroke="#34d399"
-        strokeWidth="2.2"
-        pathLength={100}
-        className="aurex-draw-line"
-        style={{ animationDelay: '380ms' }}
-      />
-      <circle cx="600" cy="18" r="4" fill="#34d399">
+      <path d={SMALL_INCOME} fill="none" stroke="#117a4b" strokeWidth="2.2" />
+      <circle cx="600" cy="18" r="4" fill="#117a4b">
         <animate
           attributeName="r"
           values="4;6;4"
@@ -151,7 +94,7 @@ function SmallLineOrArea({ filled }: { filled: boolean }) {
           repeatCount="indefinite"
         />
       </circle>
-      <circle cx="600" cy="114" r="3" fill="#fb7185">
+      <circle cx="600" cy="114" r="3" fill="#c0392b">
         <animate
           attributeName="r"
           values="3;5;3"
@@ -180,19 +123,15 @@ function SmallBar() {
   const barW = 26;
   const inner = 4;
   return (
-    <svg
-      viewBox="0 0 600 180"
-      preserveAspectRatio="none"
-      className="h-full w-full"
-    >
+    <svg viewBox="0 0 600 180" className="mt-3 h-[170px] w-full">
       <defs>
         <linearGradient id="smBarInc" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#34d399" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#34d399" stopOpacity="0.45" />
+          <stop offset="0%" stopColor="#117a4b" stopOpacity="0.95" />
+          <stop offset="100%" stopColor="#117a4b" stopOpacity="0.45" />
         </linearGradient>
         <linearGradient id="smBarExp" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#fb7185" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#fb7185" stopOpacity="0.45" />
+          <stop offset="0%" stopColor="#c0392b" stopOpacity="0.95" />
+          <stop offset="100%" stopColor="#c0392b" stopOpacity="0.45" />
         </linearGradient>
       </defs>
       <GridLines rows={4} width={600} />
@@ -226,15 +165,11 @@ function SmallBar() {
 export function PreviewFlowChartSmall() {
   const [variant, setVariant] = useState<Variant>("Area");
   return (
-    <div className="aurex-card-marketing relative flex flex-col overflow-hidden p-4">
+    <div className="aurex-card-marketing relative overflow-hidden p-4">
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[var(--aurex-text-1)]">
+          <div className="text-[13px] font-semibold text-[var(--aurex-text-1)]">
             Cash flow
-            <span className="relative flex size-1.5">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#34d399] opacity-75" />
-              <span className="relative inline-flex size-1.5 rounded-full bg-[#34d399]" />
-            </span>
           </div>
           <div className="text-[11px] text-[var(--aurex-text-3)]">
             Income vs. expenses · daily
@@ -242,47 +177,22 @@ export function PreviewFlowChartSmall() {
         </div>
         <ToggleButtons active={variant} onChange={setVariant} size="sm" />
       </div>
-      <div className="mt-3 min-h-[170px] flex-1">
-        {variant === "Bar" ? (
-          <SmallBar />
-        ) : (
-          <SmallLineOrArea filled={variant === "Area"} />
-        )}
-      </div>
+      {variant === "Bar" ? (
+        <SmallBar />
+      ) : (
+        <SmallLineOrArea filled={variant === "Area"} />
+      )}
       <div className="mt-2 flex items-center gap-4 text-[11px] text-[var(--aurex-text-2)]">
         <span
           className="inline-block size-2 rounded-full"
-          style={{ backgroundColor: "#34d399" }}
+          style={{ backgroundColor: "#117a4b" }}
         />
         Income
         <span
           className="inline-block size-2 rounded-full"
-          style={{ backgroundColor: "#fb7185" }}
+          style={{ backgroundColor: "#c0392b" }}
         />
         Expenses
-      </div>
-      <div className="mt-auto grid grid-cols-3 gap-2 border-t border-[var(--aurex-border)] pt-3">
-        <CountUpStat
-          label="Net flow"
-          value={4540}
-          delay={250}
-          tone="text-[#34d399]"
-          format={(n) => `+$${Math.round(n).toLocaleString()}`}
-        />
-        <CountUpStat
-          label="Savings rate"
-          value={54}
-          delay={400}
-          tone="text-[var(--aurex-text-1)]"
-          format={(n) => `${Math.round(n)}%`}
-        />
-        <CountUpStat
-          label="Avg / day"
-          value={281}
-          delay={550}
-          tone="text-[var(--aurex-text-1)]"
-          format={(n) => `$${Math.round(n)}`}
-        />
       </div>
     </div>
   );
@@ -298,12 +208,12 @@ function LargeLineOrArea({ filled }: { filled: boolean }) {
     <svg viewBox="0 0 1200 280" className="h-[260px] w-full">
       <defs>
         <linearGradient id="lgIncome" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#34d399" stopOpacity="0.45" />
-          <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+          <stop offset="0%" stopColor="#117a4b" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#117a4b" stopOpacity="0" />
         </linearGradient>
         <linearGradient id="lgExpense" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#fb7185" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#fb7185" stopOpacity="0" />
+          <stop offset="0%" stopColor="#c0392b" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#c0392b" stopOpacity="0" />
         </linearGradient>
       </defs>
       <GridLines rows={6} width={1200} />
@@ -311,33 +221,13 @@ function LargeLineOrArea({ filled }: { filled: boolean }) {
         <path
           d={`${LARGE_EXPENSE} L1200,280 L0,280 Z`}
           fill="url(#lgExpense)"
-          className="aurex-breathe"
         />
       )}
-      <path
-        d={LARGE_EXPENSE}
-        fill="none"
-        stroke="#fb7185"
-        strokeWidth="2"
-        pathLength={100}
-        className="aurex-draw-line"
-      />
+      <path d={LARGE_EXPENSE} fill="none" stroke="#c0392b" strokeWidth="2" />
       {filled && (
-        <path
-          d={`${LARGE_INCOME} L1200,280 L0,280 Z`}
-          fill="url(#lgIncome)"
-          className="aurex-breathe"
-        />
+        <path d={`${LARGE_INCOME} L1200,280 L0,280 Z`} fill="url(#lgIncome)" />
       )}
-      <path
-        d={LARGE_INCOME}
-        fill="none"
-        stroke="#34d399"
-        strokeWidth="2.5"
-        pathLength={100}
-        className="aurex-draw-line"
-        style={{ animationDelay: '380ms' }}
-      />
+      <path d={LARGE_INCOME} fill="none" stroke="#117a4b" strokeWidth="2.5" />
     </svg>
   );
 }
@@ -366,12 +256,12 @@ function LargeBar() {
     <svg viewBox="0 0 1200 280" className="h-[260px] w-full">
       <defs>
         <linearGradient id="lgBarInc" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#34d399" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#34d399" stopOpacity="0.4" />
+          <stop offset="0%" stopColor="#117a4b" stopOpacity="0.95" />
+          <stop offset="100%" stopColor="#117a4b" stopOpacity="0.4" />
         </linearGradient>
         <linearGradient id="lgBarExp" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#fb7185" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#fb7185" stopOpacity="0.4" />
+          <stop offset="0%" stopColor="#c0392b" stopOpacity="0.95" />
+          <stop offset="100%" stopColor="#c0392b" stopOpacity="0.4" />
         </linearGradient>
       </defs>
       <GridLines rows={6} width={1200} />
@@ -412,7 +302,7 @@ export function PreviewFlowChartLarge() {
     >
       <div className="flex items-center justify-between border-b border-[var(--aurex-border)] pb-4">
         <div className="flex items-center gap-2.5">
-          <TrendingUp className="size-4 text-[#a5b4fc]" />
+          <TrendingUp className="size-4 text-[#16181d]" />
           <span className="text-[14px] font-semibold text-[var(--aurex-text-1)]">
             Cash flow · Last 90 days
           </span>

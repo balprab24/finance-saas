@@ -1,19 +1,20 @@
 import type { Appearance } from '@clerk/types';
 
-// Dark theme appearance tuned to the Aurex palette so Clerk's widget feels
-// native inside the auth shell instead of dropping in a white modal.
+// Light "Counter" appearance tuned to the Aurex palette so Clerk's widget feels
+// native inside the auth shell: ink as the action color, white surfaces, graphite
+// text, and money hues for danger/success.
 export const clerkAppearance: Appearance = {
   variables: {
-    colorPrimary: '#6366f1',
-    colorBackground: '#12141c',
-    colorText: '#eef0f6',
-    colorTextSecondary: '#b4b8c4',
-    colorInputBackground: 'rgba(255, 255, 255, 0.04)',
-    colorInputText: '#eef0f6',
-    colorNeutral: '#eef0f6',
-    colorDanger: '#fb7185',
-    colorSuccess: '#34d399',
-    colorWarning: '#fbbf24',
+    colorPrimary: '#16181d',
+    colorBackground: '#ffffff',
+    colorText: '#16181d',
+    colorTextSecondary: '#3a414b',
+    colorInputBackground: '#ffffff',
+    colorInputText: '#16181d',
+    colorNeutral: '#16181d',
+    colorDanger: '#c0392b',
+    colorSuccess: '#117a4b',
+    colorWarning: '#b45309',
     borderRadius: '10px',
     fontFamily: 'var(--font-sans), system-ui, sans-serif',
     fontSize: '14px',
@@ -29,33 +30,33 @@ export const clerkAppearance: Appearance = {
     logoImage: 'hidden',
     developmentMode: 'hidden',
     footer:
-      'bg-transparent text-[13px] text-[var(--aurex-text-3)] [&_a]:text-[var(--aurex-brand-text)] [&_a:hover]:text-[#c4cbff]',
+      'bg-transparent text-[13px] text-[var(--aurex-text-3)] [&_a]:text-[var(--aurex-text-1)] [&_a]:underline [&_a]:underline-offset-2 [&_a:hover]:text-[var(--aurex-text-2)]',
     footerActionLink:
-      'text-[var(--aurex-brand-text)] hover:text-[#c4cbff] font-medium',
+      'text-[var(--aurex-text-1)] underline underline-offset-2 hover:text-[var(--aurex-text-2)] font-medium',
     formButtonPrimary:
-      'bg-[#6366f1] hover:bg-[#7a7df7] text-white text-sm font-medium normal-case h-10 rounded-[10px] transition-colors',
+      'bg-[#16181d] hover:bg-[#2b2f36] text-white text-sm font-medium normal-case h-10 rounded-[10px] transition-colors',
     socialButtonsBlockButton:
       'border-[var(--aurex-border)] bg-[var(--aurex-surface)] hover:bg-[var(--aurex-surface-hover)] text-[var(--aurex-text-1)] normal-case h-10 rounded-[10px]',
     socialButtonsBlockButtonText: 'text-[var(--aurex-text-1)] font-medium',
     formFieldInput:
-      'border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] placeholder:text-[var(--aurex-text-4)] focus:border-[var(--aurex-brand)] focus:ring-1 focus:ring-[var(--aurex-brand)]/40 h-10 rounded-[10px]',
+      'border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] placeholder:text-[var(--aurex-text-3)] focus:border-[var(--aurex-ink)] focus:ring-1 focus:ring-[var(--aurex-ink)]/40 h-10 rounded-[10px]',
     formFieldLabel: 'text-[var(--aurex-text-2)] font-medium text-[13px]',
     formFieldInputShowPasswordButton:
       'text-[var(--aurex-text-3)] hover:text-[var(--aurex-text-1)]',
-    formFieldErrorText: 'text-[#fb7185] text-[12.5px]',
+    formFieldErrorText: 'text-[#c0392b] text-[12.5px]',
     formFieldSuccessText: 'text-[var(--aurex-income)] text-[12.5px]',
     formFieldAction:
-      'text-[var(--aurex-brand-text)] hover:text-[#c4cbff] font-medium',
+      'text-[var(--aurex-text-1)] underline underline-offset-2 hover:text-[var(--aurex-text-2)] font-medium',
     formResendCodeLink:
-      'text-[var(--aurex-brand-text)] hover:text-[#c4cbff]',
-    spinner: 'text-[var(--aurex-brand-text)]',
+      'text-[var(--aurex-text-1)] underline underline-offset-2 hover:text-[var(--aurex-text-2)]',
+    spinner: 'text-[var(--aurex-text-1)]',
     dividerLine: 'bg-[var(--aurex-border)]',
     dividerText: 'text-[var(--aurex-text-3)] text-[12px]',
     identityPreview:
       'border-[var(--aurex-border)] bg-[var(--aurex-surface)] rounded-[10px]',
     identityPreviewText: 'text-[var(--aurex-text-1)]',
     identityPreviewEditButton:
-      'text-[var(--aurex-brand-text)] hover:text-[#c4cbff]',
+      'text-[var(--aurex-text-1)] hover:text-[var(--aurex-text-2)]',
     otpCodeFieldInput:
       'border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] rounded-[10px]',
     alertText: 'text-[var(--aurex-text-2)]',

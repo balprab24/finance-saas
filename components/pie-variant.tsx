@@ -4,10 +4,9 @@ import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recha
 import { CategoryTooltip } from '@/components/category-tooltip';
 import { formatPercentage } from '@/lib/utils';
 
-// Qualitative palette for category breakdowns — distinct hues led by the brand
-// indigo. Categorical data needs separable colors; the decorative chrome stays
-// single-indigo elsewhere.
-const COLORS = ['#6366f1', '#22d3ee', '#f59e0b', '#fb7185', '#a78bfa', '#34d399'];
+// Qualitative palette for category breakdowns: distinct hues for separable data,
+// with decorative chrome kept neutral elsewhere.
+const COLORS = ['#16181d', '#5b6470', '#b45309', '#c0392b', '#6b7280', '#117a4b'];
 
 type Props = { data: { name: string; value: number }[] };
 
@@ -54,10 +53,10 @@ export function PieVariant({ data }: Props) {
           outerRadius={92}
           innerRadius={62}
           paddingAngle={3}
-          fill="#6366f1"
+          fill="#16181d"
           dataKey="value"
           labelLine={false}
-          stroke="rgba(11,15,36,0.6)"
+          stroke="#ffffff"
           strokeWidth={2}
           animationDuration={800}
           animationBegin={0}

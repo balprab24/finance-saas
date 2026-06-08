@@ -54,7 +54,7 @@ export function Navigation() {
                 >
                   <span
                     className={`size-1.5 rounded-full ${
-                      active ? 'bg-[#a5b4fc] shadow-[0_0_8px_#a5b4fc]' : 'bg-transparent'
+                      active ? 'bg-[var(--aurex-ink)]' : 'bg-transparent'
                     }`}
                   />
                   {route.label}

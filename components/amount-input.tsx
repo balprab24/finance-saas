@@ -32,9 +32,9 @@ export function AmountInput({ value, onChange, placeholder, disabled }: Props) {
               type="button"
               onClick={onReverseValue}
               className={cn(
-                'bg-slate-400 hover:bg-slate-500 absolute top-1.5 left-1.5 rounded-md p-2 flex items-center justify-center transition',
-                isIncome && 'bg-emerald-500 hover:bg-emerald-600',
-                isExpense && 'bg-rose-500 hover:bg-rose-600',
+                'absolute top-1.5 left-1.5 flex items-center justify-center rounded-md bg-[var(--aurex-text-4)] p-2 transition hover:bg-[var(--aurex-text-3)]',
+                isIncome && 'bg-[var(--aurex-income)] hover:bg-[#0f6b42]',
+                isExpense && 'bg-[var(--aurex-expense)] hover:bg-[#a83227]',
               )}
             >
               {!parsedValue && <Info className="size-3 text-white" />}

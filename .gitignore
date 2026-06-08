@@ -57,6 +57,11 @@ yarn-error.log*
 /screenshots
 /scripts/.auth
 
+# local agent/tooling state
+.claude/
+.impeccable/
+.github/skills/
+
 # vercel
 .vercel
 

@@ -1,20 +1,17 @@
 import type { Metadata } from 'next';
-import { Fraunces, Geist, Geist_Mono } from 'next/font/google';
+import { Schibsted_Grotesk, Geist_Mono } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Toaster } from 'sonner';
 
 import './globals.css';
 import { QueryProvider } from '@/providers/query-provider';
 
-// Editorial type system: a serif display face for headlines, a clean grotesk for
-// body/UI, and a mono for tabular figures. Deliberately not Inter.
-const geistSans = Geist({ variable: '--font-sans', subsets: ['latin'] });
+// "Light Counter" type system: one grotesque (Schibsted Grotesk) carries UI and
+// headings through weight contrast, with Geist Mono for tabular figures. Variable
+// axis means no explicit weight array; --font-display points at the same grotesque
+// (see globals.css @theme).
+const grotesk = Schibsted_Grotesk({ variable: '--font-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
-const fraunces = Fraunces({
-  variable: '--font-display',
-  subsets: ['latin'],
-  axes: ['opsz'],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://aurex.app'),
@@ -42,11 +39,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     >
       <html
         lang="en"
-        className={`dark ${geistSans.variable} ${geistMono.variable} ${fraunces.variable}`}
+        className={`${grotesk.variable} ${geistMono.variable}`}
       >
         <body suppressHydrationWarning className="antialiased">
           <QueryProvider>
-            <Toaster theme="dark" />
+            <Toaster theme="light" />
             {children}
           </QueryProvider>
         </body>

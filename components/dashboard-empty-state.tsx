@@ -28,7 +28,7 @@ export function DashboardEmptyState() {
             <Button
               disabled={seedDemo.isPending}
               onClick={() => seedDemo.mutate()}
-              className="h-10 bg-[var(--aurex-brand)] px-4 text-white hover:bg-[#7a7df7]"
+              className="h-10 bg-[var(--aurex-brand)] px-4 text-white hover:bg-[#2b2f36]"
             >
               {seedDemo.isPending ? (
                 <Loader2 className="mr-2 size-4 animate-spin" />

@@ -7,9 +7,9 @@ type LogoMarkProps = {
 };
 
 /**
- * Aurex mark — a custom geometric "A" monogram (no stock icon) set in a single
- * confident indigo badge. Drawn as crisp SVG strokes so it reads cleanly from
- * 16px (dashboard header) up to large marketing sizes.
+ * Aurex mark — a custom geometric "A" monogram (no stock icon) set in a solid
+ * ink badge. Drawn as crisp SVG strokes so it reads cleanly from 16px (dashboard
+ * header) up to large marketing sizes.
  */
 export function LogoMark({ size = 30, className }: LogoMarkProps) {
   return (

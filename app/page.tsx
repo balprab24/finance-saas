@@ -34,7 +34,7 @@ function BrandMark({ size = 36 }: { size?: number }) {
 
 function NavBar() {
   return (
-    <header className="sticky top-0 z-50 bg-gradient-to-b from-[rgba(10,11,16,0.85)] to-[rgba(10,11,16,0.7)] shadow-[0_1px_0_rgba(99,102,241,0.08),0_8px_24px_rgba(0,0,0,0.4)] backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-[var(--aurex-border)] bg-[var(--aurex-bg-elev)]">
       <div className={`${SECTION_WIDE} flex h-[68px] items-center justify-between`}>
         <Link href="/" className="group flex items-center gap-2.5">
           <BrandMark size={30} />
@@ -49,7 +49,7 @@ function NavBar() {
           <Show when="signed-in">
             <Link
               href="/dashboard"
-              className="inline-flex h-10 items-center gap-1.5 rounded-[10px] bg-[var(--aurex-brand)] px-4 text-[15px] font-semibold text-white transition-colors hover:bg-[#7a7df7]"
+              className="inline-flex h-10 items-center gap-1.5 rounded-[10px] bg-[var(--aurex-brand)] px-4 text-[15px] font-semibold text-white transition-colors hover:bg-[#2b2f36]"
             >
               Open dashboard
               <ArrowRight className="size-4" />
@@ -70,7 +70,7 @@ function NavBar() {
             </Link>
             <Link
               href="/sign-up"
-              className="inline-flex h-10 items-center gap-1.5 rounded-[10px] bg-[var(--aurex-brand)] px-4 text-[15px] font-semibold text-white transition-colors hover:bg-[#7a7df7]"
+              className="inline-flex h-10 items-center gap-1.5 rounded-[10px] bg-[var(--aurex-brand)] px-4 text-[15px] font-semibold text-white transition-colors hover:bg-[#2b2f36]"
             >
               Get started
               <ArrowRight className="size-4" />
@@ -175,7 +175,7 @@ function DashboardPreview() {
             Last 30 days
           </span>
           <span className="grid size-7 place-items-center rounded-full bg-[var(--aurex-brand)] text-[10px] font-semibold text-white">
-            PB
+            AX
           </span>
         </div>
       </div>
@@ -234,25 +234,25 @@ function KpiTile({
   const toneMap = {
     brand: {
       ring: 'ring-[var(--aurex-border)]',
-      icon: <WalletCards className="size-4 text-[#a5b4fc]" />,
-      iconBg: 'bg-[rgba(99,102,241,0.14)] ring-[rgba(99,102,241,0.28)]',
+      icon: <WalletCards className="size-4 text-[#16181d]" />,
+      iconBg: 'bg-[rgba(22, 24, 29,0.14)] ring-[rgba(22, 24, 29,0.28)]',
     },
     income: {
       ring: 'ring-[var(--aurex-border)]',
-      icon: <ArrowUpRight className="size-4 text-[#34d399]" />,
-      iconBg: 'bg-[rgba(52,211,153,0.14)] ring-[rgba(52,211,153,0.3)]',
+      icon: <ArrowUpRight className="size-4 text-[#117a4b]" />,
+      iconBg: 'bg-[rgba(17, 122, 75,0.14)] ring-[rgba(17, 122, 75,0.3)]',
     },
     expense: {
       ring: 'ring-[var(--aurex-border)]',
-      icon: <ArrowDownRight className="size-4 text-[#fb7185]" />,
-      iconBg: 'bg-[rgba(251,113,133,0.14)] ring-[rgba(251,113,133,0.3)]',
+      icon: <ArrowDownRight className="size-4 text-[#c0392b]" />,
+      iconBg: 'bg-[rgba(192, 57, 43,0.14)] ring-[rgba(192, 57, 43,0.3)]',
     },
   }[tone];
 
   const deltaClass =
     trend === 'up'
-      ? 'text-[#34d399] bg-[rgba(52,211,153,0.12)] ring-[rgba(52,211,153,0.28)]'
-      : 'text-[#fb7185] bg-[rgba(251,113,133,0.12)] ring-[rgba(251,113,133,0.28)]';
+      ? 'text-[#117a4b] bg-[rgba(17, 122, 75,0.12)] ring-[rgba(17, 122, 75,0.28)]'
+      : 'text-[#c0392b] bg-[rgba(192, 57, 43,0.12)] ring-[rgba(192, 57, 43,0.28)]';
 
   return (
     <div className={`aurex-card-marketing relative overflow-hidden p-4 ring-1 ${toneMap.ring}`}>
@@ -279,11 +279,11 @@ function KpiTile({
 
 function RecentTransactions() {
   const items = [
-    { payee: 'Whole Foods', cat: 'Groceries', amt: '−$84.20', tone: 'expense' as const, color: '#fb7185' },
-    { payee: 'Stripe Payout', cat: 'Income', amt: '+$2,400.00', tone: 'income' as const, color: '#34d399' },
-    { payee: 'Lyft', cat: 'Transport', amt: '−$22.50', tone: 'expense' as const, color: '#818cf8' },
-    { payee: 'Spotify', cat: 'Subscriptions', amt: '−$11.99', tone: 'expense' as const, color: '#6366f1' },
-    { payee: 'Apple', cat: 'Tech', amt: '−$129.00', tone: 'expense' as const, color: '#a5b4fc' },
+    { payee: 'Whole Foods', cat: 'Groceries', amt: '−$84.20', tone: 'expense' as const, color: '#c0392b' },
+    { payee: 'Stripe Payout', cat: 'Income', amt: '+$2,400.00', tone: 'income' as const, color: '#117a4b' },
+    { payee: 'Lyft', cat: 'Transport', amt: '−$22.50', tone: 'expense' as const, color: '#5b6470' },
+    { payee: 'Spotify', cat: 'Subscriptions', amt: '−$11.99', tone: 'expense' as const, color: '#16181d' },
+    { payee: 'Apple', cat: 'Tech', amt: '−$129.00', tone: 'expense' as const, color: '#16181d' },
   ];
 
   return (
@@ -315,7 +315,7 @@ function RecentTransactions() {
             </div>
             <span
               className={`font-mono text-[12.5px] font-semibold tabular-nums ${
-                t.tone === 'income' ? 'text-[#34d399]' : 'text-[var(--aurex-text-1)]'
+                t.tone === 'income' ? 'text-[#117a4b]' : 'text-[var(--aurex-text-1)]'
               }`}
             >
               {t.amt}
@@ -329,10 +329,10 @@ function RecentTransactions() {
 
 function TopCategories() {
   const cats = [
-    { name: 'Groceries', value: 78, color: '#6366f1' },
-    { name: 'Rent', value: 92, color: '#818cf8' },
-    { name: 'Dining', value: 54, color: '#a5b4fc' },
-    { name: 'Transport', value: 38, color: '#fb7185' },
+    { name: 'Groceries', value: 78, color: '#16181d' },
+    { name: 'Rent', value: 92, color: '#2b2f36' },
+    { name: 'Dining', value: 54, color: '#16181d' },
+    { name: 'Transport', value: 38, color: '#c0392b' },
   ];
 
   return (
@@ -452,7 +452,7 @@ function InsightsSection() {
           </h2>
           <p className="mt-5 max-w-[520px] text-[16px] leading-[1.65] text-[var(--aurex-text-2)]">
             Aurex renders every chart with Recharts and a finance-tuned palette —
-            emerald for income, rose for expenses, indigo for everything in
+            green for income, red for expenses, graphite for everything in
             between. Toggle the visualization without losing your filter.
           </p>
         </div>
@@ -468,7 +468,7 @@ function InsightsSection() {
             icon={PieChart}
             tag="Spending breakdown"
             title="See where the money went"
-            desc="A pie of expenses by category — plus radar and radial alternatives so the chart matches the question you're asking."
+            desc="A pie of expenses by category — plus a radial alternative so the chart matches the question you're asking."
           />
         </div>
         <div
@@ -549,7 +549,7 @@ function ImportSection() {
                 style={{ ['--reveal-delay']: `${i * 120}ms` } as React.CSSProperties}
               >
                 <span className="mt-1 grid size-8 place-items-center rounded-md bg-[var(--aurex-surface)] ring-1 ring-[var(--aurex-border)]">
-                  <s.icon className="size-4 text-[#a5b4fc]" />
+                  <s.icon className="size-4 text-[#16181d]" />
                 </span>
                 <div>
                   <div className="font-display text-[20px] font-medium tracking-tight text-[var(--aurex-text-1)]">
@@ -576,7 +576,7 @@ function TrustBand() {
     { icon: WalletCards, label: 'No automatic bank link' },
   ];
   return (
-    <section id="privacy" className="aurex-hairline relative bg-[rgba(255,255,255,0.012)] py-14">
+    <section id="privacy" className="aurex-hairline relative bg-[rgba(0,0,0,0.015)] py-14">
       <div className={`${SECTION} relative z-10 flex flex-wrap items-center justify-between gap-6`}>
         <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--aurex-text-3)]">
           Built around your privacy
@@ -590,7 +590,7 @@ function TrustBand() {
               style={{ ['--reveal-delay']: `${i * 80}ms` } as React.CSSProperties}
             >
               <span className="grid size-7 place-items-center rounded-md bg-[var(--aurex-surface)] ring-1 ring-[var(--aurex-border)]">
-                <it.icon className="size-3.5 text-[#a5b4fc]" />
+                <it.icon className="size-3.5 text-[#16181d]" />
               </span>
               {it.label}
             </span>

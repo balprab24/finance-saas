@@ -21,7 +21,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </Link>
         </header>
         <main className="flex flex-1 items-center justify-center px-4 py-6">
-          <div className="aurex-card w-full max-w-md p-7">
+          <div className="aurex-card w-full max-w-md p-5 sm:p-7">
             <div className="mb-5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--aurex-text-3)]">
               <ShieldCheck className="size-3.5 text-[var(--aurex-brand-text)]" />
               Secured by Clerk

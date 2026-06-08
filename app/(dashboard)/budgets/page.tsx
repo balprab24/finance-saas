@@ -12,11 +12,8 @@ export default function BudgetsPage() {
   return (
     <div className="mx-auto w-full max-w-screen-2xl space-y-5 pb-16 pt-6">
       <div className="flex flex-col gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--aurex-text-3)]">
-          Budgets
-        </span>
         <h1 className="font-display text-[26px] font-medium tracking-[-0.01em] text-[var(--aurex-text-1)] lg:text-[30px]">
-          Set the limit, watch the spend
+          Budgets
         </h1>
       </div>
 
@@ -46,7 +43,7 @@ export default function BudgetsPage() {
               <div
                 className={
                   (totals?.totalRemaining ?? 0) < 0
-                    ? 'text-[18px] font-semibold tabular-nums text-[#fb7185]'
+                    ? 'text-[18px] font-semibold tabular-nums text-[#c0392b]'
                     : 'text-[18px] font-semibold tabular-nums text-[var(--aurex-text-1)]'
                 }
               >

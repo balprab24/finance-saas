@@ -100,7 +100,7 @@ export function DataTable<TData, TValue>({
             className={cn(
               'h-9 sm:ml-auto',
               bulkActionTone === 'danger'
-                ? 'border-[rgba(251,113,133,0.32)] bg-[rgba(251,113,133,0.08)] text-[#fb7185] hover:bg-[rgba(251,113,133,0.14)] hover:text-[#fb7185]'
+                ? 'border-[rgba(192, 57, 43,0.32)] bg-[rgba(192, 57, 43,0.08)] text-[#c0392b] hover:bg-[rgba(192, 57, 43,0.14)] hover:text-[#c0392b]'
                 : 'border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] hover:bg-[var(--aurex-surface-hover)] hover:text-[var(--aurex-text-1)]',
             )}
             onClick={async () => {
@@ -143,7 +143,7 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className="border-[var(--aurex-border)] hover:bg-[var(--aurex-surface)] data-[state=selected]:bg-[var(--aurex-brand-soft)]"
+                  className="border-[var(--aurex-border)] transition-colors hover:bg-[var(--aurex-surface)] data-[state=selected]:bg-[var(--aurex-brand-soft)]"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="py-2.5 text-[13.5px]">

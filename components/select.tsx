@@ -23,11 +23,11 @@ const styles: StylesConfig<Option, false, GroupBase<Option>> = {
     ...base,
     minHeight: 40,
     borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderColor: state.isFocused ? '#6366f1' : 'rgba(255, 255, 255, 0.08)',
-    boxShadow: state.isFocused ? '0 0 0 1px rgba(99, 102, 241, 0.4)' : 'none',
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    borderColor: state.isFocused ? '#16181d' : 'rgba(0, 0, 0, 0.08)',
+    boxShadow: state.isFocused ? '0 0 0 1px rgba(22, 24, 29, 0.4)' : 'none',
     ':hover': {
-      borderColor: state.isFocused ? '#6366f1' : 'rgba(255, 255, 255, 0.16)',
+      borderColor: state.isFocused ? '#16181d' : 'rgba(0, 0, 0, 0.16)',
     },
     transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
   }),
@@ -37,17 +37,17 @@ const styles: StylesConfig<Option, false, GroupBase<Option>> = {
   }),
   placeholder: (base) => ({
     ...base,
-    color: '#5a5d6e',
+    color: '#5b6470',
     fontSize: 14,
   }),
   singleValue: (base) => ({
     ...base,
-    color: '#eef0f6',
+    color: '#16181d',
     fontSize: 14,
   }),
   input: (base) => ({
     ...base,
-    color: '#eef0f6',
+    color: '#16181d',
     fontSize: 14,
     margin: 0,
     padding: 0,
@@ -55,20 +55,20 @@ const styles: StylesConfig<Option, false, GroupBase<Option>> = {
   indicatorSeparator: () => ({ display: 'none' }),
   dropdownIndicator: (base, state) => ({
     ...base,
-    color: state.isFocused ? '#b4b8c4' : '#7d8090',
-    ':hover': { color: '#b4b8c4' },
+    color: state.isFocused ? '#3a414b' : '#5b6470',
+    ':hover': { color: '#16181d' },
   }),
   clearIndicator: (base) => ({
     ...base,
-    color: '#7d8090',
-    ':hover': { color: '#fb7185' },
+    color: '#5b6470',
+    ':hover': { color: '#c0392b' },
   }),
   menu: (base) => ({
     ...base,
-    backgroundColor: '#14161e',
+    backgroundColor: '#ffffff',
     borderRadius: 10,
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.5)',
+    border: '1px solid rgba(0, 0, 0, 0.1)',
+    boxShadow: '0 12px 32px rgba(0, 0, 0, 0.16)',
     overflow: 'hidden',
     marginTop: 4,
     zIndex: 60,
@@ -80,25 +80,25 @@ const styles: StylesConfig<Option, false, GroupBase<Option>> = {
   option: (base, state) => ({
     ...base,
     backgroundColor: state.isSelected
-      ? 'rgba(99, 102, 241, 0.18)'
+      ? 'rgba(22, 24, 29, 0.1)'
       : state.isFocused
-        ? 'rgba(255, 255, 255, 0.05)'
+        ? 'rgba(0, 0, 0, 0.05)'
         : 'transparent',
-    color: state.isSelected ? '#eef0f6' : '#b4b8c4',
+    color: state.isSelected ? '#16181d' : '#3a414b',
     cursor: 'pointer',
     fontSize: 14,
     padding: '8px 10px',
     borderRadius: 6,
-    ':active': { backgroundColor: 'rgba(99, 102, 241, 0.22)' },
+    ':active': { backgroundColor: 'rgba(22, 24, 29, 0.14)' },
   }),
   noOptionsMessage: (base) => ({
     ...base,
-    color: '#7d8090',
+    color: '#5b6470',
     fontSize: 13,
   }),
   loadingMessage: (base) => ({
     ...base,
-    color: '#7d8090',
+    color: '#5b6470',
     fontSize: 13,
   }),
 };

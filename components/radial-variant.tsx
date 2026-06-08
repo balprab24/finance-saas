@@ -3,10 +3,9 @@
 import { Legend, RadialBar, RadialBarChart, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 
-// Qualitative palette for category breakdowns — distinct hues led by the brand
-// indigo. Categorical data needs separable colors; the decorative chrome stays
-// single-indigo elsewhere.
-const COLORS = ['#6366f1', '#22d3ee', '#f59e0b', '#fb7185', '#a78bfa', '#34d399'];
+// Qualitative palette for category breakdowns: distinct hues for separable data,
+// with decorative chrome kept neutral elsewhere.
+const COLORS = ['#16181d', '#5b6470', '#b45309', '#c0392b', '#6b7280', '#117a4b'];
 
 type Props = { data: { name: string; value: number }[] };
 
@@ -23,8 +22,8 @@ export function RadialVariant({ data }: Props) {
         data={data.map((item, index) => ({ ...item, fill: COLORS[index % COLORS.length] }))}
       >
         <RadialBar
-          label={{ position: 'insideStart', fill: '#f5f7ff', fontSize: 11 }}
-          background={{ fill: 'rgba(148,163,255,0.08)' }}
+          label={{ position: 'insideStart', fill: '#ffffff', fontSize: 11 }}
+          background={{ fill: 'rgba(0,0,0,0.06)' }}
           cornerRadius={4}
           dataKey="value"
         />

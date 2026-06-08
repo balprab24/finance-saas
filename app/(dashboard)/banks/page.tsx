@@ -18,7 +18,7 @@ function statusClass(status: string) {
     return 'border-[rgba(34,197,94,0.24)] bg-[rgba(34,197,94,0.08)] text-[#86efac]';
   }
   if (status === 'error') {
-    return 'border-[rgba(251,191,36,0.24)] bg-[var(--aurex-warn-soft)] text-[var(--aurex-warn)]';
+    return 'border-[rgba(180, 83, 9,0.24)] bg-[var(--aurex-warn-soft)] text-[var(--aurex-warn)]';
   }
   return 'border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-3)]';
 }
@@ -40,7 +40,7 @@ export default function BanksPage() {
     return (
       <div className="mx-auto w-full max-w-screen-2xl pb-16 pt-6">
         <div className="aurex-card p-5">
-          <Skeleton className="h-6 w-40 bg-white/8" />
+          <Skeleton className="h-6 w-40 bg-black/[0.06]" />
           <div className="mt-5 flex h-[360px] w-full items-center justify-center">
             <Loader2 className="size-5 animate-spin text-[var(--aurex-text-3)]" />
           </div>
@@ -53,11 +53,8 @@ export default function BanksPage() {
     <div className="mx-auto w-full max-w-screen-2xl space-y-5 pb-16 pt-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex flex-col gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--aurex-text-3)]">
-            Banks
-          </span>
           <h1 className="font-display text-[26px] font-medium tracking-[-0.01em] text-[var(--aurex-text-1)] lg:text-[30px]">
-            Linked bank connections
+            Banks
           </h1>
         </div>
         <PlaidLinkButton disabled={itemsQuery.isFetching} />

@@ -61,11 +61,11 @@ export function Chart({ data = [] }: Props) {
       </div>
       <div className="mt-3 flex items-center gap-5 text-[12px] text-[var(--aurex-text-2)]">
         <span className="inline-flex items-center gap-1.5">
-          <span className="size-1.5 rounded-full bg-[#34d399]" />
+          <span className="size-1.5 rounded-full bg-[#117a4b]" />
           Income
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="size-1.5 rounded-full bg-[#fb7185]" />
+          <span className="size-1.5 rounded-full bg-[#c0392b]" />
           Expenses
         </span>
       </div>
@@ -95,10 +95,10 @@ export function ChartLoading() {
   return (
     <div className="aurex-card p-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <Skeleton className="h-5 w-32 bg-white/8" />
-        <Skeleton className="h-8 w-full rounded-md bg-white/8 lg:w-[148px]" />
+        <Skeleton className="h-5 w-32 bg-black/[0.06]" />
+        <Skeleton className="h-8 w-full rounded-md bg-black/[0.06] lg:w-[148px]" />
       </div>
-      <Skeleton className="mt-6 h-[340px] w-full rounded-md bg-white/8" />
+      <Skeleton className="mt-6 h-[340px] w-full rounded-md bg-black/[0.06]" />
     </div>
   );
 }

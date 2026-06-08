@@ -30,7 +30,7 @@ function ProgressBar({ percent, over }: { percent: number; over: boolean }) {
       <div
         className={cn(
           'h-full rounded-full transition-all',
-          over ? 'bg-[#fb7185]' : 'bg-[var(--aurex-brand)]',
+          over ? 'bg-[#c0392b]' : 'bg-[var(--aurex-brand)]',
         )}
         style={{ width: `${width}%` }}
       />
@@ -139,8 +139,8 @@ export function BudgetsTable() {
                       className={cn(
                         'shrink-0 border-0 text-[11px]',
                         over
-                          ? 'bg-[rgba(251,113,133,0.12)] text-[#fb7185]'
-                          : 'bg-[rgba(52,211,153,0.12)] text-[#34d399]',
+                          ? 'bg-[rgba(192, 57, 43,0.12)] text-[#c0392b]'
+                          : 'bg-[rgba(17, 122, 75,0.12)] text-[#117a4b]',
                       )}
                     >
                       {over ? 'Over' : 'On track'}
@@ -153,7 +153,7 @@ export function BudgetsTable() {
               <TableCell
                 className={cn(
                   'text-right tabular-nums',
-                  over ? 'text-[#fb7185]' : 'text-[var(--aurex-text-1)]',
+                  over ? 'text-[#c0392b]' : 'text-[var(--aurex-text-1)]',
                 )}
               >
                 {row.remaining === null ? '—' : formatCurrency(row.remaining)}
@@ -165,7 +165,7 @@ export function BudgetsTable() {
                     variant="ghost"
                     disabled={disabled}
                     onClick={() => del.mutate({ id: row.budgetId! })}
-                    className="size-8 p-0 text-[var(--aurex-text-3)] hover:bg-[var(--aurex-surface-hover)] hover:text-[#fb7185]"
+                    className="size-8 p-0 text-[var(--aurex-text-3)] hover:bg-[var(--aurex-surface-hover)] hover:text-[#c0392b]"
                     aria-label={`Clear budget for ${row.name}`}
                   >
                     <X className="size-4" />

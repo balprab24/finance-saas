@@ -44,8 +44,8 @@ export function TrendsList() {
               className={cn(
                 'inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[12px] font-medium tabular-nums',
                 up
-                  ? 'bg-[rgba(251,113,133,0.1)] text-[#fb7185]'
-                  : 'bg-[rgba(52,211,153,0.1)] text-[#34d399]',
+                  ? 'bg-[rgba(192, 57, 43,0.1)] text-[#c0392b]'
+                  : 'bg-[rgba(17, 122, 75,0.1)] text-[#117a4b]',
               )}
             >
               {up ? <ArrowUpRight className="size-3.5" /> : <ArrowDownRight className="size-3.5" />}

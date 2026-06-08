@@ -19,7 +19,7 @@ export function CustomTooltip({
 
   return (
     <div
-      className="overflow-hidden rounded-xl border border-[var(--aurex-border-strong)] bg-[rgba(11,15,36,0.92)] shadow-[0_24px_48px_-16px_rgba(0,0,0,0.7)] backdrop-blur-md"
+      className="overflow-hidden rounded-xl border border-[var(--aurex-border-strong)] bg-[var(--aurex-bg-elev)] shadow-[0_12px_32px_rgba(0,0,0,0.16)]"
     >
       <div className="border-b border-[var(--aurex-border)] px-3 py-2 text-[12px] font-medium text-[var(--aurex-text-3)]">
         {format(new Date(date), 'MMM dd, yyyy')}
@@ -27,7 +27,7 @@ export function CustomTooltip({
       <div className="space-y-1.5 px-3 py-2.5">
         <div className="flex items-center justify-between gap-x-6">
           <div className="flex items-center gap-x-2">
-            <span className="size-1.5 rounded-full bg-[#34d399]" />
+            <span className="size-1.5 rounded-full bg-[#117a4b]" />
             <p className="text-[13px] text-[var(--aurex-text-2)]">Income</p>
           </div>
           <p className="text-right font-mono text-[13px] font-semibold tabular-nums text-[var(--aurex-text-1)]">
@@ -36,7 +36,7 @@ export function CustomTooltip({
         </div>
         <div className="flex items-center justify-between gap-x-6">
           <div className="flex items-center gap-x-2">
-            <span className="size-1.5 rounded-full bg-[#fb7185]" />
+            <span className="size-1.5 rounded-full bg-[#c0392b]" />
             <p className="text-[13px] text-[var(--aurex-text-2)]">Expenses</p>
           </div>
           <p className="text-right font-mono text-[13px] font-semibold tabular-nums text-[var(--aurex-text-1)]">

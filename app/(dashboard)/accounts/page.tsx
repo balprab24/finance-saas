@@ -42,11 +42,8 @@ export default function AccountsPage() {
   return (
     <div className="mx-auto w-full max-w-screen-2xl space-y-5 pb-16 pt-6">
       <div className="flex flex-col gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--aurex-text-3)]">
-          Accounts
-        </span>
         <h1 className="font-display text-[26px] font-medium tracking-[-0.01em] text-[var(--aurex-text-1)] lg:text-[30px]">
-          Every wallet, in one place
+          Accounts
         </h1>
       </div>
       <div className="aurex-card p-5">
@@ -83,7 +80,7 @@ export default function AccountsPage() {
             <Button
               onClick={newAccount.onOpen}
               size="sm"
-              className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[#7a7df7]"
+              className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[#2b2f36]"
             >
               <Plus className="mr-2 size-3.5" />
               Add account
@@ -94,7 +91,7 @@ export default function AccountsPage() {
           {accountsQuery.isLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className="h-11 w-full rounded-md bg-white/[0.06]" />
+                <Skeleton key={i} className="h-11 w-full rounded-md bg-black/[0.05]" />
               ))}
             </div>
           ) : (

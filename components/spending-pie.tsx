@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FileSearch, PieChart, Radar, Target } from 'lucide-react';
+import { FileSearch, PieChart, Target } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -12,7 +12,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PieVariant } from '@/components/pie-variant';
-import { RadarVariant } from '@/components/radar-variant';
 import { RadialVariant } from '@/components/radial-variant';
 
 type Props = {
@@ -44,12 +43,6 @@ export function SpendingPie({ data = [] }: Props) {
                 <p className="line-clamp-1">Pie</p>
               </div>
             </SelectItem>
-            <SelectItem value="radar">
-              <div className="flex items-center">
-                <Radar className="mr-2 size-4 shrink-0" />
-                <p className="line-clamp-1">Radar</p>
-              </div>
-            </SelectItem>
             <SelectItem value="radial">
               <div className="flex items-center">
                 <Target className="mr-2 size-4 shrink-0" />
@@ -72,7 +65,6 @@ export function SpendingPie({ data = [] }: Props) {
         ) : (
           <>
             {chartType === 'pie' && <PieVariant data={data} />}
-            {chartType === 'radar' && <RadarVariant data={data} />}
             {chartType === 'radial' && <RadialVariant data={data} />}
           </>
         )}
@@ -85,10 +77,10 @@ export function SpendingPieLoading() {
   return (
     <div className="aurex-card p-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <Skeleton className="h-5 w-32 bg-white/8" />
-        <Skeleton className="h-8 w-full rounded-md bg-white/8 lg:w-[148px]" />
+        <Skeleton className="h-5 w-32 bg-black/[0.06]" />
+        <Skeleton className="h-8 w-full rounded-md bg-black/[0.06] lg:w-[148px]" />
       </div>
-      <Skeleton className="mt-6 h-[340px] w-full rounded-md bg-white/8" />
+      <Skeleton className="mt-6 h-[340px] w-full rounded-md bg-black/[0.06]" />
     </div>
   );
 }
