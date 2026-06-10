@@ -4,7 +4,8 @@
 
 Aurex is a personal-finance SaaS for tracking accounts, categories, transactions,
 CSV imports, and dashboard analytics. It is a Next.js app with a typed Hono API,
-Postgres persistence, Clerk authentication, and a dark operational UI.
+Postgres persistence, Clerk authentication, and a light, document-grade UI
+("Light Counter": near-white paper, graphite ink, no brand hue). See `DESIGN.md`.
 
 ## Current stack
 
@@ -135,3 +136,43 @@ npm run db:migrate
 - Do not rewrite `.env.local`, generated screenshots, or unrelated files.
 - If a migration can fail on existing local data, document the cleanup path in
   README before handing off.
+
+## Design workflow
+
+The UI is maintained with the in-repo **Impeccable** design skill. Its commands are
+pinned as `/shortcuts` (e.g. `/critique`, `/harden`, `/polish`). Use them as a loop, not
+in isolation: `audit`/`critique` only *diagnose*; the execution commands turn those
+reports into design-system-aware edits. `PRODUCT.md` and `DESIGN.md` are the source of
+truth every command reads first.
+
+**The loop (per surface):**
+
+1. **Diagnose** — `/critique <surface>` (design / AI-slop; writes a snapshot under
+   `.impeccable/critique/`) and `/audit <surface>` (a11y / responsive / perf).
+2. **Direct** — read critique's Priority Issues; pick the axis that matters.
+3. **Execute** — `/harden` first (empty / error / edge states), then the targeted fix:
+   `/layout`, `/typeset`, `/clarify`, `/adapt`, `/onboard`, or `/distill`.
+4. **Seal** — `/polish <surface>` last (it reads the critique snapshot as its backlog),
+   then re-run `/audit` or `/critique` to confirm the score moved; `/optimize` if perf
+   regressed.
+5. **Systematize** (periodic) — `/extract` a pattern that repeats 3+ times into the
+   design system; `/document` to refresh `DESIGN.md` / `.impeccable/design.json`.
+
+**Reach for it when:**
+
+| Command | When |
+|---|---|
+| `/harden` | Missing empty / error / edge states |
+| `/onboard` | A first-time user lands on a blank table |
+| `/layout` | Sparse or monotone spacing, weak hierarchy |
+| `/typeset` | Money-figure type drift (Geist Mono vs sans) |
+| `/clarify` | Templatey or vague copy, error / empty messages |
+| `/adapt` | Tables / forms unverified on mobile |
+| `/distill` | Redundant variants diluting a view |
+| `/extract`, `/document` | A pattern repeats 3+ times; `DESIGN.md` drifted |
+
+**Scope rule.** Aurex is the **restrained product register** (light paper, graphite ink,
+no brand hue, no slop). Stay in the command set above. The louder Enhance/Direction
+commands (`bolder`, `colorize`, `delight`, `animate`, `overdrive`) are out of scope unless
+a specific surface clearly justifies one *and* it stays inside the no-glow,
+no-decorative-color brand.
