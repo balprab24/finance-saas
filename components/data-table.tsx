@@ -89,7 +89,7 @@ export function DataTable<TData, TValue>({
             onChange={(event) =>
               table.getColumn(filterKey)?.setFilterValue(event.target.value)
             }
-            className="h-9 w-full border-[var(--aurex-border)] bg-[var(--aurex-surface)] pl-8 text-[13px] text-[var(--aurex-text-1)] placeholder:text-[var(--aurex-text-4)] focus-visible:border-[var(--aurex-brand)] focus-visible:ring-1 focus-visible:ring-[var(--aurex-brand)]/40"
+            className="h-9 w-full border-[var(--aurex-border)] bg-[var(--aurex-surface)] pl-8 text-[13px] text-[var(--aurex-text-1)] placeholder:text-[var(--aurex-text-3)] focus-visible:border-[var(--aurex-brand)] focus-visible:ring-1 focus-visible:ring-[var(--aurex-brand)]/40"
           />
         </div>
         {selectedCount > 0 ? (
@@ -100,7 +100,7 @@ export function DataTable<TData, TValue>({
             className={cn(
               'h-9 sm:ml-auto',
               bulkActionTone === 'danger'
-                ? 'border-[rgba(192, 57, 43,0.32)] bg-[rgba(192, 57, 43,0.08)] text-[#c0392b] hover:bg-[rgba(192, 57, 43,0.14)] hover:text-[#c0392b]'
+                ? 'border-[rgba(192,57,43,0.32)] bg-[rgba(192,57,43,0.08)] text-[#c0392b] hover:bg-[rgba(192,57,43,0.14)] hover:text-[#c0392b]'
                 : 'border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] hover:bg-[var(--aurex-surface-hover)] hover:text-[var(--aurex-text-1)]',
             )}
             onClick={async () => {

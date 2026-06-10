@@ -60,7 +60,7 @@ export const columns: ColumnDef<ResponseType>[] = [
               </span>
             ) : null}
             {hasPlaidError ? (
-              <span className="rounded border border-[rgba(180, 83, 9,0.24)] bg-[var(--aurex-warn-soft)] px-1.5 py-0.5 text-[10.5px] font-medium uppercase tracking-[0.08em] text-[var(--aurex-warn)]">
+              <span className="rounded border border-[rgba(180,83,9,0.24)] bg-[var(--aurex-warn-soft)] px-1.5 py-0.5 text-[10.5px] font-medium uppercase tracking-[0.08em] text-[var(--aurex-warn)]">
                 Attention
               </span>
             ) : null}

@@ -171,10 +171,10 @@ function Stepper({ step }: { step: Step }) {
             <span
               className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 ${
                 isActive
-                  ? 'border-[rgba(22, 24, 29,0.32)] bg-[rgba(22, 24, 29,0.1)] text-[var(--aurex-brand-text)]'
+                  ? 'border-[rgba(22,24,29,0.32)] bg-[rgba(22,24,29,0.1)] text-[var(--aurex-brand-text)]'
                   : isDone
                     ? 'border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-2)]'
-                    : 'border-[var(--aurex-border)] bg-transparent text-[var(--aurex-text-4)]'
+                    : 'border-[var(--aurex-border)] bg-transparent text-[var(--aurex-text-3)]'
               }`}
             >
               {isDone ? <CheckCircle2 className="size-3.5" /> : null}
@@ -304,7 +304,7 @@ function ReviewStep({
       </div>
 
       {errorCount > 0 ? (
-        <div className="aurex-card border-[rgba(192, 57, 43,0.28)] p-4">
+        <div className="aurex-card border-[rgba(192,57,43,0.28)] p-4">
           <div className="flex items-center gap-2">
             <XCircle className="size-4 text-[#c0392b]" />
             <h3 className="text-[13.5px] font-semibold text-[var(--aurex-text-1)]">
@@ -396,12 +396,12 @@ function ReviewStep({
                       </td>
                       <td className="px-3 py-2 text-right">
                         {isDup ? (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-[rgba(180, 83, 9,0.12)] px-1.5 py-0.5 text-[11.5px] font-medium text-[#b45309]">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-[rgba(180,83,9,0.12)] px-1.5 py-0.5 text-[11.5px] font-medium text-[#b45309]">
                             <AlertTriangle className="size-3" />
                             Duplicate
                           </span>
                         ) : (
-                          <span className="text-[11.5px] text-[var(--aurex-text-4)]">—</span>
+                          <span className="text-[11.5px] text-[var(--aurex-text-3)]">—</span>
                         )}
                       </td>
                     </tr>
@@ -435,9 +435,9 @@ function SummaryStat({
   icon: React.ReactNode;
 }) {
   const toneRing = {
-    success: 'border-[rgba(17, 122, 75,0.28)]',
-    danger: 'border-[rgba(192, 57, 43,0.28)]',
-    warning: 'border-[rgba(180, 83, 9,0.28)]',
+    success: 'border-[rgba(17,122,75,0.28)]',
+    danger: 'border-[rgba(192,57,43,0.28)]',
+    warning: 'border-[rgba(180,83,9,0.28)]',
     muted: 'border-[var(--aurex-border)]',
   }[tone];
 

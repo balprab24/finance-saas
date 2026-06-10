@@ -18,7 +18,7 @@ function statusClass(status: string) {
     return 'border-[rgba(34,197,94,0.24)] bg-[rgba(34,197,94,0.08)] text-[#86efac]';
   }
   if (status === 'error') {
-    return 'border-[rgba(180, 83, 9,0.24)] bg-[var(--aurex-warn-soft)] text-[var(--aurex-warn)]';
+    return 'border-[rgba(180,83,9,0.24)] bg-[var(--aurex-warn-soft)] text-[var(--aurex-warn)]';
   }
   return 'border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-3)]';
 }

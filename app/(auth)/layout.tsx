@@ -34,7 +34,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             </ClerkLoading>
           </div>
         </main>
-        <footer className="px-6 py-5 text-center text-[12.5px] text-[var(--aurex-text-4)] lg:px-10">
+        <footer className="px-6 py-5 text-center text-[12.5px] text-[var(--aurex-text-3)] lg:px-10">
           &copy; {new Date().getFullYear()} Aurex
         </footer>
       </div>
