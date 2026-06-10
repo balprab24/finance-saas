@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import CurrencyInput from 'react-currency-input-field';
 import { format } from 'date-fns';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, PiggyBank, Plus, X } from 'lucide-react';
 
 import { cn, convertAmountToMiliunits, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/empty-state';
 import {
   Table,
   TableBody,
@@ -99,9 +101,20 @@ export function BudgetsTable() {
 
   if (rows.length === 0) {
     return (
-      <div className="flex h-[220px] w-full items-center justify-center text-center text-[13px] text-[var(--aurex-text-3)]">
-        Create a category first, then set a monthly budget for it here.
-      </div>
+      <EmptyState
+        icon={PiggyBank}
+        title="No budgets yet"
+        message="Budgets are set per category. Create a category first, then set a monthly amount for it here."
+        action={
+          <Link
+            href="/categories"
+            className="inline-flex h-9 items-center rounded-md bg-[var(--aurex-brand)] px-3 text-[13px] font-medium text-white transition-colors hover:bg-[#2b2f36]"
+          >
+            <Plus className="mr-2 size-3.5" />
+            Add a category
+          </Link>
+        }
+      />
     );
   }
 
@@ -139,15 +152,15 @@ export function BudgetsTable() {
                       className={cn(
                         'shrink-0 border-0 text-[11px]',
                         over
-                          ? 'bg-[rgba(192, 57, 43,0.12)] text-[#c0392b]'
-                          : 'bg-[rgba(17, 122, 75,0.12)] text-[#117a4b]',
+                          ? 'bg-[rgba(192,57,43,0.12)] text-[#c0392b]'
+                          : 'bg-[rgba(17,122,75,0.12)] text-[#117a4b]',
                       )}
                     >
                       {over ? 'Over' : 'On track'}
                     </Badge>
                   </div>
                 ) : (
-                  <span className="text-[12px] text-[var(--aurex-text-4)]">No budget set</span>
+                  <span className="text-[12px] text-[var(--aurex-text-3)]">No budget set</span>
                 )}
               </TableCell>
               <TableCell

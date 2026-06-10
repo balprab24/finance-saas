@@ -32,7 +32,7 @@ export function UnusualList() {
       {rows.map((row) => (
         <li key={row.categoryId} className="flex items-center justify-between gap-3 py-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="grid size-8 shrink-0 place-items-center rounded-md bg-[rgba(180, 83, 9,0.12)] ring-1 ring-[rgba(180, 83, 9,0.24)]">
+            <span className="grid size-8 shrink-0 place-items-center rounded-md bg-[rgba(180,83,9,0.12)] ring-1 ring-[rgba(180,83,9,0.24)]">
               <AlertTriangle className="size-4 text-[#b45309]" />
             </span>
             <div className="min-w-0">
@@ -50,7 +50,7 @@ export function UnusualList() {
             <span className="tabular-nums text-[14px] font-semibold text-[var(--aurex-text-1)]">
               {formatCurrency(row.current)}
             </span>
-            <Badge className="border-0 bg-[rgba(180, 83, 9,0.12)] text-[11px] text-[#b45309]">
+            <Badge className="border-0 bg-[rgba(180,83,9,0.12)] text-[11px] text-[#b45309]">
               {row.isNew ? 'New' : `${row.multiple}× typical`}
             </Badge>
           </div>

@@ -77,7 +77,7 @@ export function CashPosition() {
       </div>
 
       <div className="mt-1.5 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <span className="font-display text-[40px] font-semibold leading-none tracking-[-0.02em] text-[var(--aurex-text-1)] sm:text-[52px]">
+        <span className="min-w-0 font-display text-[40px] font-semibold leading-none tracking-[-0.02em] tabular-nums [overflow-wrap:anywhere] text-[var(--aurex-text-1)] sm:text-[52px]">
           {formatCurrency(net)}
         </span>
         <span

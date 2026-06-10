@@ -76,7 +76,7 @@ export function RecurringList() {
               <div className="tabular-nums text-[14px] font-semibold text-[var(--aurex-text-1)]">
                 {formatCurrency(item.typicalAmount)}
               </div>
-              <div className="text-[11px] text-[var(--aurex-text-4)]">
+              <div className="text-[11px] text-[var(--aurex-text-3)]">
                 ≈ {formatCurrency(item.monthlyEquivalent)}/mo
               </div>
             </div>

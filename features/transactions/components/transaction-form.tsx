@@ -131,7 +131,7 @@ export function TransactionForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                Category <span className="text-[var(--aurex-text-4)] font-normal">(optional)</span>
+                Category <span className="text-[var(--aurex-text-3)] font-normal">(optional)</span>
               </FormLabel>
               <FormControl>
                 <Select
@@ -169,7 +169,7 @@ export function TransactionForm({
               <FormControl>
                 <AmountInput {...field} disabled={disabled} placeholder="0.00" />
               </FormControl>
-              <p className="text-[11.5px] text-[var(--aurex-text-4)]">
+              <p className="text-[11.5px] text-[var(--aurex-text-3)]">
                 Negative for expenses, positive for income.
               </p>
               <FormMessage />
@@ -182,7 +182,7 @@ export function TransactionForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                Notes <span className="text-[var(--aurex-text-4)] font-normal">(optional)</span>
+                Notes <span className="text-[var(--aurex-text-3)] font-normal">(optional)</span>
               </FormLabel>
               <FormControl>
                 <Input
