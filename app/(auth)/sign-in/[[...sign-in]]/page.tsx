@@ -33,7 +33,7 @@ export default async function Page({
           Welcome back
         </h1>
         <p className="text-[13.5px] text-[var(--aurex-text-3)]">
-          Sign in to continue tracking your money.
+          Sign in to your workspace.
         </p>
       </div>
       <SignIn

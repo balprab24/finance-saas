@@ -30,10 +30,10 @@ export default async function Page({
     <div className="space-y-5">
       <div className="space-y-1.5 text-center">
         <h1 className="font-display text-[25px] font-medium tracking-[-0.01em] text-[var(--aurex-text-1)]">
-          Create your account
+          Create your workspace
         </h1>
         <p className="text-[13.5px] text-[var(--aurex-text-3)]">
-          Start organizing your finances in minutes.
+          Track every account, category, and transaction in one place.
         </p>
       </div>
       <SignUp

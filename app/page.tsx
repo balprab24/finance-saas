@@ -107,7 +107,7 @@ function Hero() {
           <p className="mt-7 max-w-[520px] text-[17px] leading-[1.6] text-[var(--aurex-text-2)] sm:text-[18px]">
             Aurex pulls every account, category, and transaction into one
             workspace. Import a CSV, set a filter, and read your month at a
-            glance — down to the cent.
+            glance, down to the cent.
           </p>
 
           <div className="mt-9 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
@@ -119,7 +119,7 @@ function Hero() {
             </Show>
             <Show when="signed-out">
               <Link href="/sign-up" className="aurex-button-primary">
-                Start tracking — free
+                Start tracking, free
                 <ArrowRight className="size-4" />
               </Link>
             </Show>
@@ -369,19 +369,19 @@ function HowItWorks() {
       n: '01',
       icon: Upload,
       title: 'Bring your transactions in',
-      desc: 'Add accounts and rows by hand, or drop a CSV from your bank — Aurex parses it in your browser, no upload required.',
+      desc: 'Add accounts and rows by hand, or drop a CSV from your bank. Aurex parses it in your browser, no upload required.',
     },
     {
       n: '02',
       icon: Wand2,
       title: 'Sort spending by category',
-      desc: 'Categorize as you go. Rename or split categories whenever your habits change — old transactions update with them.',
+      desc: 'Categorize as you go. Rename or split categories whenever your habits change, and old transactions update with them.',
     },
     {
       n: '03',
       icon: LineChart,
       title: 'See where the money went',
-      desc: 'Income, expenses, and the gap between — across every account, in one dashboard you can filter by date or account.',
+      desc: 'Income, expenses, and the gap between, across every account, in one dashboard you can filter by date or account.',
     },
   ];
 
@@ -389,12 +389,11 @@ function HowItWorks() {
     <section id="preview" className="aurex-hairline relative py-16 sm:py-20 lg:py-24">
       <div className={`${SECTION} relative z-10`}>
         <div className="aurex-reveal mb-12 max-w-[640px]" data-reveal>
-          <SectionEyebrow label="How it works" />
           <h2 className="font-display text-[34px] font-medium leading-[1.1] tracking-[-0.015em] text-[var(--aurex-text-1)] sm:text-[44px]">
             Bring it in. Sort it. Read it.
           </h2>
           <p className="mt-5 max-w-[520px] text-[16px] leading-[1.65] text-[var(--aurex-text-2)]">
-            Aurex is deliberately simple. Three steps — and you stay in control
+            Aurex is deliberately simple. Three steps, and you stay in control
             of your categories and accounts at every one.
           </p>
         </div>
@@ -429,29 +428,17 @@ function HowItWorks() {
   );
 }
 
-function SectionEyebrow({ label }: { label: string }) {
-  return (
-    <div className="mb-5 flex items-center gap-2.5">
-      <span className="h-px w-6 bg-[var(--aurex-brand)]" />
-      <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--aurex-text-3)]">
-        {label}
-      </span>
-    </div>
-  );
-}
-
 function InsightsSection() {
   return (
     <section id="insights" className="aurex-hairline relative py-16 sm:py-20 lg:py-24">
       <div className={`${SECTION} relative z-10`}>
         <div className="aurex-reveal" data-reveal>
-          <SectionEyebrow label="Insights" />
           <h2 className="max-w-[680px] font-display text-[34px] font-medium leading-[1.1] tracking-[-0.015em] text-[var(--aurex-text-1)] sm:text-[44px]">
             Income, expenses,
             <br /> and the gap between.
           </h2>
           <p className="mt-5 max-w-[520px] text-[16px] leading-[1.65] text-[var(--aurex-text-2)]">
-            Aurex renders every chart with Recharts and a finance-tuned palette —
+            Aurex renders every chart with Recharts and a finance-tuned palette:
             green for income, red for expenses, graphite for everything in
             between. Toggle the visualization without losing your filter.
           </p>
@@ -468,7 +455,7 @@ function InsightsSection() {
             icon={PieChart}
             tag="Spending breakdown"
             title="See where the money went"
-            desc="A pie of expenses by category — plus a radial alternative so the chart matches the question you're asking."
+            desc="A pie of expenses by category, plus a radial alternative so the chart matches the question you're asking."
           />
         </div>
         <div
@@ -480,7 +467,7 @@ function InsightsSection() {
             icon={ShieldCheck}
             tag="Filter & focus"
             title="Account and date filters"
-            desc="Narrow the dashboard to a single account or a custom date range. The charts and totals update together — no stale numbers."
+            desc="Narrow the dashboard to a single account or a custom date range. The charts and totals update together, with no stale numbers."
           />
         </div>
       </div>
@@ -533,7 +520,7 @@ function ImportSection() {
             <p className="max-w-[560px] text-[16px] leading-[1.65] text-[var(--aurex-text-2)]">
               Drop a CSV from your bank, map the columns to date / amount /
               payee, and review the rows before saving. Parsing happens in the
-              browser — your data stays with you.
+              browser, so your data stays with you.
             </p>
           </div>
           <div className="relative mt-10 grid gap-8 border-t border-[var(--aurex-border)] pt-8 md:grid-cols-3">
