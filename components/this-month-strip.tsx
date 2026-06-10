@@ -84,7 +84,7 @@ function BudgetRegion() {
       <div className="space-y-1">
         <RegionLabel icon={PiggyBank}>Budget · {format(new Date(), 'LLLL')}</RegionLabel>
         <div className="text-[28px] font-semibold tracking-tight text-[var(--aurex-text-1)] line-clamp-1 sm:text-[32px]">
-          <span className="font-display">{formatCurrency(totalSpent)}</span>
+          <span className="font-display tabular-nums">{formatCurrency(totalSpent)}</span>
           <span className="text-[14px] font-normal text-[var(--aurex-text-3)]">
             {' '}/ {formatCurrency(totalBudgeted)}
           </span>
@@ -160,21 +160,29 @@ function InsightsRegion() {
       <div className="space-y-1">
         <RegionLabel icon={Sparkles}>Insights</RegionLabel>
         <div className="text-[28px] font-semibold tracking-tight text-[var(--aurex-text-1)] line-clamp-1 sm:text-[32px]">
-          <span className="font-display">{formatCurrency(monthlyTotal)}</span>
+          <span className="font-display tabular-nums">{formatCurrency(monthlyTotal)}</span>
           <span className="text-[14px] font-normal text-[var(--aurex-text-3)]">/mo recurring</span>
         </div>
       </div>
 
       <div className="flex items-center justify-between gap-3 text-[12px]">
         {topMover ? (
-          <span className="inline-flex min-w-0 items-center gap-1.5 text-[var(--aurex-text-3)]">
-            {up ? (
-              <TrendingUp className="size-3.5 shrink-0 text-[#c0392b]" />
-            ) : (
-              <TrendingDown className="size-3.5 shrink-0 text-[#117a4b]" />
-            )}
+          <span
+            className="inline-flex min-w-0 items-center gap-1.5"
+            aria-label={`${topMover.name} spending ${up ? 'up' : 'down'} ${formatPercentage(Math.abs(topMover.percentChange))} versus last month`}
+          >
             <span className="truncate text-[var(--aurex-text-2)]">{topMover.name}</span>
-            <span className={cn('shrink-0', up ? 'text-[#c0392b]' : 'text-[#117a4b]')}>
+            <span
+              className={cn(
+                'inline-flex shrink-0 items-center gap-0.5 font-medium tabular-nums',
+                up ? 'text-[#c0392b]' : 'text-[#117a4b]',
+              )}
+            >
+              {up ? (
+                <TrendingUp className="size-3.5" aria-hidden />
+              ) : (
+                <TrendingDown className="size-3.5" aria-hidden />
+              )}
               {formatPercentage(topMover.percentChange, { addPrefix: true })}
             </span>
           </span>
