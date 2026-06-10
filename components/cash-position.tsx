@@ -18,7 +18,7 @@ const SECTION = 'border-b border-[var(--aurex-rule)] p-5 sm:p-6';
 // monospace opened ugly gaps. The supporting In − Out = Net equation stays in Geist
 // Mono with tabular figures so the columns align, making the arithmetic visible.
 export function CashPosition() {
-  const { data, isLoading, isError, refetch } = useGetSummary();
+  const { data, isLoading, isError, isFetching, refetch } = useGetSummary();
   const params = useSearchParams();
 
   const transactionsHref = qs.stringifyUrl(
@@ -62,7 +62,10 @@ export function CashPosition() {
   const TrendIcon = up ? ArrowUpRight : ArrowDownRight;
 
   return (
-    <div className={SECTION}>
+    <div
+      className={cn(SECTION, isFetching && 'opacity-60 transition-opacity duration-300')}
+      aria-busy={isFetching}
+    >
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <span className="text-[13px] font-medium text-[var(--aurex-text-3)]">Net this period</span>
         <Link
@@ -126,7 +129,7 @@ function Term({
 }
 
 function Operator({ children }: { children: React.ReactNode }) {
-  return <span className="text-[var(--aurex-text-4)]">{children}</span>;
+  return <span className="text-[var(--aurex-text-3)]">{children}</span>;
 }
 
 export function CashPositionLoading() {

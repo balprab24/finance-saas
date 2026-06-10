@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Archive, Loader2, Plus, RefreshCw } from 'lucide-react';
+import { Archive, Loader2, Plus, RefreshCw, Wallet } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DataTable } from '@/components/data-table';
+import { DataError } from '@/components/data-error';
+import { EmptyState } from '@/components/empty-state';
 
 import { columns } from './columns';
 import { useNewAccount } from '@/features/accounts/hooks/use-new-account';
@@ -94,25 +96,48 @@ export default function AccountsPage() {
                 <Skeleton key={i} className="h-11 w-full rounded-md bg-black/[0.05]" />
               ))}
             </div>
+          ) : accountsQuery.isError && !accountsQuery.data ? (
+            <DataError
+              className="border-0"
+              title="Couldn't load your accounts"
+              message="We couldn't reach your accounts. Check your connection and try again."
+              onRetry={() => accountsQuery.refetch()}
+            />
+          ) : accounts.length === 0 ? (
+            <EmptyState
+              icon={Wallet}
+              title="No accounts yet"
+              message="Add an account by hand, or link a bank to import balances and transactions automatically."
+              action={
+                <Button
+                  onClick={newAccount.onOpen}
+                  size="sm"
+                  className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[#2b2f36]"
+                >
+                  <Plus className="mr-2 size-3.5" />
+                  Add account
+                </Button>
+              }
+            />
           ) : (
-          <DataTable
-            filterKey="name"
-            columns={columns}
-            data={accounts}
-            onDelete={(rows) => {
-              const ids = rows
-                .filter((r) => !r.original.archivedAt)
-                .map((r) => r.original.id);
-              if (ids.length === 0) return;
-              archiveAccounts.mutate({ ids });
-            }}
-            disabled={isDisabled}
-            bulkActionIcon={Archive}
-            bulkActionLabel={(count) => `Archive ${count} selected`}
-            bulkActionTitle="Archive selected accounts?"
-            bulkActionDescription="This hides the selected accounts from new transactions and account lists. Existing transactions stay intact. Already-archived selections are skipped."
-            bulkActionTone="neutral"
-          />
+            <DataTable
+              filterKey="name"
+              columns={columns}
+              data={accounts}
+              onDelete={(rows) => {
+                const ids = rows
+                  .filter((r) => !r.original.archivedAt)
+                  .map((r) => r.original.id);
+                if (ids.length === 0) return;
+                archiveAccounts.mutate({ ids });
+              }}
+              disabled={isDisabled}
+              bulkActionIcon={Archive}
+              bulkActionLabel={(count) => `Archive ${count} selected`}
+              bulkActionTitle="Archive selected accounts?"
+              bulkActionDescription="This hides the selected accounts from new transactions and account lists. Existing transactions stay intact. Already-archived selections are skipped."
+              bulkActionTone="neutral"
+            />
           )}
         </div>
       </div>

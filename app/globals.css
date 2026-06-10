@@ -295,18 +295,25 @@
     border-color: var(--aurex-border-strong);
   }
 
+  /* Reveal-on-scroll enhances an already-visible default: the hidden start state
+     applies only when JS is present (ScrollReveal adds `.aurex-js` to <html>), so
+     without JS / for non-JS crawlers the [data-reveal] content ships visible, not
+     blank. `will-change` is scoped to the hidden state and cleared once revealed. */
   .aurex-reveal {
-    opacity: 0;
-    transform: translateY(14px);
     transition:
       opacity 720ms cubic-bezier(0.16, 1, 0.3, 1),
       transform 720ms cubic-bezier(0.16, 1, 0.3, 1);
     transition-delay: var(--reveal-delay, 0ms);
+  }
+  .aurex-js .aurex-reveal {
+    opacity: 0;
+    transform: translateY(14px);
     will-change: opacity, transform;
   }
-  .aurex-reveal-visible {
+  .aurex-js .aurex-reveal.aurex-reveal-visible {
     opacity: 1;
     transform: translateY(0);
+    will-change: auto;
   }
 }
 
