@@ -4,6 +4,11 @@ import { useEffect } from 'react';
 
 export function ScrollReveal() {
   useEffect(() => {
+    // Gate the hidden start state on JS being present, so the reveal enhances an
+    // already-visible default. Without this class (no JS, non-JS crawlers) the
+    // [data-reveal] sections stay visible instead of shipping blank below the hero.
+    document.documentElement.classList.add('aurex-js');
+
     const prefersReduced = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches;
