@@ -6,6 +6,7 @@ import { DataError } from '@/components/data-error';
 import { StatementSection } from '@/components/statement-section';
 import { CashFlowFigure } from '@/components/cash-flow-figure';
 import { CategoryLedger } from '@/components/category-ledger';
+import { CASH_FLOW_COLORS } from '@/lib/colors';
 
 const SECTION = 'border-b border-[var(--aurex-rule)]';
 
@@ -60,11 +61,17 @@ function CashFlowLegend() {
   return (
     <div className="flex items-center gap-3 text-[11.5px] text-[var(--aurex-text-2)]">
       <span className="inline-flex items-center gap-1.5">
-        <span className="size-1.5 rounded-full bg-[#117a4b]" />
+        <span
+          className="size-1.5 rounded-full"
+          style={{ backgroundColor: CASH_FLOW_COLORS.income }}
+        />
         Income
       </span>
       <span className="inline-flex items-center gap-1.5">
-        <span className="size-1.5 rounded-full bg-[#c0392b]" />
+        <span
+          className="size-1.5 rounded-full"
+          style={{ backgroundColor: CASH_FLOW_COLORS.expenses }}
+        />
         Expenses
       </span>
     </div>

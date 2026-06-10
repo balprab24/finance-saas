@@ -2,11 +2,8 @@
 
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { CategoryTooltip } from '@/components/category-tooltip';
+import { AUREX_COLORS, CATEGORY_CHART_COLORS } from '@/lib/colors';
 import { formatPercentage } from '@/lib/utils';
-
-// Qualitative palette for category breakdowns: distinct hues for separable data,
-// with decorative chrome kept neutral elsewhere.
-const COLORS = ['#16181d', '#5b6470', '#b45309', '#c0392b', '#6b7280', '#117a4b'];
 
 type Props = { data: { name: string; value: number }[] };
 
@@ -53,16 +50,16 @@ export function PieVariant({ data }: Props) {
           outerRadius={92}
           innerRadius={62}
           paddingAngle={3}
-          fill="#16181d"
+          fill={AUREX_COLORS.ink}
           dataKey="value"
           labelLine={false}
-          stroke="#ffffff"
+          stroke={AUREX_COLORS.surface}
           strokeWidth={2}
           animationDuration={800}
           animationBegin={0}
         >
           {data.map((_entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            <Cell key={`cell-${index}`} fill={CATEGORY_CHART_COLORS[index % CATEGORY_CHART_COLORS.length]} />
           ))}
           </Pie>
         </PieChart>

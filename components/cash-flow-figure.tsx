@@ -4,13 +4,11 @@ import { format } from 'date-fns';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import { CustomTooltip } from '@/components/custom-tooltip';
+import { CASH_FLOW_COLORS } from '@/lib/colors';
 
 type Props = {
   data: { date: Date | string; income: number; expenses: number }[];
 };
-
-const INCOME = '#117a4b';
-const EXPENSE = '#c0392b';
 
 // Compact axis ticks: $940, $1.2k, $12k. A real Y axis means a value can be read
 // off the chart at rest — no hover required — which the old gradient area chart
@@ -69,31 +67,31 @@ export function CashFlowFigure({ data }: Props) {
           />
           <Tooltip
             content={<CustomTooltip />}
-            cursor={{ stroke: 'rgba(22, 24, 29,0.4)', strokeWidth: 1 }}
+            cursor={{ stroke: 'rgba(22, 24, 29, 0.4)', strokeWidth: 1 }}
           />
           {/* Flat low-opacity tint under each line (a constant fill, not a
               gradient) so a near-flat series still reads as a shape. */}
           <Area
             type="monotone"
             dataKey="income"
-            stroke={INCOME}
+            stroke={CASH_FLOW_COLORS.income}
             strokeWidth={2.5}
-            fill={INCOME}
+            fill={CASH_FLOW_COLORS.income}
             fillOpacity={0.1}
             dot={false}
-            activeDot={{ r: 4, strokeWidth: 0, fill: INCOME }}
+            activeDot={{ r: 4, strokeWidth: 0, fill: CASH_FLOW_COLORS.income }}
             animationDuration={700}
             animationEasing="ease-out"
           />
           <Area
             type="monotone"
             dataKey="expenses"
-            stroke={EXPENSE}
+            stroke={CASH_FLOW_COLORS.expenses}
             strokeWidth={2.5}
-            fill={EXPENSE}
+            fill={CASH_FLOW_COLORS.expenses}
             fillOpacity={0.1}
             dot={false}
-            activeDot={{ r: 4, strokeWidth: 0, fill: EXPENSE }}
+            activeDot={{ r: 4, strokeWidth: 0, fill: CASH_FLOW_COLORS.expenses }}
             animationDuration={700}
             animationEasing="ease-out"
           />
