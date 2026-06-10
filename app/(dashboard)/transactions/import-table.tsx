@@ -56,7 +56,7 @@ export function ImportTable({
                   <TableCell
                     key={cellIndex}
                     className={`py-2.5 text-[12.5px] tabular-nums ${
-                      isMapped ? 'text-[var(--aurex-text-1)]' : 'text-[var(--aurex-text-4)]'
+                      isMapped ? 'text-[var(--aurex-text-1)]' : 'text-[var(--aurex-text-3)]'
                     }`}
                   >
                     {cell || <span className="italic opacity-60">empty</span>}

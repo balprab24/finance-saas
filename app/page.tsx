@@ -235,24 +235,24 @@ function KpiTile({
     brand: {
       ring: 'ring-[var(--aurex-border)]',
       icon: <WalletCards className="size-4 text-[#16181d]" />,
-      iconBg: 'bg-[rgba(22, 24, 29,0.14)] ring-[rgba(22, 24, 29,0.28)]',
+      iconBg: 'bg-[rgba(22,24,29,0.14)] ring-[rgba(22,24,29,0.28)]',
     },
     income: {
       ring: 'ring-[var(--aurex-border)]',
       icon: <ArrowUpRight className="size-4 text-[#117a4b]" />,
-      iconBg: 'bg-[rgba(17, 122, 75,0.14)] ring-[rgba(17, 122, 75,0.3)]',
+      iconBg: 'bg-[rgba(17,122,75,0.14)] ring-[rgba(17,122,75,0.3)]',
     },
     expense: {
       ring: 'ring-[var(--aurex-border)]',
       icon: <ArrowDownRight className="size-4 text-[#c0392b]" />,
-      iconBg: 'bg-[rgba(192, 57, 43,0.14)] ring-[rgba(192, 57, 43,0.3)]',
+      iconBg: 'bg-[rgba(192,57,43,0.14)] ring-[rgba(192,57,43,0.3)]',
     },
   }[tone];
 
   const deltaClass =
     trend === 'up'
-      ? 'text-[#117a4b] bg-[rgba(17, 122, 75,0.12)] ring-[rgba(17, 122, 75,0.28)]'
-      : 'text-[#c0392b] bg-[rgba(192, 57, 43,0.12)] ring-[rgba(192, 57, 43,0.28)]';
+      ? 'text-[#117a4b] bg-[rgba(17,122,75,0.12)] ring-[rgba(17,122,75,0.28)]'
+      : 'text-[#c0392b] bg-[rgba(192,57,43,0.12)] ring-[rgba(192,57,43,0.28)]';
 
   return (
     <div className={`aurex-card-marketing relative overflow-hidden p-4 ring-1 ${toneMap.ring}`}>
