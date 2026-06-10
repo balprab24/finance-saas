@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { TrendingUp } from "lucide-react";
+import { AUREX_COLORS, CASH_FLOW_COLORS } from "@/lib/colors";
 
 type Variant = "Area" | "Line" | "Bar";
+const INCOME = CASH_FLOW_COLORS.income;
+const EXPENSES = CASH_FLOW_COLORS.expenses;
 
 function ToggleButtons({
   active,
@@ -69,24 +72,24 @@ function SmallLineOrArea({ filled }: { filled: boolean }) {
     <svg viewBox="0 0 600 180" className="mt-3 h-[170px] w-full">
       <defs>
         <linearGradient id="smIncome" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#117a4b" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#117a4b" stopOpacity="0" />
+          <stop offset="0%" stopColor={INCOME} stopOpacity="0.55" />
+          <stop offset="100%" stopColor={INCOME} stopOpacity="0" />
         </linearGradient>
         <linearGradient id="smExpense" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#c0392b" stopOpacity="0.45" />
-          <stop offset="100%" stopColor="#c0392b" stopOpacity="0" />
+          <stop offset="0%" stopColor={EXPENSES} stopOpacity="0.45" />
+          <stop offset="100%" stopColor={EXPENSES} stopOpacity="0" />
         </linearGradient>
       </defs>
       <GridLines rows={4} width={600} />
       {filled && (
         <path d={`${SMALL_EXPENSE} L600,180 L0,180 Z`} fill="url(#smExpense)" />
       )}
-      <path d={SMALL_EXPENSE} fill="none" stroke="#c0392b" strokeWidth="2" />
+      <path d={SMALL_EXPENSE} fill="none" stroke={EXPENSES} strokeWidth="2" />
       {filled && (
         <path d={`${SMALL_INCOME} L600,180 L0,180 Z`} fill="url(#smIncome)" />
       )}
-      <path d={SMALL_INCOME} fill="none" stroke="#117a4b" strokeWidth="2.2" />
-      <circle cx="600" cy="18" r="4" fill="#117a4b">
+      <path d={SMALL_INCOME} fill="none" stroke={INCOME} strokeWidth="2.2" />
+      <circle cx="600" cy="18" r="4" fill={INCOME}>
         <animate
           attributeName="r"
           values="4;6;4"
@@ -94,7 +97,7 @@ function SmallLineOrArea({ filled }: { filled: boolean }) {
           repeatCount="indefinite"
         />
       </circle>
-      <circle cx="600" cy="114" r="3" fill="#c0392b">
+      <circle cx="600" cy="114" r="3" fill={EXPENSES}>
         <animate
           attributeName="r"
           values="3;5;3"
@@ -126,12 +129,12 @@ function SmallBar() {
     <svg viewBox="0 0 600 180" className="mt-3 h-[170px] w-full">
       <defs>
         <linearGradient id="smBarInc" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#117a4b" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#117a4b" stopOpacity="0.45" />
+          <stop offset="0%" stopColor={INCOME} stopOpacity="0.95" />
+          <stop offset="100%" stopColor={INCOME} stopOpacity="0.45" />
         </linearGradient>
         <linearGradient id="smBarExp" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#c0392b" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#c0392b" stopOpacity="0.45" />
+          <stop offset="0%" stopColor={EXPENSES} stopOpacity="0.95" />
+          <stop offset="100%" stopColor={EXPENSES} stopOpacity="0.45" />
         </linearGradient>
       </defs>
       <GridLines rows={4} width={600} />
@@ -185,12 +188,12 @@ export function PreviewFlowChartSmall() {
       <div className="mt-2 flex items-center gap-4 text-[11px] text-[var(--aurex-text-2)]">
         <span
           className="inline-block size-2 rounded-full"
-          style={{ backgroundColor: "#117a4b" }}
+          style={{ backgroundColor: INCOME }}
         />
         Income
         <span
           className="inline-block size-2 rounded-full"
-          style={{ backgroundColor: "#c0392b" }}
+          style={{ backgroundColor: EXPENSES }}
         />
         Expenses
       </div>
@@ -208,12 +211,12 @@ function LargeLineOrArea({ filled }: { filled: boolean }) {
     <svg viewBox="0 0 1200 280" className="h-[260px] w-full">
       <defs>
         <linearGradient id="lgIncome" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#117a4b" stopOpacity="0.45" />
-          <stop offset="100%" stopColor="#117a4b" stopOpacity="0" />
+          <stop offset="0%" stopColor={INCOME} stopOpacity="0.45" />
+          <stop offset="100%" stopColor={INCOME} stopOpacity="0" />
         </linearGradient>
         <linearGradient id="lgExpense" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#c0392b" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#c0392b" stopOpacity="0" />
+          <stop offset="0%" stopColor={EXPENSES} stopOpacity="0.4" />
+          <stop offset="100%" stopColor={EXPENSES} stopOpacity="0" />
         </linearGradient>
       </defs>
       <GridLines rows={6} width={1200} />
@@ -223,11 +226,11 @@ function LargeLineOrArea({ filled }: { filled: boolean }) {
           fill="url(#lgExpense)"
         />
       )}
-      <path d={LARGE_EXPENSE} fill="none" stroke="#c0392b" strokeWidth="2" />
+      <path d={LARGE_EXPENSE} fill="none" stroke={EXPENSES} strokeWidth="2" />
       {filled && (
         <path d={`${LARGE_INCOME} L1200,280 L0,280 Z`} fill="url(#lgIncome)" />
       )}
-      <path d={LARGE_INCOME} fill="none" stroke="#117a4b" strokeWidth="2.5" />
+      <path d={LARGE_INCOME} fill="none" stroke={INCOME} strokeWidth="2.5" />
     </svg>
   );
 }
@@ -256,12 +259,12 @@ function LargeBar() {
     <svg viewBox="0 0 1200 280" className="h-[260px] w-full">
       <defs>
         <linearGradient id="lgBarInc" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#117a4b" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#117a4b" stopOpacity="0.4" />
+          <stop offset="0%" stopColor={INCOME} stopOpacity="0.95" />
+          <stop offset="100%" stopColor={INCOME} stopOpacity="0.4" />
         </linearGradient>
         <linearGradient id="lgBarExp" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#c0392b" stopOpacity="0.95" />
-          <stop offset="100%" stopColor="#c0392b" stopOpacity="0.4" />
+          <stop offset="0%" stopColor={EXPENSES} stopOpacity="0.95" />
+          <stop offset="100%" stopColor={EXPENSES} stopOpacity="0.4" />
         </linearGradient>
       </defs>
       <GridLines rows={6} width={1200} />
@@ -302,7 +305,7 @@ export function PreviewFlowChartLarge() {
     >
       <div className="flex items-center justify-between border-b border-[var(--aurex-border)] pb-4">
         <div className="flex items-center gap-2.5">
-          <TrendingUp className="size-4 text-[#16181d]" />
+          <TrendingUp className="size-4" style={{ color: AUREX_COLORS.ink }} />
           <span className="text-[14px] font-semibold text-[var(--aurex-text-1)]">
             Cash flow · Last 90 days
           </span>

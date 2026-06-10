@@ -14,6 +14,7 @@ import {
 import { AreaVariant } from '@/components/area-variant';
 import { BarVariant } from '@/components/bar-variant';
 import { LineVariant } from '@/components/line-variant';
+import { CASH_FLOW_COLORS } from '@/lib/colors';
 
 type Props = {
   data?: { date: Date | string; income: number; expenses: number }[];
@@ -61,11 +62,17 @@ export function Chart({ data = [] }: Props) {
       </div>
       <div className="mt-3 flex items-center gap-5 text-[12px] text-[var(--aurex-text-2)]">
         <span className="inline-flex items-center gap-1.5">
-          <span className="size-1.5 rounded-full bg-[#117a4b]" />
+          <span
+            className="size-1.5 rounded-full"
+            style={{ backgroundColor: CASH_FLOW_COLORS.income }}
+          />
           Income
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="size-1.5 rounded-full bg-[#c0392b]" />
+          <span
+            className="size-1.5 rounded-full"
+            style={{ backgroundColor: CASH_FLOW_COLORS.expenses }}
+          />
           Expenses
         </span>
       </div>

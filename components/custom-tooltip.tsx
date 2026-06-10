@@ -1,6 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
+import { CASH_FLOW_COLORS } from '@/lib/colors';
 import { formatCurrency } from '@/lib/utils';
 
 type Payload = { value: number };
@@ -27,7 +28,10 @@ export function CustomTooltip({
       <div className="space-y-1.5 px-3 py-2.5">
         <div className="flex items-center justify-between gap-x-6">
           <div className="flex items-center gap-x-2">
-            <span className="size-1.5 rounded-full bg-[#117a4b]" />
+            <span
+              className="size-1.5 rounded-full"
+              style={{ backgroundColor: CASH_FLOW_COLORS.income }}
+            />
             <p className="text-[13px] text-[var(--aurex-text-2)]">Income</p>
           </div>
           <p className="text-right font-mono text-[13px] font-semibold tabular-nums text-[var(--aurex-text-1)]">
@@ -36,7 +40,10 @@ export function CustomTooltip({
         </div>
         <div className="flex items-center justify-between gap-x-6">
           <div className="flex items-center gap-x-2">
-            <span className="size-1.5 rounded-full bg-[#c0392b]" />
+            <span
+              className="size-1.5 rounded-full"
+              style={{ backgroundColor: CASH_FLOW_COLORS.expenses }}
+            />
             <p className="text-[13px] text-[var(--aurex-text-2)]">Expenses</p>
           </div>
           <p className="text-right font-mono text-[13px] font-semibold tabular-nums text-[var(--aurex-text-1)]">

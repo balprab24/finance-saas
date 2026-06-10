@@ -4,12 +4,9 @@ import { Loader2 } from 'lucide-react';
 import { LogoMark } from '@/components/brand/logo';
 import { ScrollReveal } from '@/components/marketing/scroll-reveal';
 import { ScrollSpyNav } from '@/components/marketing/scroll-spy-nav';
+import { PreviewFlowChartLarge } from '@/components/marketing/preview-flow-chart';
+import { AUREX_COLORS } from '@/lib/colors';
 import {
-  PreviewFlowChartLarge,
-  PreviewFlowChartSmall,
-} from '@/components/marketing/preview-flow-chart';
-import {
-  ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
   CalendarRange,
@@ -156,209 +153,125 @@ function Hero() {
 }
 
 function DashboardPreview() {
+  const ledger = [
+    { name: 'Groceries', amount: '$1,248.00', percent: 86 },
+    { name: 'Rent', amount: '$1,950.00', percent: 100 },
+    { name: 'Dining', amount: '$486.20', percent: 42 },
+    { name: 'Transport', amount: '$195.30', percent: 18 },
+  ];
+
   return (
-    <div className="aurex-card-marketing relative overflow-hidden p-4 sm:p-5">
-      {/* Faux dashboard header */}
-      <div className="flex items-center justify-between border-b border-[var(--aurex-border)] pb-4">
+    <div className="aurex-card-marketing relative overflow-hidden p-0">
+      <div className="flex items-center justify-between gap-4 border-b border-[var(--aurex-border)] p-4 sm:p-5">
         <div className="flex items-center gap-2.5">
           <BrandMark size={26} />
           <div className="leading-tight">
-            <div className="text-[13px] font-semibold text-[var(--aurex-text-1)]">Aurex</div>
+            <div className="text-[13px] font-semibold text-[var(--aurex-text-1)]">
+              Statement
+            </div>
             <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--aurex-text-3)]">
-              Overview · May 2026
+              May 1 - May 31
             </div>
           </div>
         </div>
-        <div className="hidden items-center gap-2 sm:flex">
+        <div className="flex min-w-0 items-center gap-2">
           <span className="aurex-pill h-7 px-2.5 text-[11px]">
             <CalendarRange className="size-3" />
             Last 30 days
           </span>
-          <span className="grid size-7 place-items-center rounded-full bg-[var(--aurex-brand)] text-[10px] font-semibold text-white">
+          <span className="hidden size-7 place-items-center rounded-full bg-[var(--aurex-brand)] text-[10px] font-semibold text-white sm:grid">
             AX
           </span>
         </div>
       </div>
 
-      {/* KPI strip */}
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <KpiTile
-          label="Balance"
-          value="$12,840.50"
-          delta="+8.2%"
-          trend="up"
-          tone="brand"
-        />
-        <KpiTile
-          label="Income"
-          value="$8,420.00"
-          delta="+12.4%"
-          trend="up"
-          tone="income"
-        />
-        <KpiTile
-          label="Expenses"
-          value="$3,879.50"
-          delta="-3.1%"
-          trend="down"
-          tone="expense"
-        />
-      </div>
-
-      {/* Chart + side rail */}
-      <div className="mt-4 grid gap-3 lg:grid-cols-[1.55fr_1fr]">
-        <PreviewFlowChartSmall />
-
-        <div className="space-y-3">
-          <RecentTransactions />
-          <TopCategories />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function KpiTile({
-  label,
-  value,
-  delta,
-  trend,
-  tone,
-}: {
-  label: string;
-  value: string;
-  delta: string;
-  trend: 'up' | 'down';
-  tone: 'brand' | 'income' | 'expense';
-}) {
-  const toneMap = {
-    brand: {
-      ring: 'ring-[var(--aurex-border)]',
-      icon: <WalletCards className="size-4 text-[#16181d]" />,
-      iconBg: 'bg-[rgba(22,24,29,0.14)] ring-[rgba(22,24,29,0.28)]',
-    },
-    income: {
-      ring: 'ring-[var(--aurex-border)]',
-      icon: <ArrowUpRight className="size-4 text-[#117a4b]" />,
-      iconBg: 'bg-[rgba(17,122,75,0.14)] ring-[rgba(17,122,75,0.3)]',
-    },
-    expense: {
-      ring: 'ring-[var(--aurex-border)]',
-      icon: <ArrowDownRight className="size-4 text-[#c0392b]" />,
-      iconBg: 'bg-[rgba(192,57,43,0.14)] ring-[rgba(192,57,43,0.3)]',
-    },
-  }[tone];
-
-  const deltaClass =
-    trend === 'up'
-      ? 'text-[#117a4b] bg-[rgba(17,122,75,0.12)] ring-[rgba(17,122,75,0.28)]'
-      : 'text-[#c0392b] bg-[rgba(192,57,43,0.12)] ring-[rgba(192,57,43,0.28)]';
-
-  return (
-    <div className={`aurex-card-marketing relative overflow-hidden p-4 ring-1 ${toneMap.ring}`}>
-      <div className="flex items-start justify-between">
-        <span className="text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--aurex-text-3)]">
-          {label}
-        </span>
-        <span className={`grid size-7 place-items-center rounded-md ring-1 ${toneMap.iconBg}`}>
-          {toneMap.icon}
-        </span>
-      </div>
-      <div className="mt-3 font-mono text-[24px] font-semibold tracking-tight tabular-nums text-[var(--aurex-text-1)]">
-        {value}
-      </div>
-      <span
-        className={`mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ${deltaClass}`}
-      >
-        {trend === 'up' ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
-        {delta} vs last period
-      </span>
-    </div>
-  );
-}
-
-function RecentTransactions() {
-  const items = [
-    { payee: 'Whole Foods', cat: 'Groceries', amt: '−$84.20', tone: 'expense' as const, color: '#c0392b' },
-    { payee: 'Stripe Payout', cat: 'Income', amt: '+$2,400.00', tone: 'income' as const, color: '#117a4b' },
-    { payee: 'Lyft', cat: 'Transport', amt: '−$22.50', tone: 'expense' as const, color: '#5b6470' },
-    { payee: 'Spotify', cat: 'Subscriptions', amt: '−$11.99', tone: 'expense' as const, color: '#16181d' },
-    { payee: 'Apple', cat: 'Tech', amt: '−$129.00', tone: 'expense' as const, color: '#16181d' },
-  ];
-
-  return (
-    <div className="aurex-card-marketing p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="text-[13px] font-semibold text-[var(--aurex-text-1)]">
-          Recent transactions
-        </div>
-        <span className="text-[11px] text-[var(--aurex-text-3)]">5 latest</span>
-      </div>
-      <ul className="space-y-2.5">
-        {items.map((t, i) => (
-          <li
-            key={t.payee}
-            className="aurex-rise flex items-center justify-between rounded-lg px-2 py-1.5 transition-all duration-200 hover:translate-x-0.5 hover:bg-[var(--aurex-surface)]"
-            style={{ animationDelay: `${i * 60}ms` }}
-          >
-            <div className="flex items-center gap-2.5">
-              <span
-                className="grid size-7 place-items-center rounded-md text-[10px] font-semibold uppercase"
-                style={{ background: `${t.color}26`, color: t.color }}
-              >
-                {t.payee.slice(0, 2)}
-              </span>
-              <div className="leading-tight">
-                <div className="text-[12.5px] font-medium text-[var(--aurex-text-1)]">{t.payee}</div>
-                <div className="text-[10.5px] text-[var(--aurex-text-3)]">{t.cat}</div>
-              </div>
-            </div>
-            <span
-              className={`font-mono text-[12.5px] font-semibold tabular-nums ${
-                t.tone === 'income' ? 'text-[#117a4b]' : 'text-[var(--aurex-text-1)]'
-              }`}
-            >
-              {t.amt}
+      <div className="grid grid-cols-1 divide-y divide-[var(--aurex-border)] lg:grid-cols-[1.08fr_0.92fr] lg:divide-x lg:divide-y-0">
+        <section className="min-w-0 p-5 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="text-[13px] font-medium text-[var(--aurex-text-3)]">
+              Net this period
             </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
+            <span className="inline-flex items-center gap-1 rounded-md bg-[var(--aurex-income-soft)] px-2 py-1 text-[11.5px] font-medium tabular-nums text-[var(--aurex-income)]">
+              <ArrowUpRight className="size-3.5" />
+              +8.2% vs last month
+            </span>
+          </div>
 
-function TopCategories() {
-  const cats = [
-    { name: 'Groceries', value: 78, color: '#16181d' },
-    { name: 'Rent', value: 92, color: '#2b2f36' },
-    { name: 'Dining', value: 54, color: '#16181d' },
-    { name: 'Transport', value: 38, color: '#c0392b' },
-  ];
+          <div className="mt-3 min-w-0 font-display text-[42px] font-semibold leading-none tracking-[-0.02em] tabular-nums [overflow-wrap:anywhere] text-[var(--aurex-text-1)] sm:text-[56px]">
+            $4,540.50
+          </div>
 
-  return (
-    <div className="aurex-card-marketing p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="text-[13px] font-semibold text-[var(--aurex-text-1)]">
-          Top categories
-        </div>
-        <PieChart className="size-3.5 text-[var(--aurex-text-3)]" />
+          <div className="mt-5 rounded-[10px] border border-[var(--aurex-border)] bg-[var(--aurex-surface)] p-3">
+            <div className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-[var(--aurex-text-3)]">
+              In - Out = Net
+            </div>
+            <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 font-mono text-[13px] font-semibold tabular-nums text-[var(--aurex-text-1)]">
+              <span>
+                <span className="mr-1 text-[var(--aurex-text-3)]">In</span>
+                $8,420.00
+              </span>
+              <span className="text-[var(--aurex-text-3)]">-</span>
+              <span>
+                <span className="mr-1 text-[var(--aurex-text-3)]">Out</span>
+                $3,879.50
+              </span>
+              <span className="text-[var(--aurex-text-3)]">=</span>
+              <span>
+                <span className="mr-1 text-[var(--aurex-text-3)]">Net</span>
+                $4,540.50
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--aurex-border)] pt-4">
+            <div className="text-[11.5px] text-[var(--aurex-text-3)]">
+              as of May 31, 4:24 PM
+            </div>
+            <span className="inline-flex items-center gap-1 text-[12.5px] font-medium text-[var(--aurex-text-1)]">
+              View transactions
+              <ArrowRight className="size-3.5" />
+            </span>
+          </div>
+        </section>
+
+        <section className="min-w-0 p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-4 border-b border-[var(--aurex-border)] pb-3">
+            <div>
+              <h3 className="text-[15px] font-semibold tracking-tight text-[var(--aurex-text-1)]">
+                Where it went
+              </h3>
+              <p className="mt-0.5 text-[11.5px] text-[var(--aurex-text-3)]">
+                Ranked by spending
+              </p>
+            </div>
+            <span className="font-mono text-[12.5px] font-semibold tabular-nums text-[var(--aurex-text-1)]">
+              $3,879.50
+            </span>
+          </div>
+
+          <ul className="mt-4 space-y-3">
+            {ledger.map((item) => (
+              <li key={item.name} className="space-y-1.5">
+                <div className="flex min-w-0 items-center justify-between gap-3 text-[12.5px]">
+                  <span className="truncate text-[var(--aurex-text-1)]">{item.name}</span>
+                  <span className="shrink-0 font-mono font-semibold tabular-nums text-[var(--aurex-text-1)]">
+                    {item.amount}
+                  </span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-[var(--aurex-surface)]">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${item.percent}%`,
+                      backgroundColor: AUREX_COLORS.bar,
+                    }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
-      <ul className="space-y-2.5">
-        {cats.map((c) => (
-          <li key={c.name} className="space-y-1">
-            <div className="flex items-center justify-between text-[11.5px]">
-              <span className="text-[var(--aurex-text-1)]">{c.name}</span>
-              <span className="font-mono tabular-nums text-[var(--aurex-text-3)]">{c.value}%</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-[var(--aurex-surface)]">
-              <div
-                className="h-full rounded-full"
-                style={{ width: `${c.value}%`, background: c.color }}
-              />
-            </div>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }

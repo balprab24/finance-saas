@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 
 import { CustomTooltip } from '@/components/custom-tooltip';
+import { CASH_FLOW_COLORS } from '@/lib/colors';
 
 type Props = {
   data: { date: Date | string; income: number; expenses: number }[];
@@ -24,17 +25,17 @@ export function BarVariant({ data }: Props) {
             tick={{ fill: 'var(--aurex-text-3)' }}
             tickMargin={16}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(22, 24, 29,0.08)' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(22, 24, 29, 0.08)' }} />
           <Bar
             dataKey="income"
-            fill="#117a4b"
+            fill={CASH_FLOW_COLORS.income}
             radius={[6, 6, 0, 0]}
             animationDuration={700}
             animationEasing="ease-out"
           />
           <Bar
             dataKey="expenses"
-            fill="#c0392b"
+            fill={CASH_FLOW_COLORS.expenses}
             radius={[6, 6, 0, 0]}
             animationDuration={700}
             animationEasing="ease-out"

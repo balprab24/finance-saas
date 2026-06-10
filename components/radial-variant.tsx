@@ -1,11 +1,8 @@
 'use client';
 
 import { Legend, RadialBar, RadialBarChart, ResponsiveContainer } from 'recharts';
+import { AUREX_COLORS, CATEGORY_CHART_COLORS } from '@/lib/colors';
 import { formatCurrency } from '@/lib/utils';
-
-// Qualitative palette for category breakdowns: distinct hues for separable data,
-// with decorative chrome kept neutral elsewhere.
-const COLORS = ['#16181d', '#5b6470', '#b45309', '#c0392b', '#6b7280', '#117a4b'];
 
 type Props = { data: { name: string; value: number }[] };
 
@@ -19,10 +16,13 @@ export function RadialVariant({ data }: Props) {
         barSize={14}
         innerRadius="28%"
         outerRadius="92%"
-        data={data.map((item, index) => ({ ...item, fill: COLORS[index % COLORS.length] }))}
+        data={data.map((item, index) => ({
+          ...item,
+          fill: CATEGORY_CHART_COLORS[index % CATEGORY_CHART_COLORS.length],
+        }))}
       >
         <RadialBar
-          label={{ position: 'insideStart', fill: '#ffffff', fontSize: 11 }}
+          label={{ position: 'insideStart', fill: AUREX_COLORS.surface, fontSize: 11 }}
           background={{ fill: 'rgba(0,0,0,0.06)' }}
           cornerRadius={4}
           dataKey="value"
