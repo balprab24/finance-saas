@@ -10,6 +10,7 @@ import { Loader2, PiggyBank, Plus, X } from 'lucide-react';
 import { cn, convertAmountToMiliunits, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DataError } from '@/components/data-error';
 import { EmptyState } from '@/components/empty-state';
 import {
   Table,
@@ -94,6 +95,17 @@ export function BudgetsTable() {
       <div className="flex h-[420px] w-full items-center justify-center">
         <Loader2 className="size-5 animate-spin text-[var(--aurex-text-3)]" />
       </div>
+    );
+  }
+
+  if (budgetsQuery.isError && !budgetsQuery.data) {
+    return (
+      <DataError
+        className="min-h-[360px] border-0"
+        title="Couldn't load your budgets"
+        message="We couldn't reach your monthly budgets. Check your connection and try again."
+        onRetry={() => budgetsQuery.refetch()}
+      />
     );
   }
 
