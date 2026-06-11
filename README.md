@@ -189,9 +189,7 @@ The command is safe to re-run — Drizzle tracks applied migrations and skips on
 
 ### Dependency security
 
-`npm audit --omit=dev` (the production dependency tree that ships to users) reports **0 vulnerabilities**.
-
-The full `npm audit` reports a handful of **moderate, dev-only** advisories that are all the same esbuild dev-server issue ([GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99)), reached through two dev toolchains: `vitest` → `vite` → `esbuild`, and `drizzle-kit` → `@esbuild-kit` → `esbuild`. The advisory concerns esbuild's local **dev server**, which neither tool ever starts — `vitest` uses esbuild only to transpile tests and `drizzle-kit` only to transpile `drizzle.config.ts`. The vulnerable code path is not reachable in production or CI. The available upgrades are disproportionate (a `vitest` 2→4 major bump that regresses test-file types, and `drizzle-kit` fixes it only in `1.0.0-rc` pre-releases), so these are accepted and tracked; revisit when bumping `vitest` / `drizzle-kit` is low-risk.
+Both `npm audit` and `npm audit --omit=dev` report **0 vulnerabilities**. Vitest/Vite are pinned to clean versions, and the package override set keeps transitive esbuild versions on patched releases while preserving the Drizzle and TSX toolchains.
 
 ### Plaid sync drain (cron)
 
