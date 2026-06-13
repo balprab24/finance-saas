@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { formatDateRange } from '@/lib/utils';
 import { AccountFilter } from '@/components/account-filter';
 import { DateFilter } from '@/components/date-filter';
+import { PageMasthead } from '@/components/page-masthead';
 import { useGetSummary } from '@/features/summary/api/use-get-summary';
 
 // The statement masthead: a clear title, the period stated ONCE (so the date stops
@@ -28,24 +29,24 @@ export function StatementMasthead() {
     : null;
 
   return (
-    <div className="flex flex-col gap-3 border-b border-[var(--aurex-rule)] p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
-      <div className="min-w-0">
-        <h1 className="font-display text-[22px] font-medium leading-tight tracking-[-0.01em] text-[var(--aurex-text-1)] sm:text-[26px]">
-          Statement
-        </h1>
-        <p className="mt-0.5 text-[12.5px] tabular-nums text-[var(--aurex-text-3)]">
+    <PageMasthead
+      title="Statement"
+      meta={
+        <>
           {period}
           {summary.isFetching ? (
             <span> · Updating…</span>
           ) : asOf ? (
             <span> · as of {asOf}</span>
           ) : null}
-        </p>
-      </div>
-      <div className="flex w-full flex-col gap-2 lg:w-auto lg:flex-row lg:items-center">
-        <AccountFilter />
-        <DateFilter />
-      </div>
-    </div>
+        </>
+      }
+      actions={
+        <>
+          <AccountFilter />
+          <DateFilter />
+        </>
+      }
+    />
   );
 }

@@ -2,26 +2,29 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const PAGE = 'mx-auto w-full max-w-screen-2xl pt-6 pb-16';
 
-function PageHeading() {
+/** The shared statement masthead in skeleton form: grotesque title + meta line,
+ *  with a right-aligned action placeholder, over the major rule. */
+function MastheadSkeleton() {
   return (
-    <div className="flex flex-col gap-2">
-      <Skeleton className="h-3 w-24 bg-black/[0.06]" />
-      <Skeleton className="h-7 w-72 max-w-full bg-black/[0.06]" />
+    <div className="flex flex-col gap-3 border-b border-[var(--aurex-rule)] p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="space-y-2">
+        <Skeleton className="h-6 w-40 bg-black/[0.06]" />
+        <Skeleton className="h-3 w-28 bg-black/[0.05]" />
+      </div>
+      <Skeleton className="h-9 w-full rounded-md bg-black/[0.06] lg:w-44" />
     </div>
   );
 }
 
-/** Header + card with a table-shaped body. Used by list routes. */
+/** One statement sheet with a table-shaped body. Used by list routes — mirrors
+ *  the real masthead-over-sheet geometry so the page doesn't reflow on data land. */
 export function TablePageSkeleton() {
   return (
-    <div className={`${PAGE} space-y-5`}>
-      <PageHeading />
-      <div className="aurex-card p-5">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-5 w-40 bg-black/[0.06]" />
-          <Skeleton className="h-9 w-32 rounded-md bg-black/[0.06]" />
-        </div>
-        <div className="mt-5 space-y-3">
+    <div className={PAGE}>
+      <div className="aurex-card overflow-hidden p-0">
+        <MastheadSkeleton />
+        <div className="space-y-3 p-5 sm:p-6">
+          <Skeleton className="h-9 w-full rounded-md bg-black/[0.05] sm:max-w-xs" />
           {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-11 w-full rounded-md bg-black/[0.05]" />
           ))}
@@ -82,12 +85,16 @@ export function DashboardSkeleton() {
   );
 }
 
-/** Generic header + single card block. Used by budgets/insights. */
+/** One statement sheet with a single tall body block. Used by budgets/insights. */
 export function CardPageSkeleton() {
   return (
-    <div className={`${PAGE} space-y-5`}>
-      <PageHeading />
-      <Skeleton className="h-[460px] w-full rounded-xl bg-black/[0.05]" />
+    <div className={PAGE}>
+      <div className="aurex-card overflow-hidden p-0">
+        <MastheadSkeleton />
+        <div className="p-5 sm:p-6">
+          <Skeleton className="h-[420px] w-full rounded-md bg-black/[0.05]" />
+        </div>
+      </div>
     </div>
   );
 }
