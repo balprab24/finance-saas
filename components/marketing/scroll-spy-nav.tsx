@@ -3,9 +3,8 @@
 import { useEffect, useState } from 'react';
 
 const SECTIONS = [
-  { href: '#preview', label: 'Product' },
-  { href: '#insights', label: 'Insights' },
-  { href: '#import', label: 'Import' },
+  { href: '#how-it-works', label: 'How it works' },
+  { href: '#accounts', label: 'Accounts' },
   { href: '#privacy', label: 'Privacy' },
 ] as const;
 
@@ -20,14 +19,24 @@ export function ScrollSpyNav({ variant }: { variant: Variant }) {
     );
     if (targets.length === 0) return;
 
+    // Track the latest visibility of every section, not just this batch of
+    // entries. When none is in the band (hero, closing footer) the active state
+    // clears instead of holding a stale highlight.
+    const ratios = new Map<string, number>();
     const io = new IntersectionObserver(
       (entries) => {
-        const inBand = entries.filter((e) => e.isIntersecting);
-        if (inBand.length === 0) return;
-        const top = inBand.sort(
-          (a, b) => b.intersectionRatio - a.intersectionRatio,
-        )[0];
-        setActive(`#${top.target.id}`);
+        for (const e of entries) {
+          ratios.set(`#${e.target.id}`, e.isIntersecting ? e.intersectionRatio : 0);
+        }
+        let best: string | null = null;
+        let bestRatio = 0;
+        for (const [href, ratio] of ratios) {
+          if (ratio > bestRatio) {
+            bestRatio = ratio;
+            best = href;
+          }
+        }
+        setActive(best);
       },
       { rootMargin: '-30% 0px -40% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] },
     );
@@ -38,24 +47,24 @@ export function ScrollSpyNav({ variant }: { variant: Variant }) {
 
   if (variant === 'desktop') {
     return (
-      <nav className="hidden items-center gap-1 md:flex">
+      <nav className="hidden items-center gap-6 md:flex">
         {SECTIONS.map((s) => {
           const isActive = active === s.href;
           return (
             <a
               key={s.href}
               href={s.href}
-              aria-current={isActive ? 'true' : undefined}
-              className={`group relative inline-flex items-center rounded-full px-3.5 py-1.5 text-[15px] font-semibold tracking-[-0.005em] transition-colors duration-200 ${
+              aria-current={isActive ? 'location' : undefined}
+              className={`group relative inline-flex h-10 items-center text-[15px] font-semibold tracking-[-0.005em] transition-colors duration-200 ${
                 isActive
-                  ? 'bg-[var(--aurex-surface)] text-[var(--aurex-text-1)]'
-                  : 'text-[var(--aurex-text-1)]/85 hover:bg-[var(--aurex-surface)] hover:text-[var(--aurex-text-1)]'
+                  ? 'text-[var(--aurex-text-1)]'
+                  : 'text-[var(--aurex-text-3)] hover:text-[var(--aurex-text-1)]'
               }`}
             >
               {s.label}
               <span
-                className={`pointer-events-none absolute -bottom-0.5 left-1/2 h-px -translate-x-1/2 bg-[var(--aurex-brand)] transition-all duration-300 ${
-                  isActive ? 'w-6' : 'w-0 group-hover:w-6'
+                className={`pointer-events-none absolute bottom-0 left-0 h-px bg-[var(--aurex-brand)] transition-all duration-300 ${
+                  isActive ? 'w-full' : 'w-0 group-hover:w-full'
                 }`}
               />
             </a>
@@ -66,26 +75,32 @@ export function ScrollSpyNav({ variant }: { variant: Variant }) {
   }
 
   return (
-    <div className="md:hidden">
-      <div className="flex gap-1.5 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <nav className="border-t border-[var(--aurex-border)] md:hidden">
+      <div className="mx-auto grid h-10 max-w-[520px] grid-cols-3 px-4">
         {SECTIONS.map((s) => {
           const isActive = active === s.href;
           return (
             <a
               key={s.href}
               href={s.href}
-              aria-current={isActive ? 'true' : undefined}
-              className={`inline-flex h-8 shrink-0 items-center rounded-full px-3 text-[13px] font-medium ring-1 transition-colors duration-200 ${
+              aria-current={isActive ? 'location' : undefined}
+              className={`relative inline-flex min-w-0 items-center justify-center px-2 text-[14px] font-semibold transition-colors duration-200 ${
                 isActive
-                  ? 'bg-[rgba(22,24,29,0.18)] text-[var(--aurex-text-1)] ring-[rgba(22,24,29,0.4)]'
-                  : 'bg-[var(--aurex-surface)] text-[var(--aurex-text-1)]/85 ring-[var(--aurex-border)]'
+                  ? 'text-[var(--aurex-text-1)]'
+                  : 'text-[var(--aurex-text-3)]'
               }`}
             >
               {s.label}
+              <span
+                className={`absolute inset-x-2 bottom-0 h-px bg-[var(--aurex-ink)] transition-opacity ${
+                  isActive ? 'opacity-100' : 'opacity-0'
+                }`}
+                aria-hidden
+              />
             </a>
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 }
