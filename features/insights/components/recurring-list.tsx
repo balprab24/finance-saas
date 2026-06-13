@@ -2,11 +2,13 @@
 
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Loader2, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { DataError } from '@/components/data-error';
 import { useGetRecurring } from '@/features/insights/api/use-get-recurring';
 import { useIgnoreRecurring } from '@/features/insights/api/use-ignore-recurring';
 import { useUnignoreRecurring } from '@/features/insights/api/use-unignore-recurring';
@@ -37,9 +39,22 @@ export function RecurringList() {
 
   if (recurringQuery.isLoading) {
     return (
-      <div className="flex h-[180px] items-center justify-center">
-        <Loader2 className="size-5 animate-spin text-[var(--aurex-text-3)]" />
+      <div className="space-y-3 py-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-14 w-full rounded-md bg-black/[0.05]" />
+        ))}
       </div>
+    );
+  }
+
+  if (recurringQuery.isError && !recurringQuery.data) {
+    return (
+      <DataError
+        className="min-h-[180px] border-0"
+        title="Couldn't load recurring activity"
+        message="We couldn't check your recurring merchants. Try this section again."
+        onRetry={() => recurringQuery.refetch()}
+      />
     );
   }
 

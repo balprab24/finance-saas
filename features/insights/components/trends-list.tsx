@@ -1,8 +1,10 @@
 'use client';
 
-import { ArrowDownRight, ArrowUpRight, Loader2 } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
 
 import { cn, formatCurrency, formatPercentage } from '@/lib/utils';
+import { DataError } from '@/components/data-error';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useGetTrends } from '@/features/insights/api/use-get-trends';
 
 export function TrendsList() {
@@ -10,9 +12,22 @@ export function TrendsList() {
 
   if (trendsQuery.isLoading) {
     return (
-      <div className="flex h-[180px] items-center justify-center">
-        <Loader2 className="size-5 animate-spin text-[var(--aurex-text-3)]" />
+      <div className="space-y-3 py-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-12 w-full rounded-md bg-black/[0.05]" />
+        ))}
       </div>
+    );
+  }
+
+  if (trendsQuery.isError && !trendsQuery.data) {
+    return (
+      <DataError
+        className="min-h-[180px] border-0"
+        title="Couldn't load category movers"
+        message="We couldn't compare this month with the previous one. Try this section again."
+        onRetry={() => trendsQuery.refetch()}
+      />
     );
   }
 

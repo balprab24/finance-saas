@@ -55,7 +55,7 @@ export const columns: ColumnDef<ResponseType>[] = [
           <div className="flex flex-wrap items-center gap-2">
             <span>{row.original.name}</span>
             {linked ? (
-              <span className="rounded border border-[rgba(34,211,238,0.24)] bg-[rgba(34,211,238,0.08)] px-1.5 py-0.5 text-[10.5px] font-medium uppercase tracking-[0.08em] text-[var(--aurex-accent)]">
+              <span className="rounded border border-[var(--aurex-border-strong)] bg-[var(--aurex-surface-2)] px-1.5 py-0.5 text-[10.5px] font-medium uppercase tracking-[0.08em] text-[var(--aurex-text-2)]">
                 Linked
               </span>
             ) : null}

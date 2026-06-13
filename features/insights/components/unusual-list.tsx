@@ -1,9 +1,11 @@
 'use client';
 
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { DataError } from '@/components/data-error';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useGetUnusual } from '@/features/insights/api/use-get-unusual';
 
 export function UnusualList() {
@@ -11,9 +13,22 @@ export function UnusualList() {
 
   if (unusualQuery.isLoading) {
     return (
-      <div className="flex h-[180px] items-center justify-center">
-        <Loader2 className="size-5 animate-spin text-[var(--aurex-text-3)]" />
+      <div className="space-y-3 py-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-14 w-full rounded-md bg-black/[0.05]" />
+        ))}
       </div>
+    );
+  }
+
+  if (unusualQuery.isError && !unusualQuery.data) {
+    return (
+      <DataError
+        className="min-h-[180px] border-0"
+        title="Couldn't load unusual spending"
+        message="We couldn't compare this month with your recent activity. Try this section again."
+        onRetry={() => unusualQuery.refetch()}
+      />
     );
   }
 

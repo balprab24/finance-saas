@@ -1,8 +1,10 @@
 'use client';
 
 import { formatDistanceToNow } from 'date-fns';
-import { Building2, Loader2 } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 
+import { PageMasthead } from '@/components/page-masthead';
+import { StatementSheet } from '@/components/statement-sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PlaidLinkButton } from '@/features/plaid/components/plaid-link-button';
 import { PlaidItemActions } from '@/features/plaid/components/plaid-item-actions';
@@ -13,12 +15,15 @@ function relativeDate(value: Date | string | null) {
   return `${formatDistanceToNow(new Date(value), { addSuffix: true })}`;
 }
 
+// Light Counter status pills: chroma only carries meaning — income green for a
+// healthy connection, warn amber for errors, neutral graphite otherwise. (Was a
+// dark-theme leftover that rendered near-invisible mint on white.)
 function statusClass(status: string) {
   if (status === 'active') {
-    return 'border-[rgba(34,197,94,0.24)] bg-[rgba(34,197,94,0.08)] text-[#86efac]';
+    return 'border-[rgba(17,122,75,0.3)] bg-[var(--aurex-income-soft)] text-[var(--aurex-income)]';
   }
   if (status === 'error') {
-    return 'border-[rgba(180,83,9,0.24)] bg-[var(--aurex-warn-soft)] text-[var(--aurex-warn)]';
+    return 'border-[rgba(180,83,9,0.3)] bg-[var(--aurex-warn-soft)] text-[var(--aurex-warn)]';
   }
   return 'border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-3)]';
 }
@@ -36,49 +41,49 @@ export default function BanksPage() {
   const itemsQuery = useGetPlaidItems();
   const items = itemsQuery.data || [];
 
+  const meta = itemsQuery.isLoading
+    ? 'Loading…'
+    : `${items.length} ${items.length === 1 ? 'connection' : 'connections'}`;
+  const masthead = (
+    <PageMasthead
+      title="Banks"
+      meta={meta}
+      actions={<PlaidLinkButton disabled={itemsQuery.isFetching} />}
+    />
+  );
+
   if (itemsQuery.isLoading) {
     return (
-      <div className="mx-auto w-full max-w-screen-2xl pb-16 pt-6">
-        <div className="aurex-card p-5">
-          <Skeleton className="h-6 w-40 bg-black/[0.06]" />
-          <div className="mt-5 flex h-[360px] w-full items-center justify-center">
-            <Loader2 className="size-5 animate-spin text-[var(--aurex-text-3)]" />
-          </div>
+      <StatementSheet masthead={masthead}>
+        <div className="space-y-3 p-5 sm:p-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-14 w-full rounded-md bg-black/[0.05]" />
+          ))}
         </div>
-      </div>
+      </StatementSheet>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-screen-2xl space-y-5 pb-16 pt-6">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div className="flex flex-col gap-2">
-          <h1 className="font-display text-[26px] font-medium tracking-[-0.01em] text-[var(--aurex-text-1)] lg:text-[30px]">
-            Banks
-          </h1>
-        </div>
-        <PlaidLinkButton disabled={itemsQuery.isFetching} />
-      </div>
-
-      <div className="aurex-card p-0">
-        {items.length === 0 ? (
-          <div className="flex min-h-[340px] flex-col items-center justify-center gap-4 px-6 text-center">
-            <div className="flex size-11 items-center justify-center rounded-lg border border-[var(--aurex-border)] bg-[var(--aurex-surface-2)] text-[var(--aurex-text-2)]">
-              <Building2 className="size-5" />
-            </div>
-            <div className="space-y-1">
-              <h2 className="text-[15px] font-semibold text-[var(--aurex-text-1)]">
-                No linked banks
-              </h2>
-              <p className="max-w-sm text-[13px] text-[var(--aurex-text-3)]">
-                Connect a bank to sync accounts and transactions through Plaid.
-              </p>
-            </div>
-            <PlaidLinkButton disabled={false} />
+    <StatementSheet masthead={masthead}>
+      {items.length === 0 ? (
+        <div className="flex min-h-[340px] flex-col items-center justify-center gap-4 px-6 py-10 text-center">
+          <div className="flex size-11 items-center justify-center rounded-lg border border-[var(--aurex-border)] bg-[var(--aurex-surface-2)] text-[var(--aurex-text-2)]">
+            <Building2 className="size-5" />
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[820px] text-left">
+          <div className="space-y-1">
+            <h2 className="text-[15px] font-semibold text-[var(--aurex-text-1)]">
+              No linked banks
+            </h2>
+            <p className="max-w-sm text-[13px] text-[var(--aurex-text-3)]">
+              Connect a bank to sync accounts and transactions through Plaid.
+            </p>
+          </div>
+          <PlaidLinkButton disabled={false} />
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[820px] text-left">
               <thead className="border-b border-[var(--aurex-border)] text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--aurex-text-3)]">
                 <tr>
                   <th className="px-5 py-3">Connection</th>
@@ -142,10 +147,9 @@ export default function BanksPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
+          </table>
+        </div>
+      )}
+    </StatementSheet>
   );
 }

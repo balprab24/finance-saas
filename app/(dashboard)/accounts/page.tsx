@@ -9,6 +9,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DataTable } from '@/components/data-table';
 import { DataError } from '@/components/data-error';
 import { EmptyState } from '@/components/empty-state';
+import { PageMasthead } from '@/components/page-masthead';
+import { StatementSheet } from '@/components/statement-sheet';
 
 import { columns } from './columns';
 import { useNewAccount } from '@/features/accounts/hooks/use-new-account';
@@ -41,106 +43,106 @@ export default function AccountsPage() {
     }
   };
 
+  const count = accounts.length;
+  const meta = accountsQuery.isLoading
+    ? 'Loading…'
+    : `${count} ${count === 1 ? 'account' : 'accounts'}${showArchived ? ' · incl. archived' : ''}`;
+
   return (
-    <div className="mx-auto w-full max-w-screen-2xl space-y-5 pb-16 pt-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="font-display text-[26px] font-medium tracking-[-0.01em] text-[var(--aurex-text-1)] lg:text-[30px]">
-          Accounts
-        </h1>
-      </div>
-      <div className="aurex-card p-5">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4">
-            <h2 className="text-[15px] font-semibold text-[var(--aurex-text-1)]">
-              Your accounts
-            </h2>
-            <label className="flex cursor-pointer items-center gap-2 text-[12.5px] text-[var(--aurex-text-3)]">
-              <Checkbox
-                checked={showArchived}
-                onCheckedChange={(value) => setShowArchived(!!value)}
-                aria-label="Show archived accounts"
-              />
-              Show archived
-            </label>
+    <StatementSheet
+      masthead={
+        <PageMasthead
+          title="Accounts"
+          meta={meta}
+          actions={
+            <>
+              <label className="flex h-9 cursor-pointer items-center gap-2 text-[12.5px] text-[var(--aurex-text-3)]">
+                <Checkbox
+                  checked={showArchived}
+                  onCheckedChange={(value) => setShowArchived(!!value)}
+                  aria-label="Show archived accounts"
+                />
+                Show archived
+              </label>
+              <Button
+                onClick={onSyncLinked}
+                size="sm"
+                variant="outline"
+                disabled={isDisabled || plaidItemIds.length === 0}
+                className="h-9 border-[var(--aurex-border)] bg-[var(--aurex-surface-2)] text-[var(--aurex-text-1)] hover:bg-[var(--aurex-surface-hover)]"
+              >
+                {syncPlaidItem.isPending ? (
+                  <Loader2 className="mr-2 size-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 size-3.5" />
+                )}
+                Sync linked
+              </Button>
+              <PlaidLinkButton disabled={isDisabled} />
+              <Button
+                onClick={newAccount.onOpen}
+                size="sm"
+                className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[#2b2f36]"
+              >
+                <Plus className="mr-2 size-3.5" />
+                Add account
+              </Button>
+            </>
+          }
+        />
+      }
+    >
+      <div className="p-5 sm:p-6">
+        {accountsQuery.isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-11 w-full rounded-md bg-black/[0.05]" />
+            ))}
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <Button
-              onClick={onSyncLinked}
-              size="sm"
-              variant="outline"
-              disabled={isDisabled || plaidItemIds.length === 0}
-              className="h-9 border-[var(--aurex-border)] bg-[var(--aurex-surface-2)] text-[var(--aurex-text-1)] hover:bg-[var(--aurex-surface-hover)]"
-            >
-              {syncPlaidItem.isPending ? (
-                <Loader2 className="mr-2 size-3.5 animate-spin" />
-              ) : (
-                <RefreshCw className="mr-2 size-3.5" />
-              )}
-              Sync linked
-            </Button>
-            <PlaidLinkButton disabled={isDisabled} />
-            <Button
-              onClick={newAccount.onOpen}
-              size="sm"
-              className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[#2b2f36]"
-            >
-              <Plus className="mr-2 size-3.5" />
-              Add account
-            </Button>
-          </div>
-        </div>
-        <div className="mt-4">
-          {accountsQuery.isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className="h-11 w-full rounded-md bg-black/[0.05]" />
-              ))}
-            </div>
-          ) : accountsQuery.isError && !accountsQuery.data ? (
-            <DataError
-              className="border-0"
-              title="Couldn't load your accounts"
-              message="We couldn't reach your accounts. Check your connection and try again."
-              onRetry={() => accountsQuery.refetch()}
-            />
-          ) : accounts.length === 0 ? (
-            <EmptyState
-              icon={Wallet}
-              title="No accounts yet"
-              message="Add an account by hand, or link a bank to import balances and transactions automatically."
-              action={
-                <Button
-                  onClick={newAccount.onOpen}
-                  size="sm"
-                  className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[#2b2f36]"
-                >
-                  <Plus className="mr-2 size-3.5" />
-                  Add account
-                </Button>
-              }
-            />
-          ) : (
-            <DataTable
-              filterKey="name"
-              columns={columns}
-              data={accounts}
-              onDelete={(rows) => {
-                const ids = rows
-                  .filter((r) => !r.original.archivedAt)
-                  .map((r) => r.original.id);
-                if (ids.length === 0) return;
-                archiveAccounts.mutate({ ids });
-              }}
-              disabled={isDisabled}
-              bulkActionIcon={Archive}
-              bulkActionLabel={(count) => `Archive ${count} selected`}
-              bulkActionTitle="Archive selected accounts?"
-              bulkActionDescription="This hides the selected accounts from new transactions and account lists. Existing transactions stay intact. Already-archived selections are skipped."
-              bulkActionTone="neutral"
-            />
-          )}
-        </div>
+        ) : accountsQuery.isError && !accountsQuery.data ? (
+          <DataError
+            className="border-0"
+            title="Couldn't load your accounts"
+            message="We couldn't reach your accounts. Check your connection and try again."
+            onRetry={() => accountsQuery.refetch()}
+          />
+        ) : accounts.length === 0 ? (
+          <EmptyState
+            icon={Wallet}
+            title="No accounts yet"
+            message="Add an account by hand, or link a bank to import balances and transactions automatically."
+            action={
+              <Button
+                onClick={newAccount.onOpen}
+                size="sm"
+                className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[#2b2f36]"
+              >
+                <Plus className="mr-2 size-3.5" />
+                Add account
+              </Button>
+            }
+          />
+        ) : (
+          <DataTable
+            filterKey="name"
+            columns={columns}
+            data={accounts}
+            onDelete={(rows) => {
+              const ids = rows
+                .filter((r) => !r.original.archivedAt)
+                .map((r) => r.original.id);
+              if (ids.length === 0) return;
+              archiveAccounts.mutate({ ids });
+            }}
+            disabled={isDisabled}
+            bulkActionIcon={Archive}
+            bulkActionLabel={(count) => `Archive ${count} selected`}
+            bulkActionTitle="Archive selected accounts?"
+            bulkActionDescription="This hides the selected accounts from new transactions and account lists. Existing transactions stay intact. Already-archived selections are skipped."
+            bulkActionTone="neutral"
+          />
+        )}
       </div>
-    </div>
+    </StatementSheet>
   );
 }

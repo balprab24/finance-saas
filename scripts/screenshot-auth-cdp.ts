@@ -40,16 +40,65 @@ type Scenario = {
   run: (page: Page) => Promise<void>;
 };
 
+const STATEMENT_ROUTES = new Set([
+  '/dashboard',
+  '/transactions',
+  '/accounts',
+  '/categories',
+  '/budgets',
+  '/insights',
+  '/banks',
+]);
+
 async function gotoPath(page: Page, path: string) {
   const url = `${APP_URL}${path}`;
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
   await page.waitForTimeout(800);
+
+  if (new URL(page.url()).pathname !== path) {
+    throw new Error(`Expected ${path}, but browser landed on ${page.url()}`);
+  }
 }
 
 async function settleCharts(page: Page) {
   // Charts mount after data resolves; give Recharts a beat to lay out.
   await page.waitForTimeout(1500);
+}
+
+async function verifyStatementSurface(page: Page, scenario: Scenario) {
+  const path = new URL(page.url()).pathname;
+  if (
+    !STATEMENT_ROUTES.has(path) ||
+    (!scenario.key.endsWith('-desktop') && !scenario.key.endsWith('-mobile'))
+  ) {
+    return;
+  }
+
+  const sheetCount = await page.getByTestId('statement-sheet').count();
+  const mastheadCount = await page.getByTestId('page-masthead').count();
+  if (sheetCount !== 1 || mastheadCount !== 1) {
+    throw new Error(
+      `Expected one statement sheet and masthead on ${path}; found ${sheetCount} sheet(s), ${mastheadCount} masthead(s)`,
+    );
+  }
+
+  if (scenario.viewport.width >= 1024) {
+    const activeNavCount = await page.locator('nav a[aria-current="page"]').count();
+    if (activeNavCount !== 1) {
+      throw new Error(`Expected one active desktop navigation link on ${path}; found ${activeNavCount}`);
+    }
+  }
+
+  const viewport = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  if (viewport.scrollWidth > viewport.clientWidth + 1) {
+    throw new Error(
+      `Horizontal viewport overflow on ${path}: ${viewport.scrollWidth}px content in ${viewport.clientWidth}px viewport`,
+    );
+  }
 }
 
 const scenarios: Scenario[] = [
@@ -117,6 +166,58 @@ const scenarios: Scenario[] = [
     viewport: MOBILE,
     run: async (page) => {
       await gotoPath(page, '/categories');
+    },
+  },
+  {
+    key: 'budgets-desktop',
+    description: '/budgets at 1440x900',
+    viewport: DESKTOP,
+    run: async (page) => {
+      await gotoPath(page, '/budgets');
+      await settleCharts(page);
+    },
+  },
+  {
+    key: 'budgets-mobile',
+    description: '/budgets at 390x844',
+    viewport: MOBILE,
+    run: async (page) => {
+      await gotoPath(page, '/budgets');
+      await settleCharts(page);
+    },
+  },
+  {
+    key: 'insights-desktop',
+    description: '/insights at 1440x900',
+    viewport: DESKTOP,
+    run: async (page) => {
+      await gotoPath(page, '/insights');
+      await settleCharts(page);
+    },
+  },
+  {
+    key: 'insights-mobile',
+    description: '/insights at 390x844',
+    viewport: MOBILE,
+    run: async (page) => {
+      await gotoPath(page, '/insights');
+      await settleCharts(page);
+    },
+  },
+  {
+    key: 'banks-desktop',
+    description: '/banks at 1440x900',
+    viewport: DESKTOP,
+    run: async (page) => {
+      await gotoPath(page, '/banks');
+    },
+  },
+  {
+    key: 'banks-mobile',
+    description: '/banks at 390x844',
+    viewport: MOBILE,
+    run: async (page) => {
+      await gotoPath(page, '/banks');
     },
   },
   {
@@ -206,6 +307,7 @@ async function capture(scenario: Scenario, context: BrowserContext): Promise<str
   try {
     await page.setViewportSize(scenario.viewport);
     await scenario.run(page);
+    await verifyStatementSurface(page, scenario);
     const out = resolve(OUT_DIR, `${scenario.key}.png`);
     await page.screenshot({ path: out, fullPage: true });
     return out;

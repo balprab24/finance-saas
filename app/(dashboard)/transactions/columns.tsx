@@ -8,8 +8,7 @@ import { format } from 'date-fns';
 import { client } from '@/lib/hono';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { cn, formatCurrency } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
+import { LedgerAmount } from '@/components/money';
 import { Actions } from './actions';
 import { AccountColumn } from './account-column';
 import { CategoryColumn } from './category-column';
@@ -72,24 +71,20 @@ export const columns: ColumnDef<ResponseType>[] = [
   {
     accessorKey: 'amount',
     header: ({ column }) => (
-      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-        Amount <ArrowUpDown className="ml-2 size-4" />
-      </Button>
+      <div className="flex justify-end">
+        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+          Amount <ArrowUpDown className="ml-2 size-4" />
+        </Button>
+      </div>
     ),
     cell: ({ row }) => {
+      // The ledger figure: mono, tabular, signed money color (income green /
+      // expense red), the same way the landing statement sets every amount.
       const amount = parseFloat(row.getValue('amount'));
-      // Color by financial meaning (Light Counter): income green, expense red,
-      // zero neutral graphite — never a solid ink "highlight" pill.
-      const tone =
-        amount > 0
-          ? 'border-0 bg-[rgba(17,122,75,0.1)] text-[#117a4b]'
-          : amount < 0
-            ? 'border-0 bg-[rgba(192,57,43,0.1)] text-[#c0392b]'
-            : 'border-0 bg-[var(--aurex-surface)] text-[var(--aurex-text-2)]';
       return (
-        <Badge className={cn('px-3.5 py-2.5 font-mono text-xs font-medium tabular-nums', tone)}>
-          {formatCurrency(amount)}
-        </Badge>
+        <div className="text-right">
+          <LedgerAmount value={amount} signed className="text-[13.5px] font-medium" />
+        </div>
       );
     },
   },

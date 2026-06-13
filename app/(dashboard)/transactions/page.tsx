@@ -1,12 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, ReceiptText } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DataTable } from '@/components/data-table';
+import { DataError } from '@/components/data-error';
+import { EmptyState } from '@/components/empty-state';
+import { PageMasthead } from '@/components/page-masthead';
+import { StatementSheet } from '@/components/statement-sheet';
 
 import { columns } from './columns';
 import { useNewTransaction } from '@/features/transactions/hooks/use-new-transaction';
@@ -76,50 +80,76 @@ export default function TransactionsPage() {
     );
   }
 
+  const count = transactions.length;
+
   return (
-    <div className="mx-auto w-full max-w-screen-2xl space-y-5 pb-16 pt-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="font-display text-[26px] font-medium tracking-[-0.01em] text-[var(--aurex-text-1)] lg:text-[30px]">
-          Transactions
-        </h1>
-      </div>
-      <div className="aurex-card p-5">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <h2 className="text-[15px] font-semibold text-[var(--aurex-text-1)]">
-            Transaction history
-          </h2>
-          <div className="flex flex-col items-stretch gap-2 lg:flex-row lg:items-center">
-            <Button
-              onClick={newTransaction.onOpen}
-              size="sm"
-              className="h-9 w-full bg-[var(--aurex-brand)] text-white hover:bg-[#2b2f36] lg:w-auto"
-            >
-              <Plus className="mr-2 size-3.5" />
-              Add transaction
-            </Button>
-            <UploadButton onUpload={onUpload} />
+    <StatementSheet
+      masthead={
+        <PageMasthead
+          title="Transactions"
+          meta={
+            transactionsQuery.isLoading
+              ? 'Loading…'
+              : `${count} ${count === 1 ? 'transaction' : 'transactions'}`
+          }
+          actions={
+            <>
+              <Button
+                onClick={newTransaction.onOpen}
+                size="sm"
+                className="h-9 w-full bg-[var(--aurex-brand)] text-white hover:bg-[#2b2f36] sm:w-auto"
+              >
+                <Plus className="mr-2 size-3.5" />
+                Add transaction
+              </Button>
+              <UploadButton onUpload={onUpload} />
+            </>
+          }
+        />
+      }
+    >
+      <div className="p-5 sm:p-6">
+        {transactionsQuery.isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-11 w-full rounded-md bg-black/[0.05]" />
+            ))}
           </div>
-        </div>
-        <div className="mt-4">
-          {transactionsQuery.isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className="h-11 w-full rounded-md bg-black/[0.05]" />
-              ))}
-            </div>
-          ) : (
-            <DataTable
-              filterKey="payee"
-              columns={columns}
-              data={transactions}
-              onDelete={(rows) =>
-                deleteTransactions.mutate({ ids: rows.map((r) => r.original.id) })
-              }
-              disabled={isDisabled}
-            />
-          )}
-        </div>
+        ) : transactionsQuery.isError && !transactionsQuery.data ? (
+          <DataError
+            className="border-0"
+            title="Couldn't load your transactions"
+            message="We couldn't reach your transaction history. Check your connection and try again."
+            onRetry={() => transactionsQuery.refetch()}
+          />
+        ) : transactions.length === 0 ? (
+          <EmptyState
+            icon={ReceiptText}
+            title="No transactions yet"
+            message="Add a transaction by hand or import a bank CSV to start reconciling your activity."
+            action={
+              <Button
+                onClick={newTransaction.onOpen}
+                size="sm"
+                className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[#2b2f36]"
+              >
+                <Plus className="mr-2 size-3.5" />
+                Add transaction
+              </Button>
+            }
+          />
+        ) : (
+          <DataTable
+            filterKey="payee"
+            columns={columns}
+            data={transactions}
+            onDelete={(rows) =>
+              deleteTransactions.mutate({ ids: rows.map((r) => r.original.id) })
+            }
+            disabled={isDisabled}
+          />
+        )}
       </div>
-    </div>
+    </StatementSheet>
   );
 }
