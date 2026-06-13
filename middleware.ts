@@ -3,6 +3,9 @@ import { NextResponse } from 'next/server';
 
 const isPublicRoute = createRouteMatcher([
   '/',
+  '/privacy',
+  '/terms',
+  '/support',
   '/api/plaid/webhook',
   // Cron drain endpoint: enforces its own CRON_SECRET bearer check, so Clerk must
   // not intercept it. Not actually unauthenticated.

@@ -127,7 +127,7 @@
     scroll-padding-top: 84px;
   }
   @media (max-width: 767px) {
-    html { scroll-padding-top: 124px; }
+    html { scroll-padding-top: 112px; }
   }
 }
 
@@ -144,24 +144,6 @@
       background 0.15s ease;
   }
   .aurex-card-hover:hover {
-    border-color: var(--aurex-border-strong);
-  }
-
-  /* Marketing-only: solid elevated card for the landing dashboard preview:
-     a real surface + hairline. */
-  .aurex-card-marketing {
-    background: var(--aurex-bg-elev);
-    border: 1px solid var(--aurex-border);
-    border-radius: 14px;
-    box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.3),
-      0 24px 48px -30px rgba(0, 0, 0, 0.6);
-    transition:
-      transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
-      border-color 240ms ease;
-  }
-  .aurex-card-marketing:hover {
-    transform: translateY(-1px);
     border-color: var(--aurex-border-strong);
   }
 
@@ -185,40 +167,78 @@
     pointer-events: none;
   }
 
-  /* Marketing-only: a faint editorial grid that fades out near the edges.
-     Replaces the floating aurora blobs. Bespoke, calm, not template-blur. */
-  .aurex-mesh {
+  /* Marketing-only: horizontal statement ruling that fades before it competes
+     with the actual reconciliation sheet. */
+  .aurex-ruling {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    overflow: hidden;
-    background-image:
-      linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
-    background-size: 60px 60px;
-    -webkit-mask-image: radial-gradient(120% 75% at 50% 0%, #000 35%, transparent 78%);
-    mask-image: radial-gradient(120% 75% at 50% 0%, #000 35%, transparent 78%);
+    background-image: linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+    background-size: 100% 36px;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 92%);
+    mask-image: linear-gradient(to bottom, #000 0%, transparent 92%);
   }
 
-  .aurex-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    height: 36px;
-    padding: 0 0.85rem;
-    border-radius: 9999px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--aurex-text-2);
-    background: var(--aurex-surface);
-    border: 1px solid var(--aurex-border);
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  /* Marketing-only: the accountant's double rule that closes a reconciled
+     total. Deliberately darker than UI hairlines; it is print grammar. */
+  .aurex-rule-total {
+    border-bottom: 3px double rgba(0, 0, 0, 0.4);
   }
-  .aurex-pill:hover {
-    background: var(--aurex-surface-hover);
-    color: var(--aurex-text-1);
-    border-color: var(--aurex-border-strong);
+
+  /* Signature marketing artifact: a statement with a real ledger spine rather
+     than generic dashboard chrome. The hard offset reads as stacked paper. */
+  .aurex-statement {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    background: var(--aurex-bg-elev);
+    border: 1px solid var(--aurex-border-strong);
+    border-radius: 10px;
+    box-shadow: 7px 7px 0 rgba(22, 24, 29, 0.055);
+  }
+
+  .aurex-ledger-spine {
+    display: flex;
+    min-height: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1rem 0;
+    color: white;
+    background: var(--aurex-ink);
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    line-height: 1;
+  }
+
+  .aurex-reconciled-mark {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--aurex-income);
+    border-radius: 6px;
+    color: var(--aurex-income);
+    transform: rotate(-1.5deg);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.05;
+  }
+  .aurex-reconciled-mark small {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .aurex-closing-rule {
+    border-top: 1px solid var(--aurex-border-strong);
+    border-bottom: 3px double rgba(0, 0, 0, 0.4);
   }
 
   .aurex-button-primary {
@@ -238,6 +258,11 @@
   .aurex-button-primary:hover {
     background: #2b2f36;
     transform: translateY(-1px);
+  }
+  .aurex-button-primary:focus-visible,
+  .aurex-button-ghost:focus-visible {
+    outline: 2px solid var(--aurex-ink);
+    outline-offset: 3px;
   }
 
   .aurex-button-ghost {
@@ -260,6 +285,13 @@
     border-color: var(--aurex-border-strong);
   }
 
+  .aurex-button-hero {
+    min-height: 48px;
+    height: 48px;
+    padding-inline: 1.2rem;
+    font-size: 16px;
+  }
+
   /* Reveal-on-scroll enhances an already-visible default: the hidden start state
      applies only when JS is present (ScrollReveal adds `.aurex-js` to <html>), so
      without JS / for non-JS crawlers the [data-reveal] content ships visible, not
@@ -280,11 +312,16 @@
     transform: translateY(0);
     will-change: auto;
   }
-}
 
-@keyframes aurex-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  @media (max-width: 639px) {
+    .aurex-statement {
+      grid-template-columns: 32px minmax(0, 1fr);
+      box-shadow: 5px 5px 0 rgba(22, 24, 29, 0.05);
+    }
+    .aurex-ledger-spine {
+      font-size: 8.5px;
+    }
+  }
 }
 
 @keyframes aurex-rise {
@@ -292,46 +329,15 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.aurex-float { animation: aurex-float 7s ease-in-out infinite; }
-.aurex-float:hover { animation-play-state: paused; }
 .aurex-rise { animation: aurex-rise 0.6s ease both; }
-
-/* One-time stroke draw-in for SVG paths normalized with pathLength="100". */
-@keyframes aurex-draw {
-  from { stroke-dashoffset: 100; }
-  to   { stroke-dashoffset: 0; }
-}
-.aurex-draw-line {
-  stroke-dasharray: 100;
-  stroke-dashoffset: 100;
-  animation: aurex-draw 1200ms cubic-bezier(0.16, 1, 0.3, 1) 200ms forwards;
-}
-
-/* Gentle "breathing" used on chart area fills so the hero feels alive. */
-@keyframes aurex-breathe {
-  0%, 100% { opacity: 0.8; }
-  50% { opacity: 1; }
-}
-.aurex-breathe { animation: aurex-breathe 4.5s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .aurex-reveal,
-  .aurex-rise,
-  .aurex-float,
-  .aurex-breathe {
+  .aurex-rise {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
     transform: none !important;
   }
-  /* SVG path draw-in: render the line fully on first paint. */
-  .aurex-draw-line {
-    animation: none !important;
-    stroke-dasharray: none !important;
-    stroke-dashoffset: 0 !important;
-  }
-  /* Note: SVG SMIL <animate> on the endpoint pulses (income/expense dots)
-     ignores CSS, so the gentle 2.4s radius cycle remains. Trade-off accepted
-     because the motion is sub-vestibular-trigger. */
 }

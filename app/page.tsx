@@ -1,29 +1,109 @@
 import Link from 'next/link';
 import { ClerkLoaded, ClerkLoading, Show, UserButton } from '@clerk/nextjs';
-import { Loader2 } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowRight,
+  Check,
+  ChevronDown,
+  Loader2,
+  Lock,
+  ShieldCheck,
+  Upload,
+  WalletCards,
+} from 'lucide-react';
 import { LogoMark } from '@/components/brand/logo';
 import { ScrollReveal } from '@/components/marketing/scroll-reveal';
 import { ScrollSpyNav } from '@/components/marketing/scroll-spy-nav';
-import { PreviewFlowChartLarge } from '@/components/marketing/preview-flow-chart';
-import { AUREX_COLORS } from '@/lib/colors';
-import {
-  ArrowRight,
-  ArrowUpRight,
-  CalendarRange,
-  LineChart,
-  Lock,
-  PieChart,
-  ShieldCheck,
-  Sparkles,
-  Upload,
-  WalletCards,
-  Wand2,
-} from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
 const SECTION = 'mx-auto w-full max-w-[1120px] px-6 sm:px-8 lg:px-14';
 const SECTION_WIDE = 'mx-auto w-full max-w-[1360px] px-6 sm:px-8 lg:px-14';
+
+/* ------------------------------------------------------------------ */
+/* Sample data — one dataset feeds the hero statement, the import     */
+/* strip, and the closing motif. Totals are derived, never typed, so  */
+/* every figure on the page reconciles by construction.               */
+/* ------------------------------------------------------------------ */
+
+const STATEMENT_PERIOD = 'May 1–31, 2026';
+
+type SampleRow = {
+  day: string;
+  payee: string;
+  category: string;
+  csv: string;
+  cents: number;
+};
+
+const SAMPLE_ROWS: SampleRow[] = [
+  {
+    day: '02',
+    payee: 'Hartfield Apartments',
+    category: 'Rent',
+    csv: 'HARTFIELD APTS',
+    cents: -195000,
+  },
+  {
+    day: '05',
+    payee: 'Brightline Studio payroll',
+    category: 'Income',
+    csv: 'BRIGHTLINE PAYROLL',
+    cents: 312045,
+  },
+  {
+    day: '09',
+    payee: 'Maple & Vine Grocers',
+    category: 'Groceries',
+    csv: 'MAPLE VINE GROCERS',
+    cents: -13218,
+  },
+  {
+    day: '14',
+    payee: 'City Transit',
+    category: 'Transport',
+    csv: 'CITY TRANSIT',
+    cents: -5850,
+  },
+  {
+    day: '19',
+    payee: 'Stillwater Design invoice',
+    category: 'Income',
+    csv: 'STILLWATER DESIGN',
+    cents: 115000,
+  },
+  {
+    day: '24',
+    payee: 'Juniper Café',
+    category: 'Dining',
+    csv: 'JUNIPER CAFE',
+    cents: -4762,
+  },
+];
+
+const IN_CENTS = SAMPLE_ROWS.filter((r) => r.cents > 0).reduce((s, r) => s + r.cents, 0);
+const OUT_CENTS = SAMPLE_ROWS.filter((r) => r.cents < 0).reduce((s, r) => s - r.cents, 0);
+const NET_CENTS = IN_CENTS - OUT_CENTS;
+const HERO_ROWS = [SAMPLE_ROWS[1], SAMPLE_ROWS[0], SAMPLE_ROWS[4], SAMPLE_ROWS[2]];
+
+const SAMPLE_ACCOUNTS = [
+  { name: 'Checking', cents: 320418 },
+  { name: 'Savings', cents: 1289000 },
+  { name: 'Credit card', cents: -64210 },
+];
+const ACCOUNTS_TOTAL_CENTS = SAMPLE_ACCOUNTS.reduce((s, a) => s + a.cents, 0);
+
+const usd = (cents: number) => formatCurrency(cents / 100);
+/* U+2212 minus, not a hyphen: consistent width in the mono column and
+   screen readers voice it. Money color is always paired with this sign. */
+const signedUsd = (cents: number) =>
+  `${cents < 0 ? '−' : '+'}${formatCurrency(Math.abs(cents) / 100)}`;
+const moneyClass = (cents: number) =>
+  cents < 0 ? 'text-[var(--aurex-expense)]' : 'text-[var(--aurex-income)]';
+/* Raw two-decimal amount as a bank CSV writes it: hyphen-minus, no sign pairing.
+   The reconciliation display (signedUsd) is the product's voice; this is the bank's. */
+const csvAmount = (cents: number) => (cents / 100).toFixed(2);
 
 function BrandMark({ size = 36 }: { size?: number }) {
   return <LogoMark size={size} />;
@@ -80,419 +160,467 @@ function NavBar() {
   );
 }
 
-function Hero() {
+function HeroStatement() {
   return (
-    <section className="aurex-hairline relative overflow-hidden">
-      <div className="aurex-mesh" aria-hidden />
+    <section
+      data-testid="landing-hero"
+      className="aurex-hairline relative overflow-hidden"
+    >
+      <div className="aurex-ruling" aria-hidden />
 
-      <div className={`${SECTION_WIDE} relative z-10 grid gap-14 pt-16 pb-20 lg:grid-cols-[1.05fr_1.4fr] lg:gap-12 lg:pt-24 lg:pb-24`}>
-        {/* Left column — copy */}
-        <div className="flex flex-col items-start aurex-rise">
-          <div className="mb-6 flex items-center gap-2.5">
-            <span className="h-px w-6 bg-[var(--aurex-brand)]" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--aurex-text-3)]">
-              Personal finance workspace
-            </span>
+      <div
+        className={`${SECTION_WIDE} relative z-10 grid min-h-[calc(100svh-108px)] items-center gap-12 py-10 sm:py-14 md:min-h-[calc(100svh-68px)] lg:grid-cols-[minmax(0,0.94fr)_minmax(560px,1.06fr)] lg:gap-14 lg:py-16 xl:gap-16`}
+      >
+        <div className="aurex-rise max-w-[620px] lg:py-8">
+          <div className="flex items-center gap-3 text-[14px] font-semibold text-[var(--aurex-text-2)]">
+            <span className="h-px w-10 bg-[var(--aurex-text-1)]" aria-hidden />
+            Personal finance, reconciled
           </div>
 
-          <h1 className="font-display text-[46px] font-medium leading-[1.04] tracking-[-0.02em] text-[var(--aurex-text-1)] sm:text-[60px] lg:text-[70px]">
-            Every dollar,
-            <br />
-            accounted&nbsp;for.
+          <h1 className="mt-7 max-w-[680px] font-display text-[48px] font-semibold leading-[0.98] tracking-[-0.035em] text-[var(--aurex-text-1)] sm:text-[64px] lg:text-[76px] xl:text-[80px]">
+            <span className="block">Every dollar,</span>
+            <span className="block">accounted for.</span>
           </h1>
 
-          <p className="mt-7 max-w-[520px] text-[17px] leading-[1.6] text-[var(--aurex-text-2)] sm:text-[18px]">
+          <p className="mt-7 max-w-[580px] text-[18px] leading-[1.58] text-[var(--aurex-text-2)] sm:text-[20px]">
             Aurex pulls every account, category, and transaction into one
-            workspace. Import a CSV, set a filter, and read your month at a
-            glance, down to the cent.
+            readable statement, then reconciles what came in against what went
+            out, to the cent.
           </p>
 
           <div className="mt-9 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
             <Show when="signed-in">
-              <Link href="/dashboard" className="aurex-button-primary">
+              <Link
+                data-testid="hero-primary-cta"
+                href="/dashboard"
+                className="aurex-button-primary aurex-button-hero"
+              >
                 Open dashboard
                 <ArrowRight className="size-4" />
               </Link>
             </Show>
             <Show when="signed-out">
-              <Link href="/sign-up" className="aurex-button-primary">
+              <Link
+                data-testid="hero-primary-cta"
+                href="/sign-up"
+                className="aurex-button-primary aurex-button-hero"
+              >
                 Start tracking, free
                 <ArrowRight className="size-4" />
               </Link>
             </Show>
-            <a href="#preview" className="aurex-button-ghost">
-              See the dashboard
+            <a href="#how-it-works" className="aurex-button-ghost aurex-button-hero">
+              See how it works
+              <ArrowDown className="size-4" />
             </a>
           </div>
 
-          <dl className="mt-10 grid w-full max-w-[470px] grid-cols-3 gap-6 border-t border-[var(--aurex-border)] pt-6">
-            {[
-              { value: 'CSV-native', label: 'Import in seconds' },
-              { value: 'To the cent', label: 'Exact accounting' },
-              { value: 'Private', label: 'Parsed in your browser' },
-            ].map((s) => (
-              <div key={s.label}>
-                <dt className="font-display text-[19px] font-medium tracking-tight text-[var(--aurex-text-1)] after:mt-2 after:block after:h-px after:w-7 after:bg-[var(--aurex-brand)] after:content-['']">
-                  {s.value}
-                </dt>
-                <dd className="mt-2 text-[12px] uppercase tracking-[0.1em] text-[var(--aurex-text-3)]">
-                  {s.label}
-                </dd>
-              </div>
-            ))}
-          </dl>
+          <p className="mt-5 text-[14px] leading-relaxed text-[var(--aurex-text-3)] sm:text-[15px]">
+            Import a bank CSV in minutes — Aurex parses it right in your browser.
+          </p>
         </div>
 
-        {/* Right column — dashboard preview */}
-        <div className="relative">
-          <DashboardPreview />
+        <SampleStatement />
+      </div>
+    </section>
+  );
+}
+
+function SampleStatement() {
+  return (
+    <section
+      aria-label={`Sample statement, ${STATEMENT_PERIOD}`}
+      className="aurex-statement aurex-rise relative min-w-0 overflow-hidden"
+    >
+      <div className="aurex-ledger-spine" aria-hidden>
+        <span>AUREX</span>
+        <span>05 / 2026</span>
+        <span>PAGE 01</span>
+      </div>
+
+      <div className="min-w-0 px-5 py-5 sm:px-7 sm:py-6 lg:px-8">
+        <header className="flex items-start justify-between gap-5 border-b border-[var(--aurex-border-strong)] pb-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <BrandMark size={28} />
+            <div className="min-w-0">
+              <h2 className="text-[17px] font-semibold tracking-[-0.01em] text-[var(--aurex-text-1)]">
+                Aurex statement
+              </h2>
+              <p className="mt-0.5 text-[12px] tabular-nums text-[var(--aurex-text-3)] sm:text-[13px]">
+                {STATEMENT_PERIOD} · Sample figures
+              </p>
+            </div>
+          </div>
+          <span className="hidden shrink-0 font-mono text-[12px] font-medium tabular-nums text-[var(--aurex-text-3)] sm:inline">
+            AX-0526-01
+          </span>
+        </header>
+
+        <div className="grid gap-5 border-b border-[var(--aurex-border-strong)] py-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <div>
+            <p className="text-[14px] font-medium text-[var(--aurex-text-2)]">
+              Net this period
+            </p>
+            <p className="mt-2 font-display text-[48px] font-semibold leading-none tracking-[-0.025em] text-[var(--aurex-text-1)] tabular-nums sm:text-[58px] lg:text-[64px]">
+              {usd(NET_CENTS)}
+            </p>
+          </div>
+          <div className="aurex-reconciled-mark" aria-label="Reconciled to the cent">
+            <Check className="size-5 stroke-[2.5]" aria-hidden />
+            <span>
+              Reconciled
+              <small>to the cent</small>
+            </span>
+          </div>
+        </div>
+
+        <div className="py-5">
+          <p className="text-[12px] font-semibold text-[var(--aurex-text-3)]">
+            In − Out = Net
+          </p>
+          <div
+            aria-label={`Reconciliation equation: In ${usd(IN_CENTS)} minus Out ${usd(OUT_CENTS)} equals Net ${usd(NET_CENTS)}`}
+            className="mt-3 grid grid-cols-[1fr_auto] gap-x-4 gap-y-2.5 font-mono text-[14px] font-semibold tabular-nums sm:grid-cols-[auto_1fr_auto_1fr_auto_1fr] sm:items-baseline sm:gap-x-3 sm:text-[15px]"
+          >
+            <span className="text-[var(--aurex-text-3)]">In</span>
+            <span className="text-right text-[var(--aurex-income)]">
+              {signedUsd(IN_CENTS)}
+            </span>
+            <span className="hidden text-[var(--aurex-text-3)] sm:inline">−</span>
+            <span className="text-[var(--aurex-text-3)] sm:hidden">Out</span>
+            <span className="text-right text-[var(--aurex-expense)]">
+              {signedUsd(-OUT_CENTS)}
+            </span>
+            <span className="hidden text-[var(--aurex-text-3)] sm:inline">=</span>
+            <span className="text-[var(--aurex-text-3)] sm:hidden">Net</span>
+            <span className="text-right text-[var(--aurex-text-1)]">
+              {usd(NET_CENTS)}
+            </span>
+          </div>
+        </div>
+
+        <div className="border-t border-[var(--aurex-border-strong)] pt-4">
+          <div className="flex items-baseline justify-between gap-4 pb-2">
+            <h3 className="text-[15px] font-semibold text-[var(--aurex-text-1)]">
+              Posted activity
+            </h3>
+            <span className="text-[12px] text-[var(--aurex-text-3)]">
+              4 of {SAMPLE_ROWS.length} rows
+            </span>
+          </div>
+
+          <ul>
+            {HERO_ROWS.map((row) => (
+              <li
+                key={row.day}
+                className="grid grid-cols-[minmax(0,1fr)_max-content] items-baseline gap-x-4 border-b border-[var(--aurex-border)] py-3.5"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-[15px] font-medium text-[var(--aurex-text-1)] sm:text-[16px]">
+                    {row.payee}
+                  </span>
+                  <span className="mt-0.5 block text-[13px] text-[var(--aurex-text-3)] sm:text-[13.5px]">
+                    May {row.day} · {row.category}
+                  </span>
+                </span>
+                <span
+                  className={`text-right font-mono text-[14px] font-semibold tabular-nums sm:text-[15px] ${moneyClass(row.cents)}`}
+                >
+                  {signedUsd(row.cents)}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="aurex-rule-total flex items-baseline justify-between gap-4 py-3">
+            <span className="text-[13px] font-medium text-[var(--aurex-text-2)]">
+              Period net · all six rows
+            </span>
+            <span className="font-mono text-[15px] font-semibold tabular-nums text-[var(--aurex-text-1)]">
+              {usd(NET_CENTS)}
+            </span>
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-function DashboardPreview() {
-  const ledger = [
-    { name: 'Groceries', amount: '$1,248.00', percent: 86 },
-    { name: 'Rent', amount: '$1,950.00', percent: 100 },
-    { name: 'Dining', amount: '$486.20', percent: 42 },
-    { name: 'Transport', amount: '$195.30', percent: 18 },
-  ];
-
+/* One artifact tells the product story: the same six rows, three states. */
+function TransformationStrip() {
   return (
-    <div className="aurex-card-marketing relative overflow-hidden p-0">
-      <div className="flex items-center justify-between gap-4 border-b border-[var(--aurex-border)] p-4 sm:p-5">
-        <div className="flex items-center gap-2.5">
-          <BrandMark size={26} />
-          <div className="leading-tight">
-            <div className="text-[13px] font-semibold text-[var(--aurex-text-1)]">
-              Statement
-            </div>
-            <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--aurex-text-3)]">
-              May 1 - May 31
-            </div>
-          </div>
+    <section
+      id="how-it-works"
+      className="aurex-hairline relative py-18 sm:py-22 lg:py-28"
+    >
+      <div className={SECTION}>
+        <div className="aurex-reveal max-w-[720px]" data-reveal>
+          <h2 className="font-display text-[38px] font-semibold leading-[1.06] tracking-[-0.02em] text-[var(--aurex-text-1)] [text-wrap:balance] sm:text-[50px]">
+            Bring it in. Sort it. Read it.
+          </h2>
+          <p className="mt-6 max-w-[640px] text-[17px] leading-[1.65] text-[var(--aurex-text-2)] sm:text-[18px]">
+            Drop a CSV from your bank: Aurex parses it in your browser, you map
+            the columns to date, amount, and payee, and the rows become a
+            statement. Below, the six transactions from above make the trip.
+          </p>
         </div>
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="aurex-pill h-7 px-2.5 text-[11px]">
-            <CalendarRange className="size-3" />
-            Last 30 days
-          </span>
-          <span className="hidden size-7 place-items-center rounded-full bg-[var(--aurex-brand)] text-[10px] font-semibold text-white sm:grid">
-            AX
-          </span>
+
+        <div className="mt-14 grid grid-cols-1 divide-y divide-[var(--aurex-border)] border-y border-[var(--aurex-border-strong)] lg:grid-cols-3 lg:divide-x lg:divide-y-0">
+          <StripStage
+            title="The import"
+            desc="Match each bank column to a field — date, amount, payee. The raw export becomes rows Aurex understands."
+            delay={0}
+          >
+            <ImportMapping />
+          </StripStage>
+
+          <StripStage
+            title="The ledger"
+            desc="Every row gets a payee and a category. Rename a category later and old rows follow."
+            delay={100}
+          >
+            <ul>
+              {SAMPLE_ROWS.map((row, i) => (
+                <li
+                  key={row.day}
+                  className={`flex items-baseline justify-between gap-4 border-b border-[var(--aurex-border)] py-2.5 last:border-b-0 ${
+                    i >= 3 ? 'hidden lg:flex' : ''
+                  }`}
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-[15px] text-[var(--aurex-text-1)]">
+                      {row.payee}
+                    </span>
+                    <span className="block text-[13px] text-[var(--aurex-text-3)]">
+                      {row.category}
+                    </span>
+                  </span>
+                  <span
+                    className={`shrink-0 font-mono text-[14px] font-semibold tabular-nums ${moneyClass(row.cents)}`}
+                  >
+                    {signedUsd(row.cents)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="pt-2.5 text-[12.5px] text-[var(--aurex-text-3)] lg:hidden">
+              Showing first 3 of {SAMPLE_ROWS.length} rows
+            </p>
+          </StripStage>
+
+          <StripStage
+            title="The statement"
+            desc="Aurex does the arithmetic. In, minus out, equals net: the number you came for."
+            delay={200}
+          >
+            <dl>
+              <div className="flex items-baseline justify-between gap-3 border-b border-[var(--aurex-border)] py-2.5">
+                <dt className="text-[15px] text-[var(--aurex-text-2)]">In</dt>
+                <dd className="font-mono text-[15px] font-semibold tabular-nums text-[var(--aurex-income)]">
+                  {signedUsd(IN_CENTS)}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-3 border-b border-[var(--aurex-border)] py-2.5">
+                <dt className="text-[15px] text-[var(--aurex-text-2)]">Out</dt>
+                <dd className="font-mono text-[15px] font-semibold tabular-nums text-[var(--aurex-expense)]">
+                  {signedUsd(-OUT_CENTS)}
+                </dd>
+              </div>
+              <div className="aurex-rule-total flex items-baseline justify-between gap-3 py-2.5">
+                <dt className="text-[15px] font-medium text-[var(--aurex-text-1)]">Net</dt>
+                <dd className="font-mono text-[15px] font-semibold tabular-nums text-[var(--aurex-text-1)]">
+                  {usd(NET_CENTS)}
+                </dd>
+              </div>
+            </dl>
+            <p className="mt-4 text-[13.5px] text-[var(--aurex-text-3)]">
+              The same six rows, reconciled.
+            </p>
+          </StripStage>
         </div>
       </div>
+    </section>
+  );
+}
 
-      <div className="grid grid-cols-1 divide-y divide-[var(--aurex-border)] lg:grid-cols-[1.08fr_0.92fr] lg:divide-x lg:divide-y-0">
-        <section className="min-w-0 p-5 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className="text-[13px] font-medium text-[var(--aurex-text-3)]">
-              Net this period
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-md bg-[var(--aurex-income-soft)] px-2 py-1 text-[11.5px] font-medium tabular-nums text-[var(--aurex-income)]">
-              <ArrowUpRight className="size-3.5" />
-              +8.2% vs last month
-            </span>
-          </div>
+/* A faithful, static echo of the real import mapper
+   (app/(dashboard)/transactions/import-table.tsx): the bank's own column header
+   sits above the Aurex field it's been mapped to. Mobile shows three rows; the
+   full six appear at lg, mirroring the live "Showing first N of M" preview. */
+const MAP_COLUMNS = [
+  { source: 'Date', field: 'Date', value: (r: SampleRow) => `2026-05-${r.day}` },
+  { source: 'Amount', field: 'Amount', value: (r: SampleRow) => csvAmount(r.cents) },
+  { source: 'Description', field: 'Payee', value: (r: SampleRow) => r.csv },
+];
 
-          <div className="mt-3 min-w-0 font-display text-[42px] font-semibold leading-none tracking-[-0.02em] tabular-nums [overflow-wrap:anywhere] text-[var(--aurex-text-1)] sm:text-[56px]">
-            $4,540.50
-          </div>
-
-          <div className="mt-5 rounded-[10px] border border-[var(--aurex-border)] bg-[var(--aurex-surface)] p-3">
-            <div className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-[var(--aurex-text-3)]">
-              In - Out = Net
-            </div>
-            <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 font-mono text-[13px] font-semibold tabular-nums text-[var(--aurex-text-1)]">
-              <span>
-                <span className="mr-1 text-[var(--aurex-text-3)]">In</span>
-                $8,420.00
-              </span>
-              <span className="text-[var(--aurex-text-3)]">-</span>
-              <span>
-                <span className="mr-1 text-[var(--aurex-text-3)]">Out</span>
-                $3,879.50
-              </span>
-              <span className="text-[var(--aurex-text-3)]">=</span>
-              <span>
-                <span className="mr-1 text-[var(--aurex-text-3)]">Net</span>
-                $4,540.50
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--aurex-border)] pt-4">
-            <div className="text-[11.5px] text-[var(--aurex-text-3)]">
-              as of May 31, 4:24 PM
-            </div>
-            <span className="inline-flex items-center gap-1 text-[12.5px] font-medium text-[var(--aurex-text-1)]">
-              View transactions
-              <ArrowRight className="size-3.5" />
-            </span>
-          </div>
-        </section>
-
-        <section className="min-w-0 p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-4 border-b border-[var(--aurex-border)] pb-3">
-            <div>
-              <h3 className="text-[15px] font-semibold tracking-tight text-[var(--aurex-text-1)]">
-                Where it went
-              </h3>
-              <p className="mt-0.5 text-[11.5px] text-[var(--aurex-text-3)]">
-                Ranked by spending
-              </p>
-            </div>
-            <span className="font-mono text-[12.5px] font-semibold tabular-nums text-[var(--aurex-text-1)]">
-              $3,879.50
-            </span>
-          </div>
-
-          <ul className="mt-4 space-y-3">
-            {ledger.map((item) => (
-              <li key={item.name} className="space-y-1.5">
-                <div className="flex min-w-0 items-center justify-between gap-3 text-[12.5px]">
-                  <span className="truncate text-[var(--aurex-text-1)]">{item.name}</span>
-                  <span className="shrink-0 font-mono font-semibold tabular-nums text-[var(--aurex-text-1)]">
-                    {item.amount}
-                  </span>
-                </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-[var(--aurex-surface)]">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${item.percent}%`,
-                      backgroundColor: AUREX_COLORS.bar,
-                    }}
-                  />
-                </div>
-              </li>
+function ImportMapping() {
+  return (
+    <div className="overflow-hidden rounded-md border border-[var(--aurex-border)]">
+      <table className="w-full table-fixed border-collapse text-left">
+        <colgroup>
+          <col className="w-[32%]" />
+          <col className="w-[32%]" />
+          <col />
+        </colgroup>
+        <thead>
+          <tr className="border-b border-[var(--aurex-border)] bg-[var(--aurex-surface)]">
+            {MAP_COLUMNS.map((col) => (
+              <th key={col.source} className="px-2 pb-2.5 pt-2 align-bottom font-normal">
+                <span className="block truncate text-[10.5px] uppercase tracking-[0.08em] text-[var(--aurex-text-3)]">
+                  {col.source}
+                </span>
+                <span className="mt-1.5 inline-flex h-7 max-w-full items-center gap-0.5 rounded-md border border-[rgba(22,24,29,0.32)] bg-[rgba(22,24,29,0.1)] px-1.5 text-[12px] font-medium text-[var(--aurex-brand-text)]">
+                  <span className="truncate">{col.field}</span>
+                  <ChevronDown className="size-2.5 shrink-0 opacity-70" aria-hidden />
+                </span>
+              </th>
             ))}
-          </ul>
-        </section>
+          </tr>
+        </thead>
+        <tbody>
+          {SAMPLE_ROWS.map((row, i) => (
+            <tr
+              key={row.day}
+              className={`border-b border-[var(--aurex-border)] last:border-b-0 ${
+                i >= 3 ? 'hidden lg:table-row' : ''
+              }`}
+            >
+              {MAP_COLUMNS.map((col) => (
+                <td
+                  key={col.source}
+                  className="truncate px-2 py-2 font-mono text-[12px] tabular-nums text-[var(--aurex-text-1)]"
+                >
+                  {col.value(row)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="border-t border-[var(--aurex-border)] bg-[var(--aurex-surface)] px-2.5 py-1.5 text-[11px] text-[var(--aurex-text-3)] lg:hidden">
+        Showing first 3 of {SAMPLE_ROWS.length} rows
       </div>
     </div>
   );
 }
 
-function HowItWorks() {
-  const steps = [
-    {
-      n: '01',
-      icon: Upload,
-      title: 'Bring your transactions in',
-      desc: 'Add accounts and rows by hand, or drop a CSV from your bank. Aurex parses it in your browser, no upload required.',
-    },
-    {
-      n: '02',
-      icon: Wand2,
-      title: 'Sort spending by category',
-      desc: 'Categorize as you go. Rename or split categories whenever your habits change, and old transactions update with them.',
-    },
-    {
-      n: '03',
-      icon: LineChart,
-      title: 'See where the money went',
-      desc: 'Income, expenses, and the gap between, across every account, in one dashboard you can filter by date or account.',
-    },
-  ];
-
+function StripStage({
+  title,
+  desc,
+  delay,
+  children,
+}: {
+  title: string;
+  desc: string;
+  delay: number;
+  children: React.ReactNode;
+}) {
   return (
-    <section id="preview" className="aurex-hairline relative py-16 sm:py-20 lg:py-24">
-      <div className={`${SECTION} relative z-10`}>
-        <div className="aurex-reveal mb-12 max-w-[640px]" data-reveal>
-          <h2 className="font-display text-[34px] font-medium leading-[1.1] tracking-[-0.015em] text-[var(--aurex-text-1)] sm:text-[44px]">
-            Bring it in. Sort it. Read it.
-          </h2>
-          <p className="mt-5 max-w-[520px] text-[16px] leading-[1.65] text-[var(--aurex-text-2)]">
-            Aurex is deliberately simple. Three steps, and you stay in control
-            of your categories and accounts at every one.
-          </p>
-        </div>
-
-        <div className="border-t border-[var(--aurex-border)]">
-          {steps.map((s, i) => (
-            <div
-              key={s.n}
-              className="aurex-reveal grid gap-4 border-b border-[var(--aurex-border)] py-8 sm:grid-cols-[auto_1fr] sm:gap-10"
-              data-reveal
-              style={{ ['--reveal-delay']: `${i * 100}ms` } as React.CSSProperties}
-            >
-              <div className="flex items-baseline gap-4 sm:w-[180px]">
-                <span className="font-display text-[40px] font-medium leading-none tabular-nums text-[var(--aurex-brand-text)]">
-                  {s.n}
-                </span>
-                <s.icon className="size-5 text-[var(--aurex-text-3)]" />
-              </div>
-              <div className="max-w-[620px]">
-                <h3 className="font-display text-[22px] font-medium tracking-[-0.01em] text-[var(--aurex-text-1)]">
-                  {s.title}
-                </h3>
-                <p className="mt-2.5 text-[15px] leading-[1.6] text-[var(--aurex-text-2)]">
-                  {s.desc}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
+    <div
+      className="aurex-reveal py-9 lg:px-9 lg:py-10 lg:first:pl-0 lg:last:pr-0"
+      data-reveal
+      style={{ ['--reveal-delay']: `${delay}ms` } as React.CSSProperties}
+    >
+      <h3 className="text-[20px] font-semibold tracking-[-0.01em] text-[var(--aurex-text-1)]">
+        {title}
+      </h3>
+      <p className="mt-2 max-w-[420px] text-[16px] leading-[1.6] text-[var(--aurex-text-2)]">
+        {desc}
+      </p>
+      <div className="mt-5">{children}</div>
+    </div>
   );
 }
 
-function InsightsSection() {
+function AccountsBlock() {
   return (
-    <section id="insights" className="aurex-hairline relative py-16 sm:py-20 lg:py-24">
-      <div className={`${SECTION} relative z-10`}>
+    <section id="accounts" className="aurex-hairline relative py-18 sm:py-22 lg:py-24">
+      <div
+        className={`${SECTION} grid items-start gap-12 md:grid-cols-[minmax(300px,380px)_1fr] lg:gap-20`}
+      >
         <div className="aurex-reveal" data-reveal>
-          <h2 className="max-w-[680px] font-display text-[34px] font-medium leading-[1.1] tracking-[-0.015em] text-[var(--aurex-text-1)] sm:text-[44px]">
-            Income, expenses,
-            <br /> and the gap between.
-          </h2>
-          <p className="mt-5 max-w-[520px] text-[16px] leading-[1.65] text-[var(--aurex-text-2)]">
-            Aurex renders every chart with Recharts and a finance-tuned palette:
-            green for income, red for expenses, graphite for everything in
-            between. Toggle the visualization without losing your filter.
+          <p className="border-b border-[var(--aurex-border-strong)] pb-3 text-[15px] font-semibold text-[var(--aurex-text-2)]">
+            Account position
           </p>
+          <ul>
+            {SAMPLE_ACCOUNTS.map((account) => (
+              <li
+                key={account.name}
+                className="flex items-baseline justify-between gap-4 border-b border-[var(--aurex-border)] py-3.5"
+              >
+                <span className="text-[16px] text-[var(--aurex-text-1)]">
+                  {account.name}
+                </span>
+                <span
+                  className={`font-mono text-[15px] font-semibold tabular-nums ${
+                    account.cents < 0
+                      ? 'text-[var(--aurex-expense)]'
+                      : 'text-[var(--aurex-text-1)]'
+                  }`}
+                >
+                  {account.cents < 0 ? signedUsd(account.cents) : usd(account.cents)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="aurex-rule-total flex items-baseline justify-between gap-4 py-3.5">
+            <span className="text-[14px] font-medium text-[var(--aurex-text-2)]">
+              Across accounts
+            </span>
+            <span className="font-mono text-[15px] font-semibold tabular-nums text-[var(--aurex-text-1)]">
+              {usd(ACCOUNTS_TOTAL_CENTS)}
+            </span>
+          </div>
         </div>
-      </div>
 
-      <div className={`${SECTION_WIDE} relative z-10 mt-8`}>
-        <PreviewFlowChartLarge />
-      </div>
-
-      <div className={`${SECTION} relative z-10 mt-8 grid gap-10 md:grid-cols-2`}>
-        <div className="aurex-reveal" data-reveal>
-          <SmallFeature
-            icon={PieChart}
-            tag="Spending breakdown"
-            title="See where the money went"
-            desc="A pie of expenses by category, plus a radial alternative so the chart matches the question you're asking."
-          />
-        </div>
         <div
           className="aurex-reveal"
           data-reveal
           style={{ ['--reveal-delay']: '120ms' } as React.CSSProperties}
         >
-          <SmallFeature
-            icon={ShieldCheck}
-            tag="Filter & focus"
-            title="Account and date filters"
-            desc="Narrow the dashboard to a single account or a custom date range. The charts and totals update together, with no stale numbers."
-          />
+          <h2 className="font-display text-[36px] font-semibold leading-[1.08] tracking-[-0.02em] text-[var(--aurex-text-1)] [text-wrap:balance] sm:text-[44px]">
+            Every account, one sheet.
+          </h2>
+          <p className="mt-5 max-w-[560px] text-[17px] leading-[1.65] text-[var(--aurex-text-2)]">
+            Checking, savings, and credit cards sit in one ledger. Filter the
+            statement to a single account or a custom date range, and every
+            total on the page recalculates with it.
+          </p>
+          <p className="mt-4 max-w-[560px] text-[17px] leading-[1.65] text-[var(--aurex-text-2)]">
+            Close an account and its history stays put: old transactions keep
+            their rows, and your totals keep their truth.
+          </p>
         </div>
       </div>
     </section>
   );
 }
 
-function SmallFeature({
-  icon: Icon,
-  tag,
-  title,
-  desc,
-}: {
-  icon: typeof Sparkles;
-  tag: string;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <div className="aurex-card-marketing p-6">
-      <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--aurex-text-3)]">
-        <Icon className="size-3.5 text-[var(--aurex-brand-text)]" />
-        {tag}
-      </div>
-      <h4 className="font-display text-[20px] font-medium tracking-[-0.01em] text-[var(--aurex-text-1)]">
-        {title}
-      </h4>
-      <p className="mt-2 text-[14.5px] leading-[1.6] text-[var(--aurex-text-2)]">
-        {desc}
-      </p>
-    </div>
-  );
-}
-
-function ImportSection() {
-  return (
-    <section id="import" className="aurex-hairline relative py-16 sm:py-20 lg:py-24">
-      <div className={`${SECTION} relative z-10`}>
-        <div
-          className="aurex-card-marketing aurex-reveal relative p-8 sm:p-10 lg:p-12"
-          data-reveal
-        >
-          <div className="relative flex flex-col items-start gap-4">
-            <span className="grid size-10 place-items-center rounded-[10px] bg-[var(--aurex-surface)] ring-1 ring-[var(--aurex-border)]">
-              <Upload className="size-[18px] text-[var(--aurex-brand-text)]" />
-            </span>
-            <h3 className="font-display text-[28px] font-medium tracking-[-0.015em] text-[var(--aurex-text-1)] sm:text-[36px]">
-              Bring in CSV activity
-            </h3>
-            <p className="max-w-[560px] text-[16px] leading-[1.65] text-[var(--aurex-text-2)]">
-              Drop a CSV from your bank, map the columns to date / amount /
-              payee, and review the rows before saving. Parsing happens in the
-              browser, so your data stays with you.
-            </p>
-          </div>
-          <div className="relative mt-10 grid gap-8 border-t border-[var(--aurex-border)] pt-8 md:grid-cols-3">
-            {[
-              { stat: 'Drop', label: 'A CSV from any bank', icon: Upload },
-              { stat: 'Map', label: 'Pick which columns mean what', icon: Wand2 },
-              { stat: 'Review', label: 'Confirm rows before saving', icon: ShieldCheck },
-            ].map((s, i) => (
-              <div
-                key={s.label}
-                className="aurex-reveal flex items-start gap-3"
-                data-reveal
-                style={{ ['--reveal-delay']: `${i * 120}ms` } as React.CSSProperties}
-              >
-                <span className="mt-1 grid size-8 place-items-center rounded-md bg-[var(--aurex-surface)] ring-1 ring-[var(--aurex-border)]">
-                  <s.icon className="size-4 text-[#16181d]" />
-                </span>
-                <div>
-                  <div className="font-display text-[20px] font-medium tracking-tight text-[var(--aurex-text-1)]">
-                    {s.stat}
-                  </div>
-                  <div className="mt-1 text-[13.5px] text-[var(--aurex-text-2)]">
-                    {s.label}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function TrustBand() {
+function TrustLine() {
   const items = [
-    { icon: Lock, label: 'Secure sign-in by Clerk' },
-    { icon: ShieldCheck, label: 'Per-user workspace' },
     { icon: Upload, label: 'CSV parsed in your browser' },
-    { icon: WalletCards, label: 'No automatic bank link' },
+    { icon: ShieldCheck, label: 'Your data, scoped to your account' },
+    { icon: Lock, label: 'Sign-in handled by Clerk' },
+    { icon: WalletCards, label: 'Optional Plaid bank sync' },
   ];
   return (
-    <section id="privacy" className="aurex-hairline relative bg-[rgba(0,0,0,0.015)] py-14">
-      <div className={`${SECTION} relative z-10 flex flex-wrap items-center justify-between gap-6`}>
-        <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--aurex-text-3)]">
-          Built around your privacy
-        </span>
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
-          {items.map((it, i) => (
+    <section id="privacy" className="aurex-hairline relative py-14">
+      <div className={SECTION}>
+        <h2 className="sr-only">Privacy</h2>
+        <div
+          className="aurex-reveal flex flex-wrap items-center gap-x-10 gap-y-4"
+          data-reveal
+        >
+          {items.map((item) => (
             <span
-              key={it.label}
-              className="aurex-reveal inline-flex items-center gap-2.5 text-[13.5px] text-[var(--aurex-text-2)]"
-              data-reveal
-              style={{ ['--reveal-delay']: `${i * 80}ms` } as React.CSSProperties}
+              key={item.label}
+              className="inline-flex items-center gap-2.5 text-[15px] text-[var(--aurex-text-2)]"
             >
-              <span className="grid size-7 place-items-center rounded-md bg-[var(--aurex-surface)] ring-1 ring-[var(--aurex-border)]">
-                <it.icon className="size-3.5 text-[#16181d]" />
-              </span>
-              {it.label}
+              <item.icon
+                aria-hidden
+                className="size-4 shrink-0 text-[var(--aurex-text-3)]"
+              />
+              {item.label}
             </span>
           ))}
         </div>
@@ -501,44 +629,47 @@ function TrustBand() {
   );
 }
 
-function CtaBand() {
+function ClosingStatement() {
   return (
-    <section className="relative py-16 sm:py-20 lg:py-24">
-      <div className={`${SECTION} relative z-10 text-center`}>
-        <h2
-          className="aurex-reveal mx-auto max-w-[640px] font-display text-[38px] font-medium leading-[1.06] tracking-[-0.015em] text-[var(--aurex-text-1)] sm:text-[50px]"
-          data-reveal
-        >
-          Your money, finally legible.
-        </h2>
-        <p
-          className="aurex-reveal mx-auto mt-5 max-w-[520px] text-[16px] leading-[1.65] text-[var(--aurex-text-2)]"
-          data-reveal
-          style={{ ['--reveal-delay']: '120ms' } as React.CSSProperties}
-        >
-          Free to start. Import a CSV and you&rsquo;ll have your first dashboard
-          in a couple of minutes.
-        </p>
-        <div
-          className="aurex-reveal mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
-          data-reveal
-          style={{ ['--reveal-delay']: '240ms' } as React.CSSProperties}
-        >
-          <Show when="signed-in">
-            <Link href="/dashboard" className="aurex-button-primary">
-              Open dashboard
-              <ArrowRight className="size-4" />
-            </Link>
-          </Show>
-          <Show when="signed-out">
-            <Link href="/sign-up" className="aurex-button-primary">
-              Create your workspace
-              <ArrowRight className="size-4" />
-            </Link>
-            <Link href="/sign-in" className="aurex-button-ghost">
-              Sign in
-            </Link>
-          </Show>
+    <section className="relative py-18 sm:py-24 lg:py-28">
+      <div className={SECTION}>
+        <div className="aurex-closing-rule grid gap-9 py-9 sm:py-11 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-end lg:gap-16">
+          <div className="aurex-reveal" data-reveal>
+            <p className="font-mono text-[13px] tabular-nums text-[var(--aurex-text-3)]">
+              Balance carried forward · {usd(NET_CENTS)} · sample
+            </p>
+            <h2 className="mt-5 max-w-[700px] font-display text-[42px] font-semibold leading-[1.04] tracking-[-0.025em] text-[var(--aurex-text-1)] [text-wrap:balance] sm:text-[58px]">
+              Your money, finally legible.
+            </h2>
+          </div>
+
+          <div
+            className="aurex-reveal"
+            data-reveal
+            style={{ ['--reveal-delay']: '140ms' } as React.CSSProperties}
+          >
+            <p className="max-w-[480px] text-[17px] leading-[1.65] text-[var(--aurex-text-2)]">
+              Import a CSV and read your first reconciled statement in a couple
+              of minutes. Free to start.
+            </p>
+            <div className="mt-7 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+              <Show when="signed-in">
+                <Link href="/dashboard" className="aurex-button-primary aurex-button-hero">
+                  Open dashboard
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Show>
+              <Show when="signed-out">
+                <Link href="/sign-up" className="aurex-button-primary aurex-button-hero">
+                  Create your workspace
+                  <ArrowRight className="size-4" />
+                </Link>
+                <Link href="/sign-in" className="aurex-button-ghost aurex-button-hero">
+                  Sign in
+                </Link>
+              </Show>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -546,8 +677,13 @@ function CtaBand() {
 }
 
 function Footer() {
+  const legal = [
+    { href: '/privacy', label: 'Privacy' },
+    { href: '/terms', label: 'Terms' },
+    { href: '/support', label: 'Support' },
+  ];
   return (
-    <footer className="border-t border-[var(--aurex-border)] py-12">
+    <footer className="border-t border-[var(--aurex-border)] py-10">
       <div
         className={`${SECTION} flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between`}
       >
@@ -557,6 +693,17 @@ function Footer() {
             Aurex
           </span>
         </Link>
+        <nav className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          {legal.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="text-[13.5px] text-[var(--aurex-text-2)] transition-colors hover:text-[var(--aurex-text-1)]"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
         <span className="text-[12.5px] text-[var(--aurex-text-3)]">
           © {new Date().getFullYear()} Aurex
         </span>
@@ -570,12 +717,11 @@ export default function HomePage() {
     <main className="relative min-h-screen overflow-hidden bg-[var(--aurex-bg)] text-[var(--aurex-text-1)] antialiased">
       <ScrollReveal />
       <NavBar />
-      <Hero />
-      <HowItWorks />
-      <InsightsSection />
-      <ImportSection />
-      <TrustBand />
-      <CtaBand />
+      <HeroStatement />
+      <TransformationStrip />
+      <AccountsBlock />
+      <TrustLine />
+      <ClosingStatement />
       <Footer />
     </main>
   );
