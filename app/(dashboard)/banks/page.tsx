@@ -5,6 +5,7 @@ import { Building2 } from 'lucide-react';
 
 import { PageMasthead } from '@/components/page-masthead';
 import { StatementSheet } from '@/components/statement-sheet';
+import { DataError } from '@/components/data-error';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PlaidLinkButton } from '@/features/plaid/components/plaid-link-button';
 import { PlaidItemActions } from '@/features/plaid/components/plaid-item-actions';
@@ -60,6 +61,21 @@ export default function BanksPage() {
             <Skeleton key={i} className="h-14 w-full rounded-md bg-black/[0.05]" />
           ))}
         </div>
+      </StatementSheet>
+    );
+  }
+
+  // A failed fetch must not collapse into "No linked banks": a user with linked
+  // banks would be nudged to redundantly re-link an account that is actually fine.
+  if (itemsQuery.isError && !itemsQuery.data) {
+    return (
+      <StatementSheet masthead={masthead}>
+        <DataError
+          className="min-h-[340px] border-0"
+          title="Couldn't load your linked banks"
+          message="We couldn't reach your bank connections. Check your connection and try again — your linked banks are safe."
+          onRetry={() => itemsQuery.refetch()}
+        />
       </StatementSheet>
     );
   }

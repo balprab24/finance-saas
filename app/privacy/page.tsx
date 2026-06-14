@@ -11,14 +11,15 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy"
-      updated="June 12, 2026"
+      updated="June 13, 2026"
       intro="Aurex is an early-stage personal-finance tool. This page explains, in plain language, how it handles your data today. It is a summary of how the product works, not a legal contract."
       sections={[
         {
           heading: 'What Aurex stores',
           paragraphs: [
-            'Only the records you create or import: your accounts, categories, and transactions. Amounts are stored as exact integer values, never as approximate floating-point numbers.',
-            'Aurex does not ask for or store anything beyond what you enter to keep your statement accurate.',
+            'The records you create or import: your accounts, categories, transactions, and any budgets you set. Amounts are stored as exact integer values, never as approximate floating-point numbers.',
+            'A small amount of operational data needed to run the service: an identifier that ties your records to your sign-in, and internal logs and counters used to sync your data, diagnose problems, and prevent abuse.',
+            'If you connect a bank, Aurex also stores data from that connection — see “Optional bank connections” below.',
           ],
         },
         {
@@ -46,6 +47,7 @@ export default function PrivacyPage() {
           heading: 'Optional bank connections',
           paragraphs: [
             'Connecting a bank through Plaid is optional. You can use Aurex entirely with manual entry and CSV imports if you prefer not to link an account.',
+            'When you do link a bank, Aurex stores an access token for that connection — encrypted at rest — along with the account and transaction data Plaid syncs from it, and a record of each sync so it can keep your statement current. Disconnecting a bank revokes that token with Plaid so it can no longer be used, and the synced accounts are archived rather than erased so your past statements stay accurate.',
           ],
         },
         {
