@@ -13,7 +13,9 @@ function LedgerStat({
   tone = 'neutral',
 }: {
   label: string;
-  value: number;
+  /** null while the period's totals are unknown (loading or failed) — rendered
+   *  as an em dash so an unreconciled period never reads as a real $0.00. */
+  value: number | null;
   tone?: 'neutral' | 'balance';
 }) {
   return (
@@ -21,7 +23,13 @@ function LedgerStat({
       <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--aurex-text-3)]">
         {label}
       </div>
-      <LedgerAmount value={value} tone={tone} className="text-[18px] font-semibold" />
+      {value === null ? (
+        <span className="font-mono text-[18px] font-semibold tabular-nums text-[var(--aurex-text-3)]">
+          —
+        </span>
+      ) : (
+        <LedgerAmount value={value} tone={tone} className="text-[18px] font-semibold" />
+      )}
     </div>
   );
 }
@@ -40,11 +48,17 @@ export default function BudgetsPage() {
         />
       }
     >
-      {/* The month's plan as a reconciliation strip: Budgeted − Spent = Remaining. */}
+      {/* The month's plan as a reconciliation strip: Budgeted − Spent = Remaining.
+          Until the totals load (or after a failed fetch) the figures read "—",
+          never a fabricated reconciled $0.00. */}
       <div className="flex flex-wrap items-center gap-x-10 gap-y-3 border-b border-[var(--aurex-border)] p-5 sm:p-6">
-        <LedgerStat label="Budgeted" value={totals?.totalBudgeted ?? 0} />
-        <LedgerStat label="Spent" value={totals?.totalSpent ?? 0} />
-        <LedgerStat label="Remaining" value={totals?.totalRemaining ?? 0} tone="balance" />
+        <LedgerStat label="Budgeted" value={totals ? totals.totalBudgeted : null} />
+        <LedgerStat label="Spent" value={totals ? totals.totalSpent : null} />
+        <LedgerStat
+          label="Remaining"
+          value={totals ? totals.totalRemaining : null}
+          tone="balance"
+        />
       </div>
       <div className="p-5 sm:p-6">
         <BudgetsTable />
