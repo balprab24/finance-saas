@@ -209,9 +209,11 @@ rest. Hover strengthens the border; it never adds a shadow or glow. No `backdrop
   Focus shifts the border to ink with a thin ink ring. Placeholder at Ink-3 contrast.
 
 ### Navigation
-- A row of text links (Ink-3 idle, Ink-1 active on a faint fill) on desktop; a left sheet
-  on ≤1024px with an ink dot marking the active route (no glow). Sticky header is solid
-  white with a bottom hairline — no blur, no gradient.
+- A row of text links on desktop — Ink-3 idle, Ink-1 active marked by a full-width ink
+  underline (inactive links grow the underline on hover), with `aria-current="page"` on the
+  active route; the chrome matches the marketing nav rather than a separate filled-pill
+  vocabulary. A left sheet on ≤1024px with an ink dot marking the active route (no glow).
+  Sticky header is solid white with a bottom hairline — no blur, no gradient.
 
 ### Logo
 - A solid **ink** rounded-square badge with a white "A" monogram. No color fill, no glow.

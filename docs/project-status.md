@@ -1,13 +1,20 @@
 # Aurex — Project Status & Next Steps
 
-_Last reviewed: 2026-06-08_
+_Last reviewed: 2026-06-13_
 
 ## Where the project stands
 
 Aurex is a genuinely solid full-stack personal-finance app — the foundation is well past
-hobby level. The recent work replaced the old dark/indigo "AI SaaS" look with the **Light
-Counter** identity (light paper, graphite ink, color only for financial meaning) and
-finished a multi-pass UI/UX review.
+hobby level. Earlier work replaced the old dark/indigo "AI SaaS" look with the **Light
+Counter** identity (light paper, graphite ink, color only for financial meaning). PR #14
+then unified every authenticated surface on shared statement primitives (`StatementSheet`,
+`PageMasthead`, `LedgerAmount`), switched desktop active nav from filled pills to an ink
+underline, and added public Privacy/Terms/Support pages.
+
+A follow-up review pass (2026-06-13) fixed three "unknown-as-zero" state bugs — the budgets
+masthead, banks fetch-error, and insights caption no longer render a fabricated `$0`/empty
+state while loading or failed — corrected the Privacy copy to accurately describe Plaid
+tokens and operational data, and made `tsc --noEmit` fully clean.
 
 ### Assessment by area
 
