@@ -27,7 +27,7 @@ describe('buildDemoWorkspace', () => {
     expect(
       data.transactions.every(
         (transaction) =>
-          transaction.categoryId === null || categoryIds.has(transaction.categoryId),
+          transaction.categoryId == null || categoryIds.has(transaction.categoryId),
       ),
     ).toBe(true);
   });

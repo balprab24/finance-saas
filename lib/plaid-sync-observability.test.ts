@@ -6,7 +6,7 @@ const scope = {
   setLevel: vi.fn(),
   setTag: vi.fn(),
 };
-const captureCheckIn = vi.fn(() => 'check_in_1');
+const captureCheckIn = vi.fn<(...args: unknown[]) => string>(() => 'check_in_1');
 const captureException = vi.fn();
 const captureMessage = vi.fn();
 const withScope = vi.fn((callback: (value: typeof scope) => void) => callback(scope));
@@ -25,7 +25,6 @@ import {
   startPlaidSyncCronCheckIn,
 } from '@/lib/plaid-sync-observability';
 
-const originalNodeEnv = process.env.NODE_ENV;
 const originalMonitorSlug = process.env.SENTRY_PLAID_SYNC_MONITOR_SLUG;
 const originalMonitorSchedule = process.env.SENTRY_PLAID_SYNC_MONITOR_SCHEDULE;
 
@@ -35,7 +34,7 @@ function restoreEnv(key: string, value: string | undefined) {
 }
 
 afterEach(() => {
-  restoreEnv('NODE_ENV', originalNodeEnv);
+  vi.unstubAllEnvs();
   restoreEnv('SENTRY_PLAID_SYNC_MONITOR_SLUG', originalMonitorSlug);
   restoreEnv('SENTRY_PLAID_SYNC_MONITOR_SCHEDULE', originalMonitorSchedule);
   vi.clearAllMocks();
@@ -43,7 +42,7 @@ afterEach(() => {
 
 describe('plaid sync observability', () => {
   it('captures terminal job failures with useful Sentry tags', () => {
-    process.env.NODE_ENV = 'production';
+    vi.stubEnv('NODE_ENV', 'production');
 
     reportPlaidSyncJobTerminal({
       job: {

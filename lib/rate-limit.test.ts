@@ -31,7 +31,7 @@ describe('checkRateLimit', () => {
       limit: 5,
       windowMs: 60_000,
       now: new Date('2026-01-01T00:00:30Z'),
-      database: fake.database as Parameters<typeof checkRateLimit>[0]['database'],
+      database: fake.database as unknown as Parameters<typeof checkRateLimit>[0]['database'],
     });
 
     expect(result).toMatchObject({
@@ -54,7 +54,7 @@ describe('checkRateLimit', () => {
       database: databaseReturning({
         count: 3,
         resetAt: new Date('2026-01-01T00:01:00Z'),
-      }).database as Parameters<typeof checkRateLimit>[0]['database'],
+      }).database as unknown as Parameters<typeof checkRateLimit>[0]['database'],
     });
 
     expect(result.allowed).toBe(false);
