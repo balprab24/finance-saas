@@ -63,7 +63,7 @@ describe('GET /summary expense semantics', () => {
 
     const { status, body } = await requestSummary();
     expect(status).toBe(200);
-    expect(body.data.expensesAmount).toBe(50_000);
+    expect(body.data!.expensesAmount).toBe(50_000);
   });
 
   it('reports a positive expensesChange when spending grows', async () => {
@@ -74,7 +74,7 @@ describe('GET /summary expense semantics', () => {
 
     const { body } = await requestSummary();
     // |-50000| vs |-25000| → +100%
-    expect(body.data.expensesChange).toBe(100);
+    expect(body.data!.expensesChange).toBe(100);
   });
 
   it('reports a negative expensesChange when spending falls', async () => {
@@ -85,7 +85,7 @@ describe('GET /summary expense semantics', () => {
 
     const { body } = await requestSummary();
     // |-10000| vs |-20000| → -50%
-    expect(body.data.expensesChange).toBe(-50);
+    expect(body.data!.expensesChange).toBe(-50);
   });
 
   it('returns zero values without crashing when no transactions exist', async () => {
@@ -96,9 +96,9 @@ describe('GET /summary expense semantics', () => {
 
     const { status, body } = await requestSummary();
     expect(status).toBe(200);
-    expect(body.data.expensesAmount).toBe(0);
-    expect(body.data.expensesChange).toBe(0);
-    expect(body.data.incomeChange).toBe(0);
+    expect(body.data!.expensesAmount).toBe(0);
+    expect(body.data!.expensesChange).toBe(0);
+    expect(body.data!.incomeChange).toBe(0);
   });
 });
 
