@@ -97,7 +97,7 @@ export default function TransactionsPage() {
               <Button
                 onClick={newTransaction.onOpen}
                 size="sm"
-                className="h-9 w-full bg-[var(--aurex-brand)] text-white hover:bg-[#2b2f36] sm:w-auto"
+                className="h-9 w-full bg-[var(--aurex-brand)] text-white hover:bg-[var(--aurex-bar)] sm:w-auto"
               >
                 <Plus className="mr-2 size-3.5" />
                 Add transaction
@@ -131,7 +131,7 @@ export default function TransactionsPage() {
               <Button
                 onClick={newTransaction.onOpen}
                 size="sm"
-                className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[#2b2f36]"
+                className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[var(--aurex-bar)]"
               >
                 <Plus className="mr-2 size-3.5" />
                 Add transaction

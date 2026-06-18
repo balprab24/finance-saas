@@ -36,6 +36,10 @@ export const columns: ColumnDef<ResponseType>[] = [
       />
     ),
     enableSorting: false,
+    meta: {
+      mobileLabel: 'Select',
+      mobileAlign: 'right',
+    },
   },
   {
     accessorKey: 'date',
@@ -48,6 +52,7 @@ export const columns: ColumnDef<ResponseType>[] = [
       const date = row.getValue('date') as Date;
       return <span>{format(new Date(date), 'dd MMM, yyyy')}</span>;
     },
+    meta: { mobileLabel: 'Date' },
   },
   {
     accessorKey: 'category',
@@ -59,6 +64,7 @@ export const columns: ColumnDef<ResponseType>[] = [
     cell: ({ row }) => (
       <CategoryColumn id={row.original.id} category={row.original.category} categoryId={row.original.categoryId} />
     ),
+    meta: { mobileLabel: 'Category' },
   },
   {
     accessorKey: 'payee',
@@ -67,6 +73,7 @@ export const columns: ColumnDef<ResponseType>[] = [
         Payee <ArrowUpDown className="ml-2 size-4" />
       </Button>
     ),
+    meta: { mobileLabel: 'Payee' },
   },
   {
     accessorKey: 'amount',
@@ -87,6 +94,10 @@ export const columns: ColumnDef<ResponseType>[] = [
         </div>
       );
     },
+    meta: {
+      mobileLabel: 'Amount',
+      mobileAlign: 'right',
+    },
   },
   {
     accessorKey: 'account',
@@ -96,9 +107,14 @@ export const columns: ColumnDef<ResponseType>[] = [
       </Button>
     ),
     cell: ({ row }) => <AccountColumn account={row.original.account} accountId={row.original.accountId} />,
+    meta: { mobileLabel: 'Account' },
   },
   {
     id: 'actions',
     cell: ({ row }) => <Actions id={row.original.id} />,
+    meta: {
+      mobileLabel: 'Actions',
+      mobileAlign: 'right',
+    },
   },
 ];

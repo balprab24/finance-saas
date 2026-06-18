@@ -12,13 +12,17 @@ import { useGetSummary } from '@/features/summary/api/use-get-summary';
 
 const SECTION = 'border-b border-[var(--aurex-rule)] p-5 sm:p-6';
 
+type Props = {
+  isUpdating?: boolean;
+};
+
 // The dashboard's lead: the period's cash position stated as a financial fact, not
 // a row of KPI cards. The net figure is set in the grotesque (Schibsted) at display
 // size with proportional figures, which keeps commas and the decimal tight where
 // monospace opened ugly gaps. The supporting In − Out = Net equation stays in Geist
 // Mono with tabular figures so the columns align, making the arithmetic visible.
-export function CashPosition() {
-  const { data, isLoading, isError, isFetching, refetch } = useGetSummary();
+export function CashPosition({ isUpdating = false }: Props) {
+  const { data, isLoading, isError, refetch } = useGetSummary();
   const params = useSearchParams();
 
   const transactionsHref = qs.stringifyUrl(
@@ -63,21 +67,21 @@ export function CashPosition() {
 
   return (
     <div
-      className={cn(SECTION, isFetching && 'opacity-60 transition-opacity duration-300')}
-      aria-busy={isFetching}
+      className={cn(SECTION, isUpdating && 'opacity-60 transition-opacity duration-300')}
+      aria-busy={isUpdating}
     >
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-        <span className="text-[13px] font-medium text-[var(--aurex-text-3)]">Net this period</span>
+        <h2 className="text-[13px] font-medium text-[var(--aurex-text-3)]">Net this period</h2>
         <Link
           href={transactionsHref}
-          className="inline-flex items-center gap-1 text-[12.5px] font-medium text-[#16181d] hover:text-[#3a414b]"
+          className="-my-1.5 inline-flex items-center gap-1 py-1.5 text-[12.5px] font-medium text-[var(--aurex-text-1)] hover:text-[var(--aurex-text-2)]"
         >
           View transactions <ArrowRight className="size-3.5" />
         </Link>
       </div>
 
       <div className="mt-1.5 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <span className="min-w-0 font-display text-[40px] font-semibold leading-none tracking-[-0.02em] tabular-nums [overflow-wrap:anywhere] text-[var(--aurex-text-1)] sm:text-[52px]">
+        <span className="min-w-0 font-display text-[clamp(1.75rem,7vw,2.5rem)] font-semibold leading-none tracking-[-0.02em] tabular-nums text-[var(--aurex-text-1)] sm:text-[52px]">
           {formatCurrency(net)}
         </span>
         <span
@@ -94,6 +98,9 @@ export function CashPosition() {
           {formatPercentage(change, { addPrefix: true })} vs last period
         </span>
       </div>
+      <p className="mt-1 text-[12px] text-[var(--aurex-text-3)]">
+        Last period is the same-length window immediately before this date range.
+      </p>
 
       {/* The equation: In − Out = Net, the arithmetic made visible. */}
       <div className="mt-4 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 font-mono text-[14px] tabular-nums sm:text-[15px]">

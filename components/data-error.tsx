@@ -24,6 +24,7 @@ export function DataError({
 }: Props) {
   return (
     <div
+      role="alert"
       className={cn(
         'flex w-full flex-col items-center justify-center gap-3 rounded-md border border-dashed border-[var(--aurex-border)] bg-[var(--aurex-surface)] p-6 text-center',
         className,

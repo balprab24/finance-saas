@@ -34,7 +34,7 @@ export const clerkAppearance: Appearance = {
     footerActionLink:
       'text-[var(--aurex-text-1)] underline underline-offset-2 hover:text-[var(--aurex-text-2)] font-medium',
     formButtonPrimary:
-      'bg-[#16181d] hover:bg-[#2b2f36] text-white text-sm font-medium normal-case h-10 rounded-[10px] transition-colors',
+      'bg-[var(--aurex-brand)] hover:bg-[var(--aurex-bar)] text-white text-sm font-medium normal-case h-10 rounded-[10px] transition-colors',
     socialButtonsBlockButton:
       'border-[var(--aurex-border)] bg-[var(--aurex-surface)] hover:bg-[var(--aurex-surface-hover)] text-[var(--aurex-text-1)] normal-case h-10 rounded-[10px]',
     socialButtonsBlockButtonText: 'text-[var(--aurex-text-1)] font-medium',
@@ -43,7 +43,7 @@ export const clerkAppearance: Appearance = {
     formFieldLabel: 'text-[var(--aurex-text-2)] font-medium text-[13px]',
     formFieldInputShowPasswordButton:
       'text-[var(--aurex-text-3)] hover:text-[var(--aurex-text-1)]',
-    formFieldErrorText: 'text-[#c0392b] text-[12.5px]',
+    formFieldErrorText: 'text-[var(--aurex-expense)] text-[12.5px]',
     formFieldSuccessText: 'text-[var(--aurex-income)] text-[12.5px]',
     formFieldAction:
       'text-[var(--aurex-text-1)] underline underline-offset-2 hover:text-[var(--aurex-text-2)] font-medium',

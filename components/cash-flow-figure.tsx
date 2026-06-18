@@ -5,6 +5,8 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 
 import { CustomTooltip } from '@/components/custom-tooltip';
 import { CASH_FLOW_COLORS } from '@/lib/colors';
+import { formatCurrency } from '@/lib/utils';
+import { usePrefersReducedMotion } from '@/lib/use-prefers-reduced-motion';
 
 type Props = {
   data: { date: Date | string; income: number; expenses: number }[];
@@ -35,13 +37,18 @@ function niceCeiling(value: number) {
 export function CashFlowFigure({ data }: Props) {
   const peak = data.reduce((max, d) => Math.max(max, d.income, d.expenses), 0);
   const yMax = niceCeiling(peak);
+  const reduceMotion = usePrefersReducedMotion();
 
-  // ResponsiveContainer measures a width:0 inner wrapper on first paint; a stable
-  // sized div keeps the chart paintable across reflow and screenshot capture.
+  // The SVG carries no semantics, so it is hidden from assistive tech and the data
+  // is exposed as a visually-hidden table instead — the canonical non-visual
+  // reading of the same series, also available to users who can't hover.
   return (
-    <div className="h-[220px] w-full sm:h-[300px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
+    <figure className="m-0">
+      <div className="h-[220px] w-full sm:h-[300px]" aria-hidden="true">
+        {/* ResponsiveContainer measures a width:0 inner wrapper on first paint; a
+            stable sized div keeps the chart paintable across reflow and capture. */}
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
           {/* Solid hairline horizontals — ruled statement lines, not the Recharts
               default dashed grid. */}
           <CartesianGrid stroke="var(--aurex-border)" vertical={false} />
@@ -80,7 +87,8 @@ export function CashFlowFigure({ data }: Props) {
             fillOpacity={0.1}
             dot={false}
             activeDot={{ r: 4, strokeWidth: 0, fill: CASH_FLOW_COLORS.income }}
-            animationDuration={700}
+            isAnimationActive={!reduceMotion}
+            animationDuration={reduceMotion ? 0 : 700}
             animationEasing="ease-out"
           />
           <Area
@@ -92,11 +100,37 @@ export function CashFlowFigure({ data }: Props) {
             fillOpacity={0.1}
             dot={false}
             activeDot={{ r: 4, strokeWidth: 0, fill: CASH_FLOW_COLORS.expenses }}
-            animationDuration={700}
+            isAnimationActive={!reduceMotion}
+            animationDuration={reduceMotion ? 0 : 700}
             animationEasing="ease-out"
           />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Non-visual equivalent of the chart: the same series as a table, read by
+          screen readers and reachable without hover. */}
+      <figcaption className="sr-only">
+        <table>
+          <caption>Daily income and expenses for the selected period.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Income</th>
+              <th scope="col">Expenses</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((d) => (
+              <tr key={String(d.date)}>
+                <th scope="row">{format(new Date(d.date), 'MMM d, yyyy')}</th>
+                <td>{formatCurrency(d.income)}</td>
+                <td>{formatCurrency(d.expenses)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </figcaption>
+    </figure>
   );
 }

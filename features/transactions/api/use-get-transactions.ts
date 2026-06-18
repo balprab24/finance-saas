@@ -9,13 +9,14 @@ export const useGetTransactions = () => {
   const from = params.get('from') || '';
   const to = params.get('to') || '';
   const accountId = params.get('accountId') || '';
+  const categoryId = params.get('categoryId') || '';
 
   return useQuery({
-    queryKey: ['transactions', { from, to, accountId }],
+    queryKey: ['transactions', { from, to, accountId, categoryId }],
     placeholderData: keepPreviousData,
     queryFn: async () => {
       const response = await client.api.transactions.$get({
-        query: { from, to, accountId },
+        query: { from, to, accountId, categoryId },
       });
       if (!response.ok) throw new Error('Failed to fetch transactions');
       const { data } = await response.json();

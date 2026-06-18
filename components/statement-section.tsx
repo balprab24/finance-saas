@@ -20,9 +20,9 @@ export function StatementSection({ title, caption, action, className, children }
     <section className={cn('p-5', className)}>
       <div className="flex items-start justify-between gap-3 border-b border-[var(--aurex-border)] pb-3">
         <div className="min-w-0">
-          <h3 className="font-display text-[19px] font-medium leading-tight tracking-[-0.01em] text-[var(--aurex-text-1)]">
+          <h2 className="font-display text-[19px] font-medium leading-tight tracking-[-0.01em] text-[var(--aurex-text-1)]">
             {title}
-          </h3>
+          </h2>
           {caption ? (
             <p className="mt-0.5 text-[12px] text-[var(--aurex-text-3)]">{caption}</p>
           ) : null}

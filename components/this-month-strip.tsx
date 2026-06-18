@@ -29,10 +29,10 @@ export function ThisMonthStrip() {
 
 function RegionLabel({ icon: Icon, children }: { icon: typeof PiggyBank; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--aurex-text-3)]">
-      <Icon className="size-3.5 text-[var(--aurex-text-3)]" />
+    <h2 className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--aurex-text-3)]">
+      <Icon className="size-3.5 text-[var(--aurex-text-3)]" aria-hidden />
       {children}
-    </div>
+    </h2>
   );
 }
 
@@ -40,7 +40,7 @@ function RegionLink({ href, children }: { href: string; children: React.ReactNod
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-1 font-medium text-[#16181d] hover:text-[#3a414b]"
+      className="-my-1.5 inline-flex items-center gap-1 py-1.5 font-medium text-[var(--aurex-text-1)] hover:text-[var(--aurex-text-2)]"
     >
       {children} <ArrowRight className="size-3.5" />
     </Link>
@@ -95,12 +95,12 @@ function BudgetRegion() {
         <div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--aurex-surface)] ring-1 ring-[var(--aurex-border)]">
             <div
-              className={cn('h-full rounded-full', over ? 'bg-[#c0392b]' : 'bg-[var(--aurex-brand)]')}
+              className={cn('h-full rounded-full', over ? 'bg-[var(--aurex-expense)]' : 'bg-[var(--aurex-brand)]')}
               style={{ width: `${percent}%` }}
             />
           </div>
           <div className="mt-3 flex items-center justify-between text-[12px]">
-            <span className={over ? 'text-[#c0392b]' : 'text-[var(--aurex-text-3)]'}>
+            <span className={over ? 'text-[var(--aurex-expense)]' : 'text-[var(--aurex-text-3)]'}>
               {over
                 ? `${formatCurrency(Math.abs(totalRemaining))} over budget`
                 : `${formatCurrency(totalRemaining)} remaining`}
@@ -163,34 +163,45 @@ function InsightsRegion() {
           <span className="font-display tabular-nums">{formatCurrency(monthlyTotal)}</span>
           <span className="text-[14px] font-normal text-[var(--aurex-text-3)]">/mo recurring</span>
         </div>
+        <p className="text-[11.5px] text-[var(--aurex-text-3)]">
+          Monthly equivalent of detected recurring merchants.
+        </p>
       </div>
 
       <div className="flex items-center justify-between gap-3 text-[12px]">
-        {topMover ? (
-          <span
-            className="inline-flex min-w-0 items-center gap-1.5"
-            aria-label={`${topMover.name} spending ${up ? 'up' : 'down'} ${formatPercentage(Math.abs(topMover.percentChange))} versus last month`}
-          >
-            <span className="truncate text-[var(--aurex-text-2)]">{topMover.name}</span>
-            <span
-              className={cn(
-                'inline-flex shrink-0 items-center gap-0.5 font-medium tabular-nums',
-                up ? 'text-[#c0392b]' : 'text-[#117a4b]',
-              )}
-            >
-              {up ? (
-                <TrendingUp className="size-3.5" aria-hidden />
-              ) : (
-                <TrendingDown className="size-3.5" aria-hidden />
-              )}
-              {formatPercentage(topMover.percentChange, { addPrefix: true })}
+        <div className="min-w-0">
+          {topMover ? (
+            <>
+              <span
+                className="inline-flex min-w-0 items-center gap-1.5"
+                aria-label={`${topMover.name} spending ${up ? 'up' : 'down'} ${formatPercentage(Math.abs(topMover.percentChange))} versus last month`}
+              >
+                <span className="shrink-0 text-[var(--aurex-text-3)]">Top mover</span>
+                <span className="truncate text-[var(--aurex-text-2)]">{topMover.name}</span>
+                <span
+                  className={cn(
+                    'inline-flex shrink-0 items-center gap-0.5 font-medium tabular-nums',
+                    up ? 'text-[var(--aurex-expense)]' : 'text-[var(--aurex-income)]',
+                  )}
+                >
+                  {up ? (
+                    <TrendingUp className="size-3.5" aria-hidden />
+                  ) : (
+                    <TrendingDown className="size-3.5" aria-hidden />
+                  )}
+                  {formatPercentage(topMover.percentChange, { addPrefix: true })}
+                </span>
+              </span>
+              <p className="mt-0.5 text-[11.5px] text-[var(--aurex-text-3)]">
+                Compared with last month.
+              </p>
+            </>
+          ) : (
+            <span className="text-[var(--aurex-text-3)]">
+              {count} recurring {count === 1 ? 'merchant' : 'merchants'}
             </span>
-          </span>
-        ) : (
-          <span className="text-[var(--aurex-text-3)]">
-            {count} recurring {count === 1 ? 'merchant' : 'merchants'}
-          </span>
-        )}
+          )}
+        </div>
         <RegionLink href="/insights">View</RegionLink>
       </div>
     </div>

@@ -100,7 +100,7 @@ export function RecurringList() {
               variant="ghost"
               disabled={ignore.isPending}
               onClick={() => onDismiss(item.merchantKey, item.displayName)}
-              className="size-8 p-0 text-[var(--aurex-text-3)] hover:bg-[var(--aurex-surface-hover)] hover:text-[#c0392b]"
+              className="size-8 p-0 text-[var(--aurex-text-3)] hover:bg-[var(--aurex-surface-hover)] hover:text-[var(--aurex-expense)]"
               aria-label={`Dismiss ${item.displayName}`}
             >
               <X className="size-4" />

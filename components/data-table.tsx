@@ -4,6 +4,7 @@ import {
   ColumnDef,
   ColumnFiltersState,
   Row,
+  RowData,
   SortingState,
   flexRender,
   getCoreRowModel,
@@ -27,6 +28,14 @@ import {
 } from '@/components/ui/table';
 import { useConfirm } from '@/hooks/use-confirm';
 import { cn } from '@/lib/utils';
+
+declare module '@tanstack/react-table' {
+  interface ColumnMeta<TData extends RowData, TValue> {
+    mobileLabel?: string;
+    mobileHidden?: boolean;
+    mobileAlign?: 'left' | 'right';
+  }
+}
 
 type Props<TData, TValue> = {
   columns: ColumnDef<TData, TValue>[];
@@ -100,7 +109,7 @@ export function DataTable<TData, TValue>({
             className={cn(
               'h-9 sm:ml-auto',
               bulkActionTone === 'danger'
-                ? 'border-[rgba(192,57,43,0.32)] bg-[rgba(192,57,43,0.08)] text-[#c0392b] hover:bg-[rgba(192,57,43,0.14)] hover:text-[#c0392b]'
+                ? 'border-[var(--aurex-expense-line)] bg-[rgba(192,57,43,0.08)] text-[var(--aurex-expense)] hover:bg-[rgba(192,57,43,0.14)] hover:text-[var(--aurex-expense)]'
                 : 'border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] hover:bg-[var(--aurex-surface-hover)] hover:text-[var(--aurex-text-1)]',
             )}
             onClick={async () => {
@@ -116,7 +125,7 @@ export function DataTable<TData, TValue>({
           </Button>
         ) : null}
       </div>
-      <div className="overflow-x-auto rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-bg-elev)]">
+      <div className="hidden rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-bg-elev)] sm:block">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -124,16 +133,28 @@ export function DataTable<TData, TValue>({
                 key={headerGroup.id}
                 className="border-[var(--aurex-border)] hover:bg-transparent"
               >
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="h-10 text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[var(--aurex-text-3)]"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  const sorted = header.column.getIsSorted();
+                  const ariaSort = header.column.getCanSort()
+                    ? sorted === 'asc'
+                      ? 'ascending'
+                      : sorted === 'desc'
+                        ? 'descending'
+                        : 'none'
+                    : undefined;
+
+                  return (
+                    <TableHead
+                      key={header.id}
+                      aria-sort={ariaSort}
+                      className="h-10 text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[var(--aurex-text-3)]"
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
@@ -171,6 +192,57 @@ export function DataTable<TData, TValue>({
             )}
           </TableBody>
         </Table>
+      </div>
+      <div className="space-y-2 sm:hidden">
+        {table.getRowModel().rows?.length ? (
+          table.getRowModel().rows.map((row) => (
+            <div
+              key={row.id}
+              data-state={row.getIsSelected() && 'selected'}
+              className="overflow-hidden rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-bg-elev)] data-[state=selected]:bg-[var(--aurex-brand-soft)]"
+            >
+              <div className="divide-y divide-[var(--aurex-border)]">
+                {row
+                  .getVisibleCells()
+                  .filter((cell) => !cell.column.columnDef.meta?.mobileHidden)
+                  .map((cell) => {
+                    const label = cell.column.columnDef.meta?.mobileLabel ?? cell.column.id;
+                    const align = cell.column.columnDef.meta?.mobileAlign ?? 'left';
+
+                    return (
+                      <div
+                        key={cell.id}
+                        className="grid grid-cols-[minmax(6.5rem,0.42fr)_minmax(0,1fr)] items-start gap-3 px-3 py-2.5"
+                      >
+                        <span className="pt-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--aurex-text-3)]">
+                          {label}
+                        </span>
+                        <div
+                          className={cn(
+                            'min-w-0 text-[13.5px] text-[var(--aurex-text-1)]',
+                            align === 'right' && 'justify-self-end text-right',
+                          )}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-bg-elev)] px-4 py-10 text-center text-[13.5px] text-[var(--aurex-text-3)]">
+            {totalCount === 0 ? (
+              <span>No {filterKey === 'name' ? 'records' : 'transactions'} yet</span>
+            ) : (
+              <span>
+                No matches for{' '}
+                <span className="text-[var(--aurex-text-1)]">&ldquo;{filterValue}&rdquo;</span>
+              </span>
+            )}
+          </div>
+        )}
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-[12px] text-[var(--aurex-text-3)] tabular-nums">

@@ -32,6 +32,10 @@ export const columns: ColumnDef<ResponseType>[] = [
       />
     ),
     enableSorting: false,
+    meta: {
+      mobileLabel: 'Select',
+      mobileAlign: 'right',
+    },
   },
   {
     accessorKey: 'name',
@@ -40,9 +44,14 @@ export const columns: ColumnDef<ResponseType>[] = [
         Name <ArrowUpDown className="ml-2 size-4" />
       </Button>
     ),
+    meta: { mobileLabel: 'Category' },
   },
   {
     id: 'actions',
     cell: ({ row }) => <Actions id={row.original.id} />,
+    meta: {
+      mobileLabel: 'Actions',
+      mobileAlign: 'right',
+    },
   },
 ];

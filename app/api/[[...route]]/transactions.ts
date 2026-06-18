@@ -29,7 +29,7 @@ const app = new Hono<AuthEnv>()
     zValidator('query', dateRangeQuerySchema),
     async (c) => {
       const userId = getUserId(c);
-      const { from, to, accountId } = c.req.valid('query');
+      const { from, to, accountId, categoryId } = c.req.valid('query');
 
       const { start: startDate, endExclusive } = parseRange(from, to);
 
@@ -58,6 +58,7 @@ const app = new Hono<AuthEnv>()
           and(
             eq(transactions.userId, userId),
             accountId ? eq(transactions.accountId, accountId) : undefined,
+            categoryId ? eq(transactions.categoryId, categoryId) : undefined,
             gte(transactions.date, startDate),
             lt(transactions.date, endExclusive),
           ),

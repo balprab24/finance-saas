@@ -39,7 +39,7 @@ export default function CategoriesPage() {
             <Button
               onClick={newCategory.onOpen}
               size="sm"
-              className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[#2b2f36]"
+              className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[var(--aurex-bar)]"
             >
               <Plus className="mr-2 size-3.5" />
               Add category
@@ -71,7 +71,7 @@ export default function CategoriesPage() {
               <Button
                 onClick={newCategory.onOpen}
                 size="sm"
-                className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[#2b2f36]"
+                className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[var(--aurex-bar)]"
               >
                 <Plus className="mr-2 size-3.5" />
                 Add category

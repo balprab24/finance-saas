@@ -71,10 +71,13 @@
 
   --aurex-income: #117a4b;
   --aurex-income-soft: rgba(17, 122, 75, 0.12);
+  --aurex-income-line: rgba(17, 122, 75, 0.3);
   --aurex-expense: #c0392b;
   --aurex-expense-soft: rgba(192, 57, 43, 0.1);
+  --aurex-expense-line: rgba(192, 57, 43, 0.3);
   --aurex-warn: #b45309;
   --aurex-warn-soft: rgba(180, 83, 9, 0.1);
+  --aurex-warn-line: rgba(180, 83, 9, 0.3);
 
   --aurex-text-1: #16181d;
   --aurex-text-2: #3a414b;
@@ -319,7 +322,7 @@
       box-shadow: 5px 5px 0 rgba(22, 24, 29, 0.05);
     }
     .aurex-ledger-spine {
-      font-size: 8.5px;
+      font-size: 9.5px;
     }
   }
 }

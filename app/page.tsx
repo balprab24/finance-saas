@@ -126,7 +126,7 @@ function NavBar() {
           <Show when="signed-in">
             <Link
               href="/dashboard"
-              className="inline-flex h-10 items-center gap-1.5 rounded-[10px] bg-[var(--aurex-brand)] px-4 text-[15px] font-semibold text-white transition-colors hover:bg-[#2b2f36]"
+              className="inline-flex h-10 items-center gap-1.5 rounded-[10px] bg-[var(--aurex-brand)] px-4 text-[15px] font-semibold text-white transition-colors hover:bg-[var(--aurex-bar)]"
             >
               Open dashboard
               <ArrowRight className="size-4" />
@@ -141,13 +141,13 @@ function NavBar() {
           <Show when="signed-out">
             <Link
               href="/sign-in"
-              className="inline-flex h-10 items-center px-3 text-[15px] font-medium text-[var(--aurex-text-1)]/85 transition-colors hover:text-[var(--aurex-text-1)]"
+              className="inline-flex h-10 items-center px-3 text-[15px] font-medium text-[var(--aurex-text-2)] transition-colors hover:text-[var(--aurex-text-1)]"
             >
               Sign in
             </Link>
             <Link
               href="/sign-up"
-              className="inline-flex h-10 items-center gap-1.5 rounded-[10px] bg-[var(--aurex-brand)] px-4 text-[15px] font-semibold text-white transition-colors hover:bg-[#2b2f36]"
+              className="inline-flex h-10 items-center gap-1.5 rounded-[10px] bg-[var(--aurex-brand)] px-4 text-[15px] font-semibold text-white transition-colors hover:bg-[var(--aurex-bar)]"
             >
               Get started
               <ArrowRight className="size-4" />

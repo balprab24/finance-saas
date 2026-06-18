@@ -21,10 +21,10 @@ function relativeDate(value: Date | string | null) {
 // dark-theme leftover that rendered near-invisible mint on white.)
 function statusClass(status: string) {
   if (status === 'active') {
-    return 'border-[rgba(17,122,75,0.3)] bg-[var(--aurex-income-soft)] text-[var(--aurex-income)]';
+    return 'border-[var(--aurex-income-line)] bg-[var(--aurex-income-soft)] text-[var(--aurex-income)]';
   }
   if (status === 'error') {
-    return 'border-[rgba(180,83,9,0.3)] bg-[var(--aurex-warn-soft)] text-[var(--aurex-warn)]';
+    return 'border-[var(--aurex-warn-line)] bg-[var(--aurex-warn-soft)] text-[var(--aurex-warn)]';
   }
   return 'border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-3)]';
 }
@@ -36,6 +36,65 @@ function jobLabel(status?: string | null) {
   if (status === 'succeeded') return 'Succeeded';
   if (status === 'failed') return 'Failed';
   return status;
+}
+
+type PlaidItem = NonNullable<ReturnType<typeof useGetPlaidItems>['data']>[number];
+
+function ConnectionIdentity({ item }: { item: PlaidItem }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-[var(--aurex-border)] bg-[var(--aurex-surface-2)] text-[var(--aurex-text-2)]">
+        <Building2 className="size-4" />
+      </div>
+      <div className="min-w-0">
+        <div className="truncate text-[14px] font-medium text-[var(--aurex-text-1)]">
+          {item.institutionName || 'Linked bank'}
+        </div>
+        {item.errorMessage ? (
+          <div className="mt-1 max-w-[320px] truncate text-[12px] text-[var(--aurex-warn)]">
+            {item.errorMessage}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function StatusPill({ status }: { status: string }) {
+  return (
+    <span
+      className={`inline-flex rounded border px-1.5 py-0.5 text-[10.5px] font-medium uppercase tracking-[0.08em] ${statusClass(status)}`}
+    >
+      {status}
+    </span>
+  );
+}
+
+function AccountsCount({ item }: { item: PlaidItem }) {
+  return (
+    <>
+      {item.accountCount}
+      {item.archivedAccountCount > 0 ? (
+        <span className="text-[var(--aurex-text-3)]">
+          {' '}
+          / {item.archivedAccountCount} archived
+        </span>
+      ) : null}
+    </>
+  );
+}
+
+function JobStatus({ item }: { item: PlaidItem }) {
+  return (
+    <>
+      <div>{jobLabel(item.latestSyncJob?.status)}</div>
+      {item.latestSyncJob?.lastError ? (
+        <div className="mt-1 max-w-[260px] truncate text-[12px] text-[var(--aurex-warn)]">
+          {item.latestSyncJob.lastError}
+        </div>
+      ) : null}
+    </>
+  );
 }
 
 export default function BanksPage() {
@@ -98,8 +157,9 @@ export default function BanksPage() {
           <PlaidLinkButton disabled={false} />
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] text-left">
+        <>
+          <div className="hidden overflow-x-auto sm:block">
+            <table className="w-full min-w-[820px] text-left">
               <thead className="border-b border-[var(--aurex-border)] text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--aurex-text-3)]">
                 <tr>
                   <th className="px-5 py-3">Connection</th>
@@ -114,57 +174,78 @@ export default function BanksPage() {
                 {items.map((item) => (
                   <tr key={item.id} className="align-middle">
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex size-9 items-center justify-center rounded-lg border border-[var(--aurex-border)] bg-[var(--aurex-surface-2)] text-[var(--aurex-text-2)]">
-                          <Building2 className="size-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="truncate text-[14px] font-medium text-[var(--aurex-text-1)]">
-                            {item.institutionName || 'Linked bank'}
-                          </div>
-                          {item.errorMessage ? (
-                            <div className="mt-1 max-w-[320px] truncate text-[12px] text-[var(--aurex-warn)]">
-                              {item.errorMessage}
-                            </div>
-                          ) : null}
-                        </div>
-                      </div>
+                      <ConnectionIdentity item={item} />
                     </td>
                     <td className="px-5 py-4">
-                      <span
-                        className={`inline-flex rounded border px-1.5 py-0.5 text-[10.5px] font-medium uppercase tracking-[0.08em] ${statusClass(item.status)}`}
-                      >
-                        {item.status}
-                      </span>
+                      <StatusPill status={item.status} />
                     </td>
                     <td className="px-5 py-4 text-[13px] text-[var(--aurex-text-2)]">
-                      {item.accountCount}
-                      {item.archivedAccountCount > 0 ? (
-                        <span className="text-[var(--aurex-text-3)]">
-                          {' '}
-                          / {item.archivedAccountCount} archived
-                        </span>
-                      ) : null}
+                      <AccountsCount item={item} />
                     </td>
                     <td className="px-5 py-4 text-[13px] text-[var(--aurex-text-2)]">
                       {relativeDate(item.lastSyncedAt)}
                     </td>
                     <td className="px-5 py-4 text-[13px] text-[var(--aurex-text-2)]">
-                      <div>{jobLabel(item.latestSyncJob?.status)}</div>
-                      {item.latestSyncJob?.lastError ? (
-                        <div className="mt-1 max-w-[260px] truncate text-[12px] text-[var(--aurex-warn)]">
-                          {item.latestSyncJob.lastError}
-                        </div>
-                      ) : null}
+                      <JobStatus item={item} />
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 text-right">
                       <PlaidItemActions itemId={item.id} status={item.status} />
                     </td>
                   </tr>
                 ))}
               </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+          <div className="space-y-2 p-3 sm:hidden">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="overflow-hidden rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-bg-elev)]"
+              >
+                <div className="border-b border-[var(--aurex-border)] px-3 py-3">
+                  <ConnectionIdentity item={item} />
+                </div>
+                <dl className="divide-y divide-[var(--aurex-border)]">
+                  <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-3 px-3 py-2.5">
+                    <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--aurex-text-3)]">
+                      Status
+                    </dt>
+                    <dd className="text-right">
+                      <StatusPill status={item.status} />
+                    </dd>
+                  </div>
+                  <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-3 px-3 py-2.5">
+                    <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--aurex-text-3)]">
+                      Accounts
+                    </dt>
+                    <dd className="text-right text-[13px] text-[var(--aurex-text-2)]">
+                      <AccountsCount item={item} />
+                    </dd>
+                  </div>
+                  <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-3 px-3 py-2.5">
+                    <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--aurex-text-3)]">
+                      Last sync
+                    </dt>
+                    <dd className="text-right text-[13px] text-[var(--aurex-text-2)]">
+                      {relativeDate(item.lastSyncedAt)}
+                    </dd>
+                  </div>
+                  <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-3 px-3 py-2.5">
+                    <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--aurex-text-3)]">
+                      Job
+                    </dt>
+                    <dd className="min-w-0 text-right text-[13px] text-[var(--aurex-text-2)]">
+                      <JobStatus item={item} />
+                    </dd>
+                  </div>
+                </dl>
+                <div className="flex justify-end border-t border-[var(--aurex-border)] px-3 py-2">
+                  <PlaidItemActions itemId={item.id} status={item.status} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </StatementSheet>
   );

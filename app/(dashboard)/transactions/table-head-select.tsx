@@ -26,8 +26,9 @@ export function TableHeadSelect({ columnIndex, selectedColumns, onChange }: Prop
       onValueChange={(value) => onChange(columnIndex, value)}
     >
       <SelectTrigger
+        aria-label={`Map column ${columnIndex + 1}`}
         className={cn(
-          'h-8 w-full justify-start gap-2 rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-surface)] px-2.5 text-[12.5px] font-medium capitalize text-[var(--aurex-text-2)] hover:bg-[var(--aurex-surface-hover)] focus:ring-0 focus:ring-offset-0',
+          'h-8 w-full justify-start gap-2 rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-surface)] px-2.5 text-[12.5px] font-medium capitalize text-[var(--aurex-text-2)] hover:bg-[var(--aurex-surface-hover)]',
           currentSelection &&
             'border-[rgba(22,24,29,0.32)] bg-[rgba(22,24,29,0.1)] text-[var(--aurex-brand-text)]',
         )}
