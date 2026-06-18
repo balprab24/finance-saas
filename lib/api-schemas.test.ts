@@ -126,11 +126,12 @@ describe('dateRangeQuerySchema', () => {
   it('allows omitting from and/or to', () => {
     expect(() => dateRangeQuerySchema.parse({})).not.toThrow();
     expect(() => dateRangeQuerySchema.parse({ accountId: 'acct_1' })).not.toThrow();
+    expect(() => dateRangeQuerySchema.parse({ categoryId: 'cat_1' })).not.toThrow();
   });
 
   it('treats empty-string query params as absent', () => {
     expect(
-      dateRangeQuerySchema.parse({ from: '', to: '', accountId: '' }),
-    ).toEqual({ from: undefined, to: undefined, accountId: undefined });
+      dateRangeQuerySchema.parse({ from: '', to: '', accountId: '', categoryId: '' }),
+    ).toEqual({ from: undefined, to: undefined, accountId: undefined, categoryId: undefined });
   });
 });

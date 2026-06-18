@@ -13,7 +13,11 @@ import { useGetSummary } from '@/features/summary/api/use-get-summary';
 // repeating under every figure and section), an "as of" freshness cue, and the
 // account/period controls pulled into the document header instead of floating in
 // the page corner. Replaces the old eyebrow + greeting + detached filter row.
-export function StatementMasthead() {
+type Props = {
+  isUpdating?: boolean;
+};
+
+export function StatementMasthead({ isUpdating = false }: Props) {
   const params = useSearchParams();
   const from = params.get('from') || undefined;
   const to = params.get('to') || undefined;
@@ -34,7 +38,7 @@ export function StatementMasthead() {
       meta={
         <>
           {period}
-          {summary.isFetching ? (
+          {isUpdating ? (
             <span> · Updating…</span>
           ) : asOf ? (
             <span> · as of {asOf}</span>

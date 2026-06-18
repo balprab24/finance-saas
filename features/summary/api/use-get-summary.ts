@@ -9,12 +9,13 @@ export const useGetSummary = () => {
   const from = params.get('from') || '';
   const to = params.get('to') || '';
   const accountId = params.get('accountId') || '';
+  const categoryId = params.get('categoryId') || '';
 
   return useQuery({
-    queryKey: ['summary', { from, to, accountId }],
+    queryKey: ['summary', { from, to, accountId, categoryId }],
     placeholderData: keepPreviousData,
     queryFn: async () => {
-      const response = await client.api.summary.$get({ query: { from, to, accountId } });
+      const response = await client.api.summary.$get({ query: { from, to, accountId, categoryId } });
       if (!response.ok) throw new Error('Failed to fetch summary');
       const { data } = await response.json();
       return {

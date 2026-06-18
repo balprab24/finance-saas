@@ -103,6 +103,7 @@ export const dateRangeQuerySchema = z
     from: z.preprocess(emptyToUndef, isoDateString.optional()),
     to: z.preprocess(emptyToUndef, isoDateString.optional()),
     accountId: z.preprocess(emptyToUndef, idString.optional()),
+    categoryId: z.preprocess(emptyToUndef, idString.optional()),
   })
   .refine(
     (q) => !q.from || !q.to || q.from <= q.to,

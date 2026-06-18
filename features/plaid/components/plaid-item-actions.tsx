@@ -89,7 +89,7 @@ export function PlaidItemActions({ itemId, status }: PlaidItemActionsProps) {
             variant="outline"
             disabled={isPending}
             onClick={onReconnect}
-            className="h-8 border-[rgba(180,83,9,0.28)] bg-[var(--aurex-warn-soft)] text-[var(--aurex-warn)] hover:bg-[rgba(180,83,9,0.16)]"
+            className="h-8 border-[var(--aurex-warn-line)] bg-[var(--aurex-warn-soft)] text-[var(--aurex-warn)] hover:bg-[rgba(180,83,9,0.16)]"
           >
             {updateLinkTokenMutation.isPending ? (
               <Loader2 className="size-3.5 animate-spin" />

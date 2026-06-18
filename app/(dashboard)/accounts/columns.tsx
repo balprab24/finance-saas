@@ -33,6 +33,10 @@ export const columns: ColumnDef<ResponseType>[] = [
     ),
     enableSorting: false,
     enableHiding: false,
+    meta: {
+      mobileLabel: 'Select',
+      mobileAlign: 'right',
+    },
   },
   {
     accessorKey: 'name',
@@ -60,7 +64,7 @@ export const columns: ColumnDef<ResponseType>[] = [
               </span>
             ) : null}
             {hasPlaidError ? (
-              <span className="rounded border border-[rgba(180,83,9,0.24)] bg-[var(--aurex-warn-soft)] px-1.5 py-0.5 text-[10.5px] font-medium uppercase tracking-[0.08em] text-[var(--aurex-warn)]">
+              <span className="rounded border border-[var(--aurex-warn-line)] bg-[var(--aurex-warn-soft)] px-1.5 py-0.5 text-[10.5px] font-medium uppercase tracking-[0.08em] text-[var(--aurex-warn)]">
                 Attention
               </span>
             ) : null}
@@ -81,6 +85,7 @@ export const columns: ColumnDef<ResponseType>[] = [
         </div>
       );
     },
+    meta: { mobileLabel: 'Account' },
   },
   {
     id: 'actions',
@@ -92,5 +97,9 @@ export const columns: ColumnDef<ResponseType>[] = [
         plaidStatus={row.original.plaidStatus}
       />
     ),
+    meta: {
+      mobileLabel: 'Actions',
+      mobileAlign: 'right',
+    },
   },
 ];

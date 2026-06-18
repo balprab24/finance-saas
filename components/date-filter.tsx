@@ -1,7 +1,7 @@
 'use client';
 
 import qs from 'query-string';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { format, subDays } from 'date-fns';
 import { ChevronDown } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -29,6 +29,17 @@ export function DateFilter() {
 
   const [date, setDate] = useState<DateRange | undefined>(paramState);
 
+  // One month on phones (two side-by-side overflow a narrow popover), two from
+  // the md breakpoint up. Defaults to one so the first paint never overflows.
+  const [months, setMonths] = useState(1);
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 768px)');
+    const update = () => setMonths(mql.matches ? 2 : 1);
+    update();
+    mql.addEventListener('change', update);
+    return () => mql.removeEventListener('change', update);
+  }, []);
+
   const pushToUrl = (dateRange: DateRange | undefined) => {
     const query = {
       from: format(dateRange?.from || defaultFrom, 'yyyy-MM-dd'),
@@ -51,7 +62,7 @@ export function DateFilter() {
           size="sm"
           variant="outline"
           className={cn(
-            'lg:w-auto w-full h-9 rounded-full px-4 text-[13px] font-medium border border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] hover:bg-[var(--aurex-surface-hover)] hover:border-[var(--aurex-border-strong)] hover:text-[var(--aurex-text-1)] focus:ring-0 focus:ring-offset-0 outline-none transition-colors',
+            'lg:w-auto w-full h-11 lg:h-9 rounded-full px-4 text-[13px] font-medium border border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] hover:bg-[var(--aurex-surface-hover)] hover:border-[var(--aurex-border-strong)] hover:text-[var(--aurex-text-1)] transition-colors',
           )}
         >
           <span>{formatDateRange(paramState)}</span>
@@ -66,7 +77,7 @@ export function DateFilter() {
           defaultMonth={date?.from}
           selected={date}
           onSelect={setDate}
-          numberOfMonths={2}
+          numberOfMonths={months}
         />
         <div className="p-4 w-full flex items-center gap-x-2">
           <Button onClick={onReset} disabled={!date?.from || !date?.to} className="w-full" variant="outline">

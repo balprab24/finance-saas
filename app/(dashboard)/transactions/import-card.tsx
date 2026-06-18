@@ -1,12 +1,16 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { format } from 'date-fns';
-import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, FileSpreadsheet, XCircle } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, XCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { LedgerAmount } from '@/components/money';
+import { PageMasthead } from '@/components/page-masthead';
+import { StatementSection } from '@/components/statement-section';
+import { StatementSheet } from '@/components/statement-sheet';
 import { ImportTable } from './import-table';
-import { convertAmountToMiliunits, formatCurrency } from '@/lib/utils';
+import { convertAmountToMiliunits } from '@/lib/utils';
 import { parseCsvDate } from '@/lib/csv-date';
 
 const outputFormat = 'yyyy-MM-dd';
@@ -118,18 +122,15 @@ export function ImportCard({ data, onCancel, onSubmit }: Props) {
   const submit = () => onSubmit(formatted);
 
   return (
-    <div className="mx-auto w-full max-w-screen-2xl space-y-5 pb-16 pt-6">
-      <div className="flex flex-col gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--aurex-text-3)]">
-          Import CSV
-        </span>
-        <h1 className="text-[24px] font-semibold tracking-tight text-[var(--aurex-text-1)] lg:text-[28px]">
-          {step === 'map' ? 'Map your CSV columns' : 'Review before importing'}
-        </h1>
-      </div>
-
-      <Stepper step={step} />
-
+    <StatementSheet
+      masthead={
+        <PageMasthead
+          title="Import CSV"
+          meta={step === 'map' ? 'Map your CSV columns' : 'Review before importing'}
+          actions={<Stepper step={step} />}
+        />
+      }
+    >
       {step === 'map' ? (
         <MapStep
           headers={headers}
@@ -152,7 +153,7 @@ export function ImportCard({ data, onCancel, onSubmit }: Props) {
           onSubmit={submit}
         />
       )}
-    </div>
+    </StatementSheet>
   );
 }
 
@@ -162,7 +163,7 @@ function Stepper({ step }: { step: Step }) {
     { key: 'review', label: '2. Review' },
   ] as const;
   return (
-    <ol className="flex items-center gap-2 text-[12.5px]">
+    <ol className="flex flex-wrap items-center gap-2 text-[12.5px]">
       {steps.map((s, i) => {
         const isActive = s.key === step;
         const isDone = step === 'review' && s.key === 'map';
@@ -171,7 +172,7 @@ function Stepper({ step }: { step: Step }) {
             <span
               className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 ${
                 isActive
-                  ? 'border-[rgba(22,24,29,0.32)] bg-[rgba(22,24,29,0.1)] text-[var(--aurex-brand-text)]'
+                  ? 'border-[var(--aurex-border-strong)] bg-[var(--aurex-brand-soft)] text-[var(--aurex-brand-text)]'
                   : isDone
                     ? 'border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-2)]'
                     : 'border-[var(--aurex-border)] bg-transparent text-[var(--aurex-text-3)]'
@@ -212,20 +213,15 @@ function MapStep({
   requiredCount: number;
 }) {
   return (
-    <div className="aurex-card p-5 sm:p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-[16px] font-semibold text-[var(--aurex-text-1)]">
-            Tell us which columns are which
-          </h2>
-          <p className="text-[12.5px] text-[var(--aurex-text-3)]">
-            Pick a role for each column. Required: amount, date, payee.
-          </p>
-        </div>
+    <StatementSection
+      title="Map columns"
+      caption="Pick a role for each column. Required: amount, date, payee."
+    >
+      <div className="mb-4 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <span className="inline-flex items-center justify-center rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-surface)] px-2.5 py-1 text-[12px] text-[var(--aurex-text-2)]">
+          {progress} / {requiredCount} required mapped
+        </span>
         <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-          <span className="inline-flex items-center justify-center rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-surface)] px-2.5 py-1 text-[12px] text-[var(--aurex-text-2)]">
-            {progress} / {requiredCount} required mapped
-          </span>
           <Button
             onClick={onCancel}
             size="sm"
@@ -238,22 +234,20 @@ function MapStep({
             size="sm"
             disabled={!canContinue}
             onClick={onContinue}
-            className="h-9 bg-[var(--aurex-brand)] hover:bg-[#2b2f36]"
+            className="h-9 bg-[var(--aurex-brand)] hover:bg-[var(--aurex-bar)]"
           >
             Continue
             <ArrowRight className="ml-1.5 size-3.5" />
           </Button>
         </div>
       </div>
-      <div className="mt-4">
-        <ImportTable
-          headers={headers}
-          body={body}
-          selectedColumns={selectedColumns}
-          onTableHeadSelectChange={onTableHeadSelectChange}
-        />
-      </div>
-    </div>
+      <ImportTable
+        headers={headers}
+        body={body}
+        selectedColumns={selectedColumns}
+        onTableHeadSelectChange={onTableHeadSelectChange}
+      />
+    </StatementSection>
   );
 }
 
@@ -278,93 +272,88 @@ function ReviewStep({
   const canSubmit = validCount > 0;
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-3">
-        <SummaryStat
-          tone="success"
-          label="Ready to import"
-          value={validCount}
-          hint={`from ${totalCsvRows} CSV rows`}
-          icon={<CheckCircle2 className="size-4 text-[#117a4b]" />}
-        />
-        <SummaryStat
-          tone={errorCount > 0 ? 'danger' : 'muted'}
-          label="Invalid rows"
-          value={errorCount}
-          hint={errorCount > 0 ? 'will be skipped' : 'none'}
-          icon={<XCircle className="size-4 text-[#c0392b]" />}
-        />
-        <SummaryStat
-          tone={dupCount > 0 ? 'warning' : 'muted'}
-          label="Likely duplicates"
-          value={dupCount}
-          hint={dupCount > 0 ? 'flagged in preview' : 'none'}
-          icon={<AlertTriangle className="size-4 text-[#b45309]" />}
-        />
-      </div>
-
-      {errorCount > 0 ? (
-        <div className="aurex-card border-[rgba(192,57,43,0.28)] p-4">
-          <div className="flex items-center gap-2">
-            <XCircle className="size-4 text-[#c0392b]" />
-            <h3 className="text-[13.5px] font-semibold text-[var(--aurex-text-1)]">
-              {errorCount} row{errorCount === 1 ? '' : 's'} will be skipped
-            </h3>
-          </div>
-          <ul className="mt-2.5 max-h-40 space-y-1 overflow-y-auto pr-1 text-[12.5px]">
-            {errors.slice(0, 50).map((e) => (
-              <li
-                key={e.row}
-                className="flex items-baseline justify-between gap-2 text-[var(--aurex-text-2)]"
-              >
-                <span className="font-mono text-[var(--aurex-text-3)]">row {e.row}</span>
-                <span className="flex-1 text-right">{e.reason}</span>
-              </li>
-            ))}
-            {errorCount > 50 ? (
-              <li className="text-[11.5px] text-[var(--aurex-text-3)]">
-                …and {errorCount - 50} more
-              </li>
-            ) : null}
-          </ul>
+    <>
+      <StatementSection
+        title="Review summary"
+        caption={`${totalCsvRows} CSV rows checked before import`}
+        className="border-b border-[var(--aurex-rule)]"
+      >
+        <div className="grid gap-3 border-y border-[var(--aurex-border)] py-3 sm:grid-cols-2 lg:grid-cols-3">
+          <SummaryStat
+            label="Ready to import"
+            value={validCount}
+            hint={`from ${totalCsvRows} CSV rows`}
+            icon={<CheckCircle2 className="size-4 text-[var(--aurex-income)]" />}
+          />
+          <SummaryStat
+            label="Invalid rows"
+            value={errorCount}
+            hint={errorCount > 0 ? 'will be skipped' : 'none'}
+            icon={<XCircle className="size-4 text-[var(--aurex-expense)]" />}
+          />
+          <SummaryStat
+            label="Likely duplicates"
+            value={dupCount}
+            hint={dupCount > 0 ? 'flagged in preview' : 'none'}
+            icon={<AlertTriangle className="size-4 text-[var(--aurex-warn)]" />}
+          />
         </div>
-      ) : null}
 
-      <div className="aurex-card p-5 sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <FileSpreadsheet className="size-4 text-[var(--aurex-text-3)]" />
-            <h2 className="text-[15px] font-semibold text-[var(--aurex-text-1)]">
-              Preview of valid rows
-            </h2>
+        {errorCount > 0 ? (
+          <div className="mt-4 border-t border-[var(--aurex-expense-line)] bg-[var(--aurex-expense-soft)] p-4">
+            <div className="flex items-center gap-2">
+              <XCircle className="size-4 text-[var(--aurex-expense)]" />
+              <h3 className="text-[13.5px] font-semibold text-[var(--aurex-text-1)]">
+                {errorCount} row{errorCount === 1 ? '' : 's'} will be skipped
+              </h3>
+            </div>
+            <ul className="mt-2.5 max-h-40 space-y-1 overflow-y-auto pr-1 text-[12.5px]">
+              {errors.slice(0, 50).map((e) => (
+                <li
+                  key={e.row}
+                  className="flex items-baseline justify-between gap-2 text-[var(--aurex-text-2)]"
+                >
+                  <span className="font-mono text-[var(--aurex-text-3)]">row {e.row}</span>
+                  <span className="flex-1 text-right">{e.reason}</span>
+                </li>
+              ))}
+              {errorCount > 50 ? (
+                <li className="text-[11.5px] text-[var(--aurex-text-3)]">
+                  …and {errorCount - 50} more
+                </li>
+              ) : null}
+            </ul>
           </div>
-          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-9 border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] hover:bg-[var(--aurex-surface-hover)]"
-              onClick={onBack}
-            >
-              <ArrowLeft className="mr-1.5 size-3.5" />
-              Back to mapping
-            </Button>
-            <Button
-              size="sm"
-              disabled={!canSubmit}
-              onClick={onSubmit}
-              className="h-9 bg-[var(--aurex-brand)] hover:bg-[#2b2f36]"
-            >
-              Import {validCount} {validCount === 1 ? 'transaction' : 'transactions'}
-            </Button>
-          </div>
+        ) : null}
+      </StatementSection>
+
+      <StatementSection title="Preview of valid rows">
+        <div className="mb-4 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-end">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9 border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] hover:bg-[var(--aurex-surface-hover)]"
+            onClick={onBack}
+          >
+            <ArrowLeft className="mr-1.5 size-3.5" />
+            Back to mapping
+          </Button>
+          <Button
+            size="sm"
+            disabled={!canSubmit}
+            onClick={onSubmit}
+            className="h-9 bg-[var(--aurex-brand)] hover:bg-[var(--aurex-bar)]"
+          >
+            Import {validCount} {validCount === 1 ? 'transaction' : 'transactions'}
+          </Button>
         </div>
         {validCount === 0 ? (
-          <p className="mt-4 rounded-md border border-dashed border-[var(--aurex-border)] bg-[var(--aurex-surface)] px-4 py-8 text-center text-[13px] text-[var(--aurex-text-3)]">
+          <p className="rounded-md border border-dashed border-[var(--aurex-border)] bg-[var(--aurex-surface)] px-4 py-8 text-center text-[13px] text-[var(--aurex-text-3)]">
             No valid rows to import. Go back and fix the column mapping.
           </p>
         ) : (
-          <div className="mt-4 overflow-hidden rounded-md border border-[var(--aurex-border)]">
-            <table className="w-full">
+          <div className="overflow-x-auto rounded-md border border-[var(--aurex-border)]">
+            <table className="w-full min-w-[520px]">
               <thead className="bg-[var(--aurex-surface)] text-[11.5px] uppercase tracking-[0.08em] text-[var(--aurex-text-3)]">
                 <tr>
                   <th className="px-3 py-2 text-left">Date</th>
@@ -386,17 +375,11 @@ function ReviewStep({
                       </td>
                       <td className="px-3 py-2 text-[var(--aurex-text-1)]">{row.payee}</td>
                       <td className="px-3 py-2 text-right font-medium tabular-nums">
-                        <span
-                          className={
-                            row.amount < 0 ? 'text-[#c0392b]' : 'text-[#117a4b]'
-                          }
-                        >
-                          {formatCurrency(row.amount / 1000)}
-                        </span>
+                        <LedgerAmount value={row.amount / 1000} signed className="text-[13px]" />
                       </td>
                       <td className="px-3 py-2 text-right">
                         {isDup ? (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-[rgba(180,83,9,0.12)] px-1.5 py-0.5 text-[11.5px] font-medium text-[#b45309]">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-[var(--aurex-warn-soft)] px-1.5 py-0.5 text-[11.5px] font-medium text-[var(--aurex-warn)]">
                             <AlertTriangle className="size-3" />
                             Duplicate
                           </span>
@@ -416,33 +399,24 @@ function ReviewStep({
             ) : null}
           </div>
         )}
-      </div>
-    </div>
+      </StatementSection>
+    </>
   );
 }
 
 function SummaryStat({
-  tone,
   label,
   value,
   hint,
   icon,
 }: {
-  tone: 'success' | 'danger' | 'warning' | 'muted';
   label: string;
   value: number;
   hint: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
 }) {
-  const toneRing = {
-    success: 'border-[rgba(17,122,75,0.28)]',
-    danger: 'border-[rgba(192,57,43,0.28)]',
-    warning: 'border-[rgba(180,83,9,0.28)]',
-    muted: 'border-[var(--aurex-border)]',
-  }[tone];
-
   return (
-    <div className={`aurex-card ${toneRing} p-4`}>
+    <div className="p-1">
       <div className="flex items-start justify-between">
         <span className="text-[11.5px] font-semibold uppercase tracking-[0.1em] text-[var(--aurex-text-3)]">
           {label}

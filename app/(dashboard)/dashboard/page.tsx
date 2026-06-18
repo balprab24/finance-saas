@@ -6,6 +6,7 @@ import { DataCharts } from '@/components/data-charts';
 import { ThisMonthStrip } from '@/components/this-month-strip';
 import { DashboardEmptyState } from '@/components/dashboard-empty-state';
 import { useGetOnboardingStatus } from '@/features/onboarding/api/use-get-onboarding-status';
+import { useGetSummary } from '@/features/summary/api/use-get-summary';
 
 // The dashboard as one financial statement (Direction A, "The Statement"): a single
 // ruled sheet — masthead → cash position (In − Out = Net) → cash-flow / where-it-went
@@ -23,11 +24,18 @@ export default function DashboardPage() {
     );
   }
 
+  return <DashboardStatement />;
+}
+
+function DashboardStatement() {
+  const summary = useGetSummary();
+  const isSummaryFetching = summary.isFetching;
+
   return (
     <div className="mx-auto w-full max-w-screen-2xl pb-16 pt-6">
       <div className="aurex-card overflow-hidden p-0">
-        <StatementMasthead />
-        <CashPosition />
+        <StatementMasthead isUpdating={isSummaryFetching} />
+        <CashPosition isUpdating={isSummaryFetching} />
         <DataCharts />
         <ThisMonthStrip />
       </div>

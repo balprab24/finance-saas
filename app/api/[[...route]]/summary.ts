@@ -71,6 +71,7 @@ const app = new Hono<AuthEnv>().get(
 
     const category = await db
       .select({
+        categoryId: categories.id,
         name: categories.name,
         value: sql<number>`SUM(ABS(${transactions.amount}))`.mapWith(Number),
       })
@@ -88,14 +89,18 @@ const app = new Hono<AuthEnv>().get(
           lt(transactions.date, endExclusive),
         ),
       )
-      .groupBy(categories.name)
+      .groupBy(categories.id, categories.name)
       .orderBy(desc(sql`SUM(ABS(${transactions.amount}))`));
 
     const topCategories = category.slice(0, 3);
     const otherCategories = category.slice(3);
     const otherSum = otherCategories.reduce((acc, c) => acc + c.value, 0);
-    const finalCategories = [...topCategories];
-    if (otherCategories.length > 0) finalCategories.push({ name: 'Other', value: otherSum });
+    const finalCategories: Array<{ categoryId: string | null; name: string; value: number }> = [
+      ...topCategories,
+    ];
+    if (otherCategories.length > 0) {
+      finalCategories.push({ categoryId: null, name: 'Other', value: otherSum });
+    }
 
     const activeDays = await db
       .select({

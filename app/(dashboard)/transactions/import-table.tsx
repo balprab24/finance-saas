@@ -29,8 +29,8 @@ export function ImportTable({
   const remaining = body.length - preview.length;
 
   return (
-    <div className="overflow-hidden rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-bg-elev)]">
-      <Table>
+    <div className="overflow-x-auto rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-bg-elev)]">
+      <Table className="min-w-max">
         <TableHeader>
           <TableRow className="border-[var(--aurex-border)] bg-[var(--aurex-surface)] hover:bg-[var(--aurex-surface)]">
             {headers.map((_item, index) => (

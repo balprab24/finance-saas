@@ -33,11 +33,54 @@ function ProgressBar({ percent, over }: { percent: number; over: boolean }) {
       <div
         className={cn(
           'h-full rounded-full transition-all',
-          over ? 'bg-[#c0392b]' : 'bg-[var(--aurex-brand)]',
+          over ? 'bg-[var(--aurex-expense)]' : 'bg-[var(--aurex-brand)]',
         )}
         style={{ width: `${width}%` }}
       />
     </div>
+  );
+}
+
+function BudgetProgress({
+  hasBudget,
+  percent,
+  over,
+}: {
+  hasBudget: boolean;
+  percent: number;
+  over: boolean;
+}) {
+  if (!hasBudget) {
+    return <span className="text-[12px] text-[var(--aurex-text-3)]">No budget set</span>;
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      <ProgressBar percent={percent} over={over} />
+      <Badge
+        className={cn(
+          'shrink-0 border-0 text-[11px]',
+          over
+            ? 'bg-[var(--aurex-expense-soft)] text-[var(--aurex-expense)]'
+            : 'bg-[var(--aurex-income-soft)] text-[var(--aurex-income)]',
+        )}
+      >
+        {over ? 'Over' : 'On track'}
+      </Badge>
+    </div>
+  );
+}
+
+function RemainingAmount({ row, over }: { row: BudgetRow; over: boolean }) {
+  return (
+    <span
+      className={cn(
+        'tabular-nums',
+        over ? 'text-[var(--aurex-expense)]' : 'text-[var(--aurex-text-1)]',
+      )}
+    >
+      {row.remaining === null ? '—' : formatCurrency(row.remaining)}
+    </span>
   );
 }
 
@@ -63,6 +106,7 @@ function BudgetAmountCell({
     <CurrencyInput
       prefix="$"
       placeholder="Set budget"
+      aria-label={`Monthly budget for ${row.name}`}
       value={value}
       decimalsLimit={2}
       decimalScale={2}
@@ -120,7 +164,7 @@ export function BudgetsTable() {
         action={
           <Link
             href="/categories"
-            className="inline-flex h-9 items-center rounded-md bg-[var(--aurex-brand)] px-3 text-[13px] font-medium text-white transition-colors hover:bg-[#2b2f36]"
+            className="inline-flex h-9 items-center rounded-md bg-[var(--aurex-brand)] px-3 text-[13px] font-medium text-white transition-colors hover:bg-[var(--aurex-bar)]"
           >
             <Plus className="mr-2 size-3.5" />
             Add a category
@@ -131,76 +175,130 @@ export function BudgetsTable() {
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow className="border-[var(--aurex-border)] hover:bg-transparent">
-          <TableHead className="text-[var(--aurex-text-3)]">Category</TableHead>
-          <TableHead className="text-[var(--aurex-text-3)]">Budget</TableHead>
-          <TableHead className="text-[var(--aurex-text-3)]">Spent</TableHead>
-          <TableHead className="w-[28%] text-[var(--aurex-text-3)]">Progress</TableHead>
-          <TableHead className="text-right text-[var(--aurex-text-3)]">Remaining</TableHead>
-          <TableHead className="w-10" />
-        </TableRow>
-      </TableHeader>
-      <TableBody>
+    <>
+      <div className="hidden sm:block">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-[var(--aurex-border)] hover:bg-transparent">
+              <TableHead className="text-[var(--aurex-text-3)]">Category</TableHead>
+              <TableHead className="text-[var(--aurex-text-3)]">Budget</TableHead>
+              <TableHead className="text-[var(--aurex-text-3)]">Spent</TableHead>
+              <TableHead className="w-[28%] text-[var(--aurex-text-3)]">Progress</TableHead>
+              <TableHead className="text-right text-[var(--aurex-text-3)]">Remaining</TableHead>
+              <TableHead className="w-10" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row) => {
+              const over = row.status === 'over';
+              const hasBudget = row.budgeted !== null;
+              const percent =
+                hasBudget && row.budgeted! > 0 ? (row.spent / row.budgeted!) * 100 : 0;
+              return (
+                <TableRow
+                  key={row.categoryId}
+                  className="border-[var(--aurex-border)] hover:bg-[var(--aurex-surface)]"
+                >
+                  <TableCell className="font-medium text-[var(--aurex-text-1)]">
+                    {row.name}
+                  </TableCell>
+                  <TableCell>
+                    <BudgetAmountCell row={row} disabled={disabled} onSave={onSave} />
+                  </TableCell>
+                  <TableCell className="tabular-nums text-[var(--aurex-text-2)]">
+                    {formatCurrency(row.spent)}
+                  </TableCell>
+                  <TableCell>
+                    <BudgetProgress hasBudget={hasBudget} percent={percent} over={over} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <RemainingAmount row={row} over={over} />
+                  </TableCell>
+                  <TableCell>
+                    {row.budgetId ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={disabled}
+                        onClick={() => del.mutate({ id: row.budgetId! })}
+                        className="size-8 p-0 text-[var(--aurex-text-3)] hover:bg-[var(--aurex-surface-hover)] hover:text-[var(--aurex-expense)]"
+                        aria-label={`Clear budget for ${row.name}`}
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    ) : null}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="space-y-2 sm:hidden">
         {rows.map((row) => {
           const over = row.status === 'over';
           const hasBudget = row.budgeted !== null;
-          const percent = hasBudget && row.budgeted! > 0 ? (row.spent / row.budgeted!) * 100 : 0;
+          const percent =
+            hasBudget && row.budgeted! > 0 ? (row.spent / row.budgeted!) * 100 : 0;
+
           return (
-            <TableRow key={row.categoryId} className="border-[var(--aurex-border)] hover:bg-[var(--aurex-surface)]">
-              <TableCell className="font-medium text-[var(--aurex-text-1)]">{row.name}</TableCell>
-              <TableCell>
-                <BudgetAmountCell row={row} disabled={disabled} onSave={onSave} />
-              </TableCell>
-              <TableCell className="tabular-nums text-[var(--aurex-text-2)]">
-                {formatCurrency(row.spent)}
-              </TableCell>
-              <TableCell>
-                {hasBudget ? (
-                  <div className="flex items-center gap-3">
-                    <ProgressBar percent={percent} over={over} />
-                    <Badge
-                      className={cn(
-                        'shrink-0 border-0 text-[11px]',
-                        over
-                          ? 'bg-[rgba(192,57,43,0.12)] text-[#c0392b]'
-                          : 'bg-[rgba(17,122,75,0.12)] text-[#117a4b]',
-                      )}
-                    >
-                      {over ? 'Over' : 'On track'}
-                    </Badge>
-                  </div>
-                ) : (
-                  <span className="text-[12px] text-[var(--aurex-text-3)]">No budget set</span>
-                )}
-              </TableCell>
-              <TableCell
-                className={cn(
-                  'text-right tabular-nums',
-                  over ? 'text-[#c0392b]' : 'text-[var(--aurex-text-1)]',
-                )}
-              >
-                {row.remaining === null ? '—' : formatCurrency(row.remaining)}
-              </TableCell>
-              <TableCell>
+            <div
+              key={row.categoryId}
+              className="overflow-hidden rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-bg-elev)]"
+            >
+              <div className="flex items-center justify-between gap-3 border-b border-[var(--aurex-border)] px-3 py-3">
+                <div className="min-w-0 font-medium text-[var(--aurex-text-1)]">
+                  {row.name}
+                </div>
                 {row.budgetId ? (
                   <Button
                     size="sm"
                     variant="ghost"
                     disabled={disabled}
                     onClick={() => del.mutate({ id: row.budgetId! })}
-                    className="size-8 p-0 text-[var(--aurex-text-3)] hover:bg-[var(--aurex-surface-hover)] hover:text-[#c0392b]"
+                    className="size-8 shrink-0 p-0 text-[var(--aurex-text-3)] hover:bg-[var(--aurex-surface-hover)] hover:text-[var(--aurex-expense)]"
                     aria-label={`Clear budget for ${row.name}`}
                   >
                     <X className="size-4" />
                   </Button>
                 ) : null}
-              </TableCell>
-            </TableRow>
+              </div>
+              <div className="divide-y divide-[var(--aurex-border)]">
+                <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-center gap-3 px-3 py-2.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--aurex-text-3)]">
+                    Budget
+                  </span>
+                  <div className="justify-self-end">
+                    <BudgetAmountCell row={row} disabled={disabled} onSave={onSave} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-3 px-3 py-2.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--aurex-text-3)]">
+                    Spent
+                  </span>
+                  <span className="justify-self-end tabular-nums text-[var(--aurex-text-2)]">
+                    {formatCurrency(row.spent)}
+                  </span>
+                </div>
+                <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-center gap-3 px-3 py-2.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--aurex-text-3)]">
+                    Progress
+                  </span>
+                  <BudgetProgress hasBudget={hasBudget} percent={percent} over={over} />
+                </div>
+                <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-3 px-3 py-2.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--aurex-text-3)]">
+                    Remaining
+                  </span>
+                  <span className="justify-self-end">
+                    <RemainingAmount row={row} over={over} />
+                  </span>
+                </div>
+              </div>
+            </div>
           );
         })}
-      </TableBody>
-    </Table>
+      </div>
+    </>
   );
 }

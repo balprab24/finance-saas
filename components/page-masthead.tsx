@@ -29,7 +29,12 @@ export function PageMasthead({ title, meta, actions, className }: Props) {
           {title}
         </h1>
         {meta ? (
-          <p className="mt-0.5 text-[12.5px] tabular-nums text-[var(--aurex-text-3)]">{meta}</p>
+          <p
+            aria-live="polite"
+            className="mt-0.5 text-[12.5px] tabular-nums text-[var(--aurex-text-3)]"
+          >
+            {meta}
+          </p>
         ) : null}
       </div>
       {actions ? (
