@@ -35,8 +35,11 @@ than backend rework.
 ## Next steps (prioritized)
 
 ### Now — small polish (deferred P2 from the UI review)
-- **Transactions on mobile**: the table scrolls horizontally inside its card. Add a
-  condensed / stacked mobile layout so a phone user can scan without side-scrolling.
+- **Transactions on mobile** _(done)_: the `DataTable` mobile branch now renders a
+  purpose-built transaction card (payee + signed amount, then date · category · account,
+  with select and the row menu as quiet affordances) via an opt-in `renderMobileRow` prop;
+  no horizontal scrolling. Accounts/categories keep the generic transpose. Still worth a
+  visual check at a phone viewport against live data.
 - **Accessibility sweep**: keyboard-only pass of the primary flows, focus-ring consistency,
   screen-reader labels on icon-only buttons (the `…` row menu, filter icons).
 - **CSP smoke test in deployment**: verify Clerk, Plaid Link, and Sentry all work under
