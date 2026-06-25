@@ -17,14 +17,19 @@ import {
   jsonError,
   requireAuth,
 } from '@/lib/api-helpers';
+import { API_RATE_LIMITS, authenticatedRateLimit } from '@/lib/api-rate-limit';
 
 type BudgetStatus = 'none' | 'under' | 'over';
+
+const reportLimit = authenticatedRateLimit('budgets:report', API_RATE_LIMITS.report);
+const mutationLimit = authenticatedRateLimit('budgets:mutation', API_RATE_LIMITS.mutation);
 
 const app = new Hono<AuthEnv>()
   .get(
     '/',
     clerkMiddleware(),
     requireAuth,
+    reportLimit,
     zValidator('query', budgetMonthQuerySchema),
     async (c) => {
       const userId = getUserId(c);
@@ -110,6 +115,7 @@ const app = new Hono<AuthEnv>()
     '/',
     clerkMiddleware(),
     requireAuth,
+    mutationLimit,
     zValidator('json', upsertBudgetSchema),
     async (c) => {
       const userId = getUserId(c);
@@ -141,6 +147,7 @@ const app = new Hono<AuthEnv>()
     '/:id',
     clerkMiddleware(),
     requireAuth,
+    mutationLimit,
     zValidator('param', idParamSchema),
     async (c) => {
       const userId = getUserId(c);

@@ -51,6 +51,16 @@ vi.mock('@clerk/hono', () => ({
   getAuth: () => state.auth,
 }));
 
+vi.mock('@/lib/api-rate-limit', () => ({
+  API_RATE_LIMITS: {
+    read: { limit: 1, windowMs: 1000 },
+    demoSeed: { limit: 1, windowMs: 1000 },
+  },
+  authenticatedRateLimit: () => async (_c: unknown, next: () => Promise<void>) => {
+    await next();
+  },
+}));
+
 async function requestOnboarding(path: string, init?: RequestInit) {
   const { default: app } = await import('./onboarding');
   const response = await app.fetch(new Request(`http://localhost${path}`, init));

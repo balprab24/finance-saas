@@ -12,8 +12,12 @@ import {
   jsonError,
   requireAuth,
 } from '@/lib/api-helpers';
+import { API_RATE_LIMITS, authenticatedRateLimit } from '@/lib/api-rate-limit';
 
 type Counter = typeof accounts | typeof categories;
+
+const readLimit = authenticatedRateLimit('onboarding:read', API_RATE_LIMITS.read);
+const demoSeedLimit = authenticatedRateLimit('onboarding:demo-seed', API_RATE_LIMITS.demoSeed);
 
 async function countRows(table: Counter, userId: string) {
   const [result] = await db
@@ -42,12 +46,12 @@ async function getWorkspaceStatus(userId: string) {
 }
 
 const app = new Hono<AuthEnv>()
-  .get('/status', clerkMiddleware(), requireAuth, async (c) => {
+  .get('/status', clerkMiddleware(), requireAuth, readLimit, async (c) => {
     const userId = getUserId(c);
     const status = await getWorkspaceStatus(userId);
     return c.json(status);
   })
-  .post('/demo', clerkMiddleware(), requireAuth, async (c) => {
+  .post('/demo', clerkMiddleware(), requireAuth, demoSeedLimit, async (c) => {
     const userId = getUserId(c);
 
     const status = await getWorkspaceStatus(userId);

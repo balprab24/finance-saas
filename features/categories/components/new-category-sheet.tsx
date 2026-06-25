@@ -1,7 +1,5 @@
 'use client';
 
-import { z } from 'zod';
-
 import {
   Sheet,
   SheetContent,
@@ -9,13 +7,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { insertCategorySchema } from '@/db/schema';
 import { useNewCategory } from '@/features/categories/hooks/use-new-category';
 import { CategoryForm } from '@/features/categories/components/category-form';
 import { useCreateCategory } from '@/features/categories/api/use-create-category';
 
-const formSchema = insertCategorySchema.pick({ name: true });
-type FormValues = z.input<typeof formSchema>;
+type FormValues = { name: string };
 
 export function NewCategorySheet() {
   const { isOpen, onClose } = useNewCategory();

@@ -5,7 +5,6 @@ import { Trash } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { insertTransactionSchema } from '@/db/schema';
 import {
   Form,
   FormControl,
@@ -20,9 +19,10 @@ import { Select } from '@/components/select';
 import { DatePicker } from '@/components/date-picker';
 import { AmountInput } from '@/components/amount-input';
 import { convertAmountToMiliunits } from '@/lib/utils';
+import type { CreateTransactionInput } from '@/lib/api-schemas';
 
 const formSchema = z.object({
-  date: z.coerce.date({ message: 'Pick a date for this transaction' }),
+  date: z.date({ message: 'Pick a date for this transaction' }),
   accountId: z.string().min(1, 'Select an account'),
   categoryId: z.string().nullable().optional(),
   payee: z
@@ -45,15 +45,19 @@ const formSchema = z.object({
     .optional(),
 });
 
-const apiSchema = insertTransactionSchema.omit({ id: true, userId: true });
-
-type FormValues = z.input<typeof formSchema>;
-type ApiFormValues = z.input<typeof apiSchema>;
+type FormValues = {
+  date: Date;
+  accountId: string;
+  categoryId?: string | null;
+  payee: string;
+  amount: string;
+  notes?: string | null;
+};
 
 type Props = {
   id?: string;
   defaultValues?: FormValues;
-  onSubmit: (values: ApiFormValues) => void;
+  onSubmit: (values: CreateTransactionInput) => void;
   onDelete?: () => void;
   disabled?: boolean;
   accountOptions: { label: string; value: string }[];

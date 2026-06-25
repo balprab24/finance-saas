@@ -19,6 +19,11 @@ import {
   jsonError,
   requireAuth,
 } from '@/lib/api-helpers';
+import { API_RATE_LIMITS, authenticatedRateLimit } from '@/lib/api-rate-limit';
+
+const readLimit = authenticatedRateLimit('accounts:read', API_RATE_LIMITS.read);
+const mutationLimit = authenticatedRateLimit('accounts:mutation', API_RATE_LIMITS.mutation);
+const bulkLimit = authenticatedRateLimit('accounts:bulk', API_RATE_LIMITS.bulkMutation);
 
 async function getAccountTransactionCount(userId: string, accountId: string) {
   const [result] = await db
@@ -30,7 +35,7 @@ async function getAccountTransactionCount(userId: string, accountId: string) {
 }
 
 const app = new Hono<AuthEnv>()
-  .get('/', clerkMiddleware(), requireAuth, async (c) => {
+  .get('/', clerkMiddleware(), requireAuth, readLimit, async (c) => {
     const userId = getUserId(c);
     const includeArchived = c.req.query('includeArchived') === 'true';
 
@@ -64,6 +69,7 @@ const app = new Hono<AuthEnv>()
     '/:id',
     clerkMiddleware(),
     requireAuth,
+    readLimit,
     zValidator('param', idParamSchema),
     async (c) => {
       const userId = getUserId(c);
@@ -98,6 +104,7 @@ const app = new Hono<AuthEnv>()
     '/',
     clerkMiddleware(),
     requireAuth,
+    mutationLimit,
     zValidator('json', createAccountSchema),
     async (c) => {
       const userId = getUserId(c);
@@ -122,6 +129,7 @@ const app = new Hono<AuthEnv>()
     '/bulk-archive',
     clerkMiddleware(),
     requireAuth,
+    bulkLimit,
     zValidator('json', bulkIdsSchema),
     async (c) => {
       const userId = getUserId(c);
@@ -140,6 +148,7 @@ const app = new Hono<AuthEnv>()
     '/bulk-delete',
     clerkMiddleware(),
     requireAuth,
+    bulkLimit,
     zValidator('json', bulkIdsSchema),
     async (c) => {
       const userId = getUserId(c);
@@ -169,6 +178,7 @@ const app = new Hono<AuthEnv>()
     '/:id',
     clerkMiddleware(),
     requireAuth,
+    mutationLimit,
     zValidator('param', idParamSchema),
     zValidator('json', updateAccountSchema),
     async (c) => {
@@ -198,6 +208,7 @@ const app = new Hono<AuthEnv>()
     '/:id/archive',
     clerkMiddleware(),
     requireAuth,
+    mutationLimit,
     zValidator('param', idParamSchema),
     async (c) => {
       const userId = getUserId(c);
@@ -218,6 +229,7 @@ const app = new Hono<AuthEnv>()
     '/:id/restore',
     clerkMiddleware(),
     requireAuth,
+    mutationLimit,
     zValidator('param', idParamSchema),
     async (c) => {
       const userId = getUserId(c);
@@ -238,6 +250,7 @@ const app = new Hono<AuthEnv>()
     '/:id',
     clerkMiddleware(),
     requireAuth,
+    mutationLimit,
     zValidator('param', idParamSchema),
     async (c) => {
       const userId = getUserId(c);

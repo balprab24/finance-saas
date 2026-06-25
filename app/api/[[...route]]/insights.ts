@@ -11,6 +11,7 @@ import { detectRecurring, type RecurringInput } from '@/lib/recurring';
 import { flagUnusual } from '@/lib/insights';
 import { budgetMonthQuerySchema, ignoreRecurringSchema } from '@/lib/api-schemas';
 import { AuthEnv, getUserId, requireAuth } from '@/lib/api-helpers';
+import { API_RATE_LIMITS, authenticatedRateLimit } from '@/lib/api-rate-limit';
 
 // lower(coalesce(merchant_name, payee)) — must match lib/recurring.recurringMerchantKey.
 const merchantKeyExpr = sql<string>`lower(coalesce(${transactions.merchantName}, ${transactions.payee}))`;
@@ -19,13 +20,16 @@ const displayNameExpr = sql<string>`coalesce(${transactions.merchantName}, ${tra
 const RECURRING_WINDOW_MONTHS = 6;
 const TRAILING_MONTHS = 3;
 
+const reportLimit = authenticatedRateLimit('insights:report', API_RATE_LIMITS.report);
+const mutationLimit = authenticatedRateLimit('insights:mutation', API_RATE_LIMITS.mutation);
+
 function percentChange(current: number, previous: number) {
   if (previous === 0) return current === 0 ? 0 : 100;
   return ((current - previous) / previous) * 100;
 }
 
 const app = new Hono<AuthEnv>()
-  .get('/recurring', clerkMiddleware(), requireAuth, async (c) => {
+  .get('/recurring', clerkMiddleware(), requireAuth, reportLimit, async (c) => {
     const userId = getUserId(c);
     const now = new Date();
     const windowStart = subMonths(now, RECURRING_WINDOW_MONTHS);
@@ -65,6 +69,7 @@ const app = new Hono<AuthEnv>()
     '/trends',
     clerkMiddleware(),
     requireAuth,
+    reportLimit,
     zValidator('query', budgetMonthQuerySchema),
     async (c) => {
       const userId = getUserId(c);
@@ -117,6 +122,7 @@ const app = new Hono<AuthEnv>()
     '/unusual',
     clerkMiddleware(),
     requireAuth,
+    reportLimit,
     zValidator('query', budgetMonthQuerySchema),
     async (c) => {
       const userId = getUserId(c);
@@ -184,6 +190,7 @@ const app = new Hono<AuthEnv>()
     '/recurring/ignore',
     clerkMiddleware(),
     requireAuth,
+    mutationLimit,
     zValidator('json', ignoreRecurringSchema),
     async (c) => {
       const userId = getUserId(c);
@@ -201,6 +208,7 @@ const app = new Hono<AuthEnv>()
     '/recurring/ignore',
     clerkMiddleware(),
     requireAuth,
+    mutationLimit,
     zValidator('json', ignoreRecurringSchema),
     async (c) => {
       const userId = getUserId(c);
