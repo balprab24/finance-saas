@@ -109,7 +109,7 @@ Validation caps: names 120 chars, payees 200 chars, notes 2000 chars, ids 64 cha
 
 ## Known Limitations and Open Product Gaps
 
-- Dense tables (transactions, banks) still scroll horizontally on phones rather than using a condensed/stacked layout.
+- Transactions on phones use a purpose-built stacked card (`DataTable` `renderMobileRow`); the banks table still scrolls horizontally rather than using a condensed/stacked layout.
 - CSV import maps `amount`, `date`, and `payee`; `notes` and category mapping are not implemented, and duplicate detection only flags duplicates within the uploaded file (not against existing DB rows).
 - Summary `days` contains active transaction dates only; the API does not fill missing dates with zero rows.
 - No multi-currency, export, rule engine, or shared organization/team model.

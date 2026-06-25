@@ -2,32 +2,34 @@
 
 import { Row } from '@tanstack/react-table';
 import { format } from 'date-fns';
+import { TriangleAlert } from 'lucide-react';
 
 import { Checkbox } from '@/components/ui/checkbox';
 import { LedgerAmount } from '@/components/money';
+import { cn } from '@/lib/utils';
 
 import { Actions } from './actions';
-import { AccountColumn } from './account-column';
-import { CategoryColumn } from './category-column';
 import type { ResponseType } from './columns';
 
 // Purpose-built mobile card for a transaction row. Instead of transposing every
 // column into a stacked label/value list, it reads like a statement line:
-// payee + signed amount up top, then date · category · account beneath, with
-// select and the row actions as quiet affordances. Composed from the same
-// primitives the desktop columns use so interactions and styling stay identical.
+// payee + signed amount up top, then date · category · account as plain
+// metadata beneath. Selection (checkbox) and editing (the ⋯ menu, which opens
+// the full transaction sheet) are the only interactive affordances — the
+// metadata line is deliberately not tappable, so a muted 12px label never hides
+// a sheet-opening target the user can't see and could mis-tap.
 function TransactionCard({ row }: { row: Row<ResponseType> }) {
-  const { date, payee, amount } = row.original;
+  const { date, payee, amount, category, account } = row.original;
   // amount arrives in dollars (already converted server-side), same as columns.tsx.
   const value = parseFloat(String(amount));
 
   return (
-    <div className="flex items-start gap-3 px-3 py-2.5">
+    <div className="flex items-start gap-3 px-3 py-3">
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(checked) => row.toggleSelected(!!checked)}
-        aria-label="Select transaction"
-        className="mt-0.5 shrink-0"
+        aria-label={`Select ${payee}`}
+        className="mt-1 shrink-0"
       />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-3">
@@ -36,21 +38,34 @@ function TransactionCard({ row }: { row: Row<ResponseType> }) {
           </span>
           <LedgerAmount value={value} signed className="shrink-0 text-[13.5px] font-medium" />
         </div>
-        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] text-[var(--aurex-text-3)]">
-          <span className="tabular-nums">{format(new Date(date), 'dd MMM, yyyy')}</span>
-          <span aria-hidden>·</span>
-          <CategoryColumn
-            id={row.original.id}
-            category={row.original.category}
-            categoryId={row.original.categoryId}
-          />
-          <span aria-hidden>·</span>
-          <AccountColumn account={row.original.account} accountId={row.original.accountId} />
+        <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] text-[var(--aurex-text-3)]">
+          <span className="whitespace-nowrap tabular-nums">
+            {format(new Date(date), 'dd MMM, yyyy')}
+          </span>
+          <span
+            className={cn(
+              'inline-flex items-center gap-1',
+              !category && 'text-[var(--aurex-warn)]',
+            )}
+          >
+            <span aria-hidden className="mr-1.5">
+              ·
+            </span>
+            {!category && <TriangleAlert className="size-3 shrink-0" aria-hidden />}
+            {category ?? 'Uncategorized'}
+          </span>
+          <span className="whitespace-nowrap">
+            <span aria-hidden className="mr-1.5">
+              ·
+            </span>
+            {account ?? 'Unknown'}
+          </span>
         </div>
       </div>
-      <div className="-mr-1 shrink-0">
-        <Actions id={row.original.id} />
-      </div>
+      <Actions
+        id={row.original.id}
+        className="relative -mr-1 size-9 shrink-0 after:absolute after:-inset-1.5"
+      />
     </div>
   );
 }

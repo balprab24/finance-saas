@@ -12,8 +12,9 @@ import {
 import { useOpenTransaction } from '@/features/transactions/hooks/use-open-transaction';
 import { useDeleteTransaction } from '@/features/transactions/api/use-delete-transaction';
 import { useConfirm } from '@/hooks/use-confirm';
+import { cn } from '@/lib/utils';
 
-export function Actions({ id }: { id: string }) {
+export function Actions({ id, className }: { id: string; className?: string }) {
   const [ConfirmDialog, confirm] = useConfirm(
     'Delete transaction?',
     'This will permanently delete the transaction.',
@@ -31,8 +32,9 @@ export function Actions({ id }: { id: string }) {
       <ConfirmDialog />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="size-8 p-0">
+          <Button variant="ghost" className={cn('size-8 p-0', className)}>
             <MoreHorizontal className="size-4" />
+            <span className="sr-only">Open actions menu</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

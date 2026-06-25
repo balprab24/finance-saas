@@ -9,7 +9,10 @@ personal workspace that is safe for a reviewer to try with demo, manual, CSV, or
 Plaid Sandbox data. The foundation is well past hobby level: Clerk auth, typed Hono
 routes, Drizzle/Postgres persistence, Plaid token encryption, a database-backed sync
 queue, replay-protected webhooks, and non-destructive account archival are all in
-place.
+place. The **Light Counter** identity (light paper, graphite ink, color only for
+financial meaning) unifies every authenticated surface on shared statement primitives
+(`StatementSheet`, `PageMasthead`, `LedgerAmount`), with an ink-underline desktop nav
+and public Privacy/Terms/Support pages (PR #14).
 
 The June 25, 2026 hardening pass added authenticated rate limits to the non-Plaid
 API surface, centralized rate-limit responses, added browser security headers, moved
