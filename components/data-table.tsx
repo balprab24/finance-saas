@@ -30,6 +30,8 @@ import { useConfirm } from '@/hooks/use-confirm';
 import { cn } from '@/lib/utils';
 
 declare module '@tanstack/react-table' {
+  // TanStack declaration merging requires these generic names even though this app only adds static metadata.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue> {
     mobileLabel?: string;
     mobileHidden?: boolean;

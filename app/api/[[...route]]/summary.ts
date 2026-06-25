@@ -13,6 +13,9 @@ import {
   getUserId,
   requireAuth,
 } from '@/lib/api-helpers';
+import { API_RATE_LIMITS, authenticatedRateLimit } from '@/lib/api-rate-limit';
+
+const reportLimit = authenticatedRateLimit('summary:report', API_RATE_LIMITS.report);
 
 function percentageChange(current: number, previous: number) {
   if (previous === 0) return current === 0 ? 0 : 100;
@@ -23,6 +26,7 @@ const app = new Hono<AuthEnv>().get(
   '/',
   clerkMiddleware(),
   requireAuth,
+  reportLimit,
   zValidator('query', dateRangeQuerySchema),
   async (c) => {
     const userId = getUserId(c);

@@ -104,7 +104,7 @@ Open [http://localhost:3000](http://localhost:3000).
 npm run dev          # Start the Next.js dev server
 npm run build        # Build for production
 npm run start        # Start the production server
-npm run lint         # Run Next linting
+npm run lint         # Run ESLint on source files
 npm run test         # Run Vitest tests
 npm run e2e          # Build/start the app and run deterministic Playwright tests
 npm run db:generate  # Generate Drizzle migrations
@@ -190,6 +190,19 @@ The command is safe to re-run — Drizzle tracks applied migrations and skips on
 ### Dependency security
 
 Both `npm audit` and `npm audit --omit=dev` report **0 vulnerabilities**. Vitest/Vite are pinned to clean versions, and the package override set keeps transitive esbuild versions on patched releases while preserving the Drizzle and TSX toolchains.
+
+### General API and browser hardening
+
+Authenticated non-Plaid API endpoints are DB-rate-limited per Clerk user. Normal
+reads, report queries, mutations, bulk imports/deletes, and demo seeding use
+separate buckets so a runaway client cannot make endless writes or expensive report
+queries.
+
+The app also emits baseline browser security headers from `next.config.ts`,
+including CSP, frame restrictions, referrer policy, MIME sniff protection,
+permissions policy, and production HSTS. See
+[`docs/security-review.md`](docs/security-review.md) for the latest codebase and
+security review.
 
 ### Plaid sync drain (cron)
 

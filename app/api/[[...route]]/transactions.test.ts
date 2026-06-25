@@ -49,6 +49,17 @@ vi.mock('@clerk/hono', () => ({
   getAuth: () => ({ userId: 'user_alice' }),
 }));
 
+vi.mock('@/lib/api-rate-limit', () => ({
+  API_RATE_LIMITS: {
+    read: { limit: 1, windowMs: 1000 },
+    mutation: { limit: 1, windowMs: 1000 },
+    bulkMutation: { limit: 1, windowMs: 1000 },
+  },
+  authenticatedRateLimit: () => async (_c: unknown, next: () => Promise<void>) => {
+    await next();
+  },
+}));
+
 const validPatchBody = {
   amount: -1500,
   payee: 'Coffee Shop',

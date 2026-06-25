@@ -1,6 +1,4 @@
 'use client';
-
-import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 
 import {
@@ -10,7 +8,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { insertCategorySchema } from '@/db/schema';
 import { useOpenCategory } from '@/features/categories/hooks/use-open-category';
 import { CategoryForm } from '@/features/categories/components/category-form';
 import { useGetCategory } from '@/features/categories/api/use-get-category';
@@ -18,8 +15,7 @@ import { useEditCategory } from '@/features/categories/api/use-edit-category';
 import { useDeleteCategory } from '@/features/categories/api/use-delete-category';
 import { useConfirm } from '@/hooks/use-confirm';
 
-const formSchema = insertCategorySchema.pick({ name: true });
-type FormValues = z.input<typeof formSchema>;
+type FormValues = { name: string };
 
 export function EditCategorySheet() {
   const { isOpen, onClose, id } = useOpenCategory();

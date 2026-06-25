@@ -1,6 +1,4 @@
 'use client';
-
-import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
 
 import {
@@ -10,7 +8,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { insertAccountSchema } from '@/db/schema';
 import { useOpenAccount } from '@/features/accounts/hooks/use-open-account';
 import { AccountForm } from '@/features/accounts/components/account-form';
 import { useGetAccount } from '@/features/accounts/api/use-get-account';
@@ -19,8 +16,7 @@ import { useArchiveAccount } from '@/features/accounts/api/use-archive-account';
 import { useRestoreAccount } from '@/features/accounts/api/use-restore-account';
 import { useConfirm } from '@/hooks/use-confirm';
 
-const formSchema = insertAccountSchema.pick({ name: true });
-type FormValues = z.input<typeof formSchema>;
+type FormValues = { name: string };
 
 export function EditAccountSheet() {
   const { isOpen, onClose, id } = useOpenAccount();

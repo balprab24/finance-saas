@@ -26,6 +26,15 @@ vi.mock('@clerk/hono', () => ({
   getAuth: () => state.auth,
 }));
 
+vi.mock('@/lib/api-rate-limit', () => ({
+  API_RATE_LIMITS: {
+    report: { limit: 1, windowMs: 1000 },
+  },
+  authenticatedRateLimit: () => async (_c: unknown, next: () => Promise<void>) => {
+    await next();
+  },
+}));
+
 async function requestSummary(query = '') {
   const { default: app } = await import('./summary');
   const url = `http://localhost/${query ? `?${query}` : ''}`;

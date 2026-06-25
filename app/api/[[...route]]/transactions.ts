@@ -20,12 +20,18 @@ import {
   jsonError,
   requireAuth,
 } from '@/lib/api-helpers';
+import { API_RATE_LIMITS, authenticatedRateLimit } from '@/lib/api-rate-limit';
+
+const readLimit = authenticatedRateLimit('transactions:read', API_RATE_LIMITS.read);
+const mutationLimit = authenticatedRateLimit('transactions:mutation', API_RATE_LIMITS.mutation);
+const bulkLimit = authenticatedRateLimit('transactions:bulk', API_RATE_LIMITS.bulkMutation);
 
 const app = new Hono<AuthEnv>()
   .get(
     '/',
     clerkMiddleware(),
     requireAuth,
+    readLimit,
     zValidator('query', dateRangeQuerySchema),
     async (c) => {
       const userId = getUserId(c);
@@ -72,6 +78,7 @@ const app = new Hono<AuthEnv>()
     '/:id',
     clerkMiddleware(),
     requireAuth,
+    readLimit,
     zValidator('param', idParamSchema),
     async (c) => {
       const userId = getUserId(c);
@@ -99,6 +106,7 @@ const app = new Hono<AuthEnv>()
     '/',
     clerkMiddleware(),
     requireAuth,
+    mutationLimit,
     zValidator('json', createTransactionSchema),
     async (c) => {
       const userId = getUserId(c);
@@ -136,6 +144,7 @@ const app = new Hono<AuthEnv>()
     '/bulk-create',
     clerkMiddleware(),
     requireAuth,
+    bulkLimit,
     zValidator('json', bulkCreateTransactionsSchema),
     async (c) => {
       const userId = getUserId(c);
@@ -185,6 +194,7 @@ const app = new Hono<AuthEnv>()
     '/bulk-delete',
     clerkMiddleware(),
     requireAuth,
+    bulkLimit,
     zValidator('json', bulkIdsSchema),
     async (c) => {
       const userId = getUserId(c);
@@ -202,6 +212,7 @@ const app = new Hono<AuthEnv>()
     '/:id',
     clerkMiddleware(),
     requireAuth,
+    mutationLimit,
     zValidator('param', idParamSchema),
     zValidator('json', updateTransactionSchema),
     async (c) => {
@@ -244,6 +255,7 @@ const app = new Hono<AuthEnv>()
     '/:id',
     clerkMiddleware(),
     requireAuth,
+    mutationLimit,
     zValidator('param', idParamSchema),
     async (c) => {
       const userId = getUserId(c);

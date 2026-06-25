@@ -1,4 +1,4 @@
-import { Hono, type Context } from 'hono';
+import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { clerkMiddleware } from '@clerk/hono';
@@ -33,8 +33,9 @@ import {
 } from '@/lib/plaid-sync-jobs';
 import { scheduleWarmDrain } from '@/lib/after-drain';
 import { verifyPlaidWebhookToken } from '@/lib/plaid-webhook';
-import { checkRateLimit, clientIpFromHeaders, type RateLimitResult } from '@/lib/rate-limit';
+import { clientIpFromHeaders } from '@/lib/rate-limit';
 import { recordPlaidWebhookEvent } from '@/lib/plaid-webhook-replay';
+import { enforceRateLimit } from '@/lib/api-rate-limit';
 
 const itemParamSchema = z.object({
   itemId: z.string().trim().min(1).max(64),
@@ -63,25 +64,12 @@ function plaidFailureMessage(err: unknown, fallback: string) {
   return fallback;
 }
 
-function rateLimitedResponse(c: Context, result: RateLimitResult) {
-  c.header('Retry-After', String(result.retryAfterSeconds));
-  c.header('X-RateLimit-Limit', String(result.limit));
-  c.header('X-RateLimit-Remaining', String(result.remaining));
-  c.header('X-RateLimit-Reset', result.resetAt.toISOString());
-  return jsonError(c, 429, 'Too many requests');
-}
-
 async function enforcePlaidRateLimit(
-  c: Context,
+  c: Parameters<typeof enforceRateLimit>[0],
   key: string,
   config: { limit: number; windowMs: number },
 ) {
-  const result = await checkRateLimit({ key, ...config });
-  if (!result.allowed) return rateLimitedResponse(c, result);
-  c.header('X-RateLimit-Limit', String(result.limit));
-  c.header('X-RateLimit-Remaining', String(result.remaining));
-  c.header('X-RateLimit-Reset', result.resetAt.toISOString());
-  return null;
+  return await enforceRateLimit(c, key, config);
 }
 
 function verifyWebhookBodyHash(rawBody: string, expectedHash: unknown) {

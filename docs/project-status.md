@@ -1,33 +1,36 @@
 # Aurex — Project Status & Next Steps
 
-_Last reviewed: 2026-06-13_
+_Last reviewed: 2026-06-25_
 
 ## Where the project stands
 
-Aurex is a genuinely solid full-stack personal-finance app — the foundation is well past
-hobby level. Earlier work replaced the old dark/indigo "AI SaaS" look with the **Light
-Counter** identity (light paper, graphite ink, color only for financial meaning). PR #14
-then unified every authenticated surface on shared statement primitives (`StatementSheet`,
-`PageMasthead`, `LedgerAmount`), switched desktop active nav from filled pills to an ink
-underline, and added public Privacy/Terms/Support pages.
+Aurex is a genuinely solid full-stack personal-finance app, best positioned as a
+personal workspace that is safe for a reviewer to try with demo, manual, CSV, or
+Plaid Sandbox data. The foundation is well past hobby level: Clerk auth, typed Hono
+routes, Drizzle/Postgres persistence, Plaid token encryption, a database-backed sync
+queue, replay-protected webhooks, and non-destructive account archival are all in
+place.
 
-A follow-up review pass (2026-06-13) fixed three "unknown-as-zero" state bugs — the budgets
-masthead, banks fetch-error, and insights caption no longer render a fabricated `$0`/empty
-state while loading or failed — corrected the Privacy copy to accurately describe Plaid
-tokens and operational data, and made `tsc --noEmit` fully clean.
+The June 25, 2026 hardening pass added authenticated rate limits to the non-Plaid
+API surface, centralized rate-limit responses, added browser security headers, moved
+old dashboard planning specs to `docs/archive/`, migrated linting off deprecated
+`next lint`, and adjusted navigation so the core account/transaction/bank workflow
+comes first.
 
 ### Assessment by area
 
 | Area | State | Notes |
 |---|---|---|
 | **UI / visual identity** | Good | Light Counter is distinctive and on-brand, not generic. No purple/glow/gradient/serif. Audited + polished. See `DESIGN.md`. |
-| **UX** | Good | Statement-style dashboard (net = in − out, cash-flow chart, category ledger). Clear nav, restrained operational page titles, retryable errors, honest empty/loading states. |
-| **Backend** | Strong / production-hardened | Typed Hono API, every query scoped by Clerk `userId`, money as integer milliunits, account archival (no destructive deletes), rate limiting, Plaid with encrypted + rotatable tokens, Vercel cron sync, Sentry. |
+| **UX** | Good | Statement-style dashboard (net = in − out, cash-flow chart, category ledger). Primary nav now emphasizes Overview, Transactions, Accounts, and Banks before secondary planning/analysis tools. |
+| **Backend** | Strong / production-hardened | Typed Hono API, every query scoped by Clerk `userId`, money as integer milliunits, account archival, authenticated API rate limits, Plaid with encrypted + rotatable tokens, Vercel cron sync, Sentry. |
 | **Database** | Sound | Drizzle + Postgres, SQL migrations, per-user case-insensitive unique indexes, deliberate FK strategy (restrict vs `set null`). |
-| **Tests / CI** | Good | 159 passing Vitest unit/API tests, Playwright e2e for the landing, GitHub Actions CI. |
+| **Security** | Good | CSP and baseline browser headers are configured; dependency audits report 0 vulnerabilities. See `docs/security-review.md`. |
+| **Tests / CI** | Good | 163 passing Vitest unit/API tests, 4 DB integration tests skipped without `DATABASE_URL`, Playwright e2e for the landing, GitHub Actions CI. |
 
-**Bottom line:** the foundations (security, data model, API) are strong; remaining work is
-product breadth and polish, not rework.
+**Bottom line:** the foundations (security, data model, API) are strong. The next work
+should be product focus, deployment verification, and mobile workflow polish rather
+than backend rework.
 
 ## Next steps (prioritized)
 
@@ -36,6 +39,8 @@ product breadth and polish, not rework.
   condensed / stacked mobile layout so a phone user can scan without side-scrolling.
 - **Accessibility sweep**: keyboard-only pass of the primary flows, focus-ring consistency,
   screen-reader labels on icon-only buttons (the `…` row menu, filter icons).
+- **CSP smoke test in deployment**: verify Clerk, Plaid Link, and Sentry all work under
+  the enforced production CSP.
 
 ### Next — product depth
 - **Recurring → upcoming bills**: surface the next recurring charges as a forward-looking
@@ -51,8 +56,8 @@ product breadth and polish, not rework.
   Vercel with the cron + `CRON_SECRET`, Sentry env wired. (`docs/` already has a
   deploy-readiness checklist.)
 - **Plaid production access** (currently sandbox): requires Plaid's production approval.
-- **Rate-limit + observability dashboards**: confirm the cron drain and Sentry monitors in
-  prod.
+- **Observability dashboards**: confirm the cron drain, rate-limit pressure, and Sentry
+  monitors in prod.
 
 ## Known non-issues / decisions on record
 - Repo is intentionally **public**; secret hygiene verified (no keys in tree or history,

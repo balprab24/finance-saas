@@ -1,7 +1,5 @@
 'use client';
 
-import { z } from 'zod';
-
 import {
   Sheet,
   SheetContent,
@@ -9,13 +7,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { insertAccountSchema } from '@/db/schema';
 import { useNewAccount } from '@/features/accounts/hooks/use-new-account';
 import { AccountForm } from '@/features/accounts/components/account-form';
 import { useCreateAccount } from '@/features/accounts/api/use-create-account';
 
-const formSchema = insertAccountSchema.pick({ name: true });
-type FormValues = z.input<typeof formSchema>;
+type FormValues = { name: string };
 
 export function NewAccountSheet() {
   const { isOpen, onClose } = useNewAccount();

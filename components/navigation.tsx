@@ -10,15 +10,18 @@ import { NavButton } from '@/components/nav-button';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
-const routes = [
+const primaryRoutes = [
   { href: '/dashboard', label: 'Overview' },
   { href: '/transactions', label: 'Transactions' },
   { href: '/accounts', label: 'Accounts' },
   { href: '/banks', label: 'Banks' },
+] as const;
+
+const secondaryRoutes = [
   { href: '/categories', label: 'Categories' },
   { href: '/budgets', label: 'Budgets' },
   { href: '/insights', label: 'Insights' },
-];
+] as const;
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -39,28 +42,35 @@ export function Navigation() {
         </SheetTrigger>
         <SheetContent side="left" className="border-r border-[var(--aurex-border)] bg-[var(--aurex-bg-elev)] px-2">
           <nav className="flex flex-col gap-y-1.5 pt-8">
-            {routes.map((route) => {
-              const active = route.href === pathname;
-              return (
-                <Link
-                  key={route.href}
-                  href={route.href}
-                  onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[15px] font-medium transition-colors ${
-                    active
-                      ? 'bg-[var(--aurex-surface-hover)] text-[var(--aurex-text-1)] ring-1 ring-[var(--aurex-border-strong)]'
-                      : 'text-[var(--aurex-text-2)] hover:bg-[var(--aurex-surface)] hover:text-[var(--aurex-text-1)]'
-                  }`}
-                >
-                  <span
-                    className={`size-1.5 rounded-full ${
-                      active ? 'bg-[var(--aurex-ink)]' : 'bg-transparent'
-                    }`}
-                  />
-                  {route.label}
-                </Link>
-              );
-            })}
+            {[primaryRoutes, secondaryRoutes].map((group, groupIndex) => (
+              <div
+                key={groupIndex}
+                className={groupIndex === 1 ? 'mt-2 border-t border-[var(--aurex-border)] pt-2' : undefined}
+              >
+                {group.map((route) => {
+                  const active = route.href === pathname;
+                  return (
+                    <Link
+                      key={route.href}
+                      href={route.href}
+                      onClick={() => setIsOpen(false)}
+                      className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[15px] font-medium transition-colors ${
+                        active
+                          ? 'bg-[var(--aurex-surface-hover)] text-[var(--aurex-text-1)] ring-1 ring-[var(--aurex-border-strong)]'
+                          : 'text-[var(--aurex-text-2)] hover:bg-[var(--aurex-surface)] hover:text-[var(--aurex-text-1)]'
+                      }`}
+                    >
+                      <span
+                        className={`size-1.5 rounded-full ${
+                          active ? 'bg-[var(--aurex-ink)]' : 'bg-transparent'
+                        }`}
+                      />
+                      {route.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
         </SheetContent>
       </Sheet>
@@ -69,7 +79,16 @@ export function Navigation() {
 
   return (
     <nav className="hidden lg:flex items-center gap-6 overflow-x-auto">
-      {routes.map((route) => (
+      {primaryRoutes.map((route) => (
+        <NavButton
+          key={route.href}
+          href={route.href}
+          label={route.label}
+          isActive={pathname === route.href}
+        />
+      ))}
+      <div className="h-5 w-px shrink-0 bg-[var(--aurex-border)]" aria-hidden />
+      {secondaryRoutes.map((route) => (
         <NavButton
           key={route.href}
           href={route.href}

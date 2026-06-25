@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint \"{app,components,db,e2e,features,hooks,lib,providers,scripts}/**/*.{ts,tsx}\" \"*.{ts,tsx}\" --ignore-pattern next-env.d.ts",
     "e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

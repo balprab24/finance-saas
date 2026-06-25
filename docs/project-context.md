@@ -91,6 +91,8 @@ Validation caps: names 120 chars, payees 200 chars, notes 2000 chars, ids 64 cha
 
 - Do not commit `.env.local` or real credentials. `.env`, `.env.*`, finance import/export files, screenshots, and auth artifacts are gitignored.
 - `NEXT_PUBLIC_*` values are browser-visible; keep `CLERK_SECRET_KEY`, `DATABASE_URL`, Plaid secrets, `PLAID_TOKEN_ENCRYPTION_KEY(S)`, and `CRON_SECRET` server-only. Never log or return Plaid access tokens.
+- Authenticated non-Plaid API routes are rate-limited per Clerk user via `lib/api-rate-limit.ts`; preserve those middleware calls when adding new routes.
+- Browser security headers are set in `next.config.ts`; CSP changes must be tested with Clerk, Plaid Link, and Sentry in the target deployment.
 - API errors return generic `500` in production; non-production logs `[api error]`.
 - CSV imports and local screenshots may contain personal finance data; keep generated artifacts out of git unless they are intentional fixtures.
 - Preserve tenant scoping in both API predicates and database relationships.
@@ -100,7 +102,7 @@ Validation caps: names 120 chars, payees 200 chars, notes 2000 chars, ids 64 cha
 - Multi-tenant hardening: `transactions.user_id`, tenant indexes, case-insensitive per-user account/category uniqueness, composite `(id, user_id)` uniqueness, and composite transaction FKs.
 - Account archival (`accounts.archived_at`); account FK changed from cascade to restrict; hard delete rejected when transactions exist.
 - `transactions.amount` promoted to bigint; shared API schemas for trimming, length caps, date validation, amount bounds, and bulk limits.
-- Plaid integration: encrypted + rotatable access tokens, link/exchange/sync/remove endpoints, signed + replay-protected webhook, background sync queue drained by a Vercel cron, and Sentry observability. Rate limiting (`rateLimits` table) on Plaid endpoints and the webhook.
+- Plaid integration: encrypted + rotatable access tokens, link/exchange/sync/remove endpoints, signed + replay-protected webhook, background sync queue drained by a Vercel cron, and Sentry observability. Rate limiting (`rateLimits` table) on Plaid endpoints, the webhook, and the broader authenticated API surface.
 - Budgets (per-category monthly) and Insights (recurring/unusual/trends) features end to end.
 - "Light Counter" UI: statement-style dashboard and authenticated surfaces unified on shared statement primitives (PR #14), underline desktop nav, public legal pages.
 - Tests around auth/validation/unique conflicts, archive/restore, bulk limits, summary semantics, onboarding demo, transaction ownership, Plaid sync/normalize/webhook, rate limiting, and observability.
