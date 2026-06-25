@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { type LucideIcon, ChevronLeft, ChevronRight, Search, Trash } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -50,6 +50,11 @@ type Props<TData, TValue> = {
   bulkActionTitle?: string;
   bulkActionDescription?: string;
   bulkActionTone?: 'danger' | 'neutral';
+  /** Optional purpose-built mobile card body for each row. When provided, it
+   *  replaces the generic column-transpose card on small screens (the selected
+   *  state container is still supplied by DataTable). When omitted, the table
+   *  falls back to the generic label/value transpose. */
+  renderMobileRow?: (row: Row<TData>) => ReactNode;
 };
 
 export function DataTable<TData, TValue>({
@@ -63,6 +68,7 @@ export function DataTable<TData, TValue>({
   bulkActionTitle = 'Delete selected rows?',
   bulkActionDescription = 'You are about to perform a bulk delete. This cannot be undone.',
   bulkActionTone = 'danger',
+  renderMobileRow,
 }: Props<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -203,34 +209,38 @@ export function DataTable<TData, TValue>({
               data-state={row.getIsSelected() && 'selected'}
               className="overflow-hidden rounded-md border border-[var(--aurex-border)] bg-[var(--aurex-bg-elev)] data-[state=selected]:bg-[var(--aurex-brand-soft)]"
             >
-              <div className="divide-y divide-[var(--aurex-border)]">
-                {row
-                  .getVisibleCells()
-                  .filter((cell) => !cell.column.columnDef.meta?.mobileHidden)
-                  .map((cell) => {
-                    const label = cell.column.columnDef.meta?.mobileLabel ?? cell.column.id;
-                    const align = cell.column.columnDef.meta?.mobileAlign ?? 'left';
+              {renderMobileRow ? (
+                renderMobileRow(row)
+              ) : (
+                <div className="divide-y divide-[var(--aurex-border)]">
+                  {row
+                    .getVisibleCells()
+                    .filter((cell) => !cell.column.columnDef.meta?.mobileHidden)
+                    .map((cell) => {
+                      const label = cell.column.columnDef.meta?.mobileLabel ?? cell.column.id;
+                      const align = cell.column.columnDef.meta?.mobileAlign ?? 'left';
 
-                    return (
-                      <div
-                        key={cell.id}
-                        className="grid grid-cols-[minmax(6.5rem,0.42fr)_minmax(0,1fr)] items-start gap-3 px-3 py-2.5"
-                      >
-                        <span className="pt-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--aurex-text-3)]">
-                          {label}
-                        </span>
+                      return (
                         <div
-                          className={cn(
-                            'min-w-0 text-[13.5px] text-[var(--aurex-text-1)]',
-                            align === 'right' && 'justify-self-end text-right',
-                          )}
+                          key={cell.id}
+                          className="grid grid-cols-[minmax(6.5rem,0.42fr)_minmax(0,1fr)] items-start gap-3 px-3 py-2.5"
                         >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          <span className="pt-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--aurex-text-3)]">
+                            {label}
+                          </span>
+                          <div
+                            className={cn(
+                              'min-w-0 text-[13.5px] text-[var(--aurex-text-1)]',
+                              align === 'right' && 'justify-self-end text-right',
+                            )}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-              </div>
+                      );
+                    })}
+                </div>
+              )}
             </div>
           ))
         ) : (

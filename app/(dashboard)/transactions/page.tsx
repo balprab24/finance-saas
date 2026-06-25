@@ -13,6 +13,7 @@ import { PageMasthead } from '@/components/page-masthead';
 import { StatementSheet } from '@/components/statement-sheet';
 
 import { columns } from './columns';
+import { renderTransactionMobileRow } from './transaction-card';
 import { useNewTransaction } from '@/features/transactions/hooks/use-new-transaction';
 import { useGetTransactions } from '@/features/transactions/api/use-get-transactions';
 import { useBulkDeleteTransactions } from '@/features/transactions/api/use-bulk-delete-transactions';
@@ -143,6 +144,7 @@ export default function TransactionsPage() {
             filterKey="payee"
             columns={columns}
             data={transactions}
+            renderMobileRow={renderTransactionMobileRow}
             onDelete={(rows) =>
               deleteTransactions.mutate({ ids: rows.map((r) => r.original.id) })
             }
