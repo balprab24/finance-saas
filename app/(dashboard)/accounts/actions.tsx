@@ -112,6 +112,7 @@ export function Actions({ id, archived, plaidItemId, plaidStatus }: ActionsProps
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="size-8 p-0">
+            <span className="sr-only">Open actions menu</span>
             <MoreHorizontal className="size-4" />
           </Button>
         </DropdownMenuTrigger>

@@ -43,8 +43,12 @@ than backend rework.
   with select and the row menu as quiet affordances) via an opt-in `renderMobileRow` prop;
   no horizontal scrolling. Accounts/categories keep the generic transpose. Still worth a
   visual check at a phone viewport against live data.
-- **Accessibility sweep**: keyboard-only pass of the primary flows, focus-ring consistency,
-  screen-reader labels on icon-only buttons (the `…` row menu, filter icons).
+- **Accessibility sweep** _(done 2026-07-05)_: audited icon-only buttons across all
+  surfaces (added `sr-only` names to the mobile nav trigger and the accounts/categories
+  `…` row menus; transactions already had one) and confirmed every `outline-none` pairs
+  with a visible `focus-visible` ring. Interactive flows (sheets, dialogs, dropdowns) run
+  on Radix primitives for focus trap / Esc / focus return; a human keyboard-only pass in
+  a real browser remains a worthwhile spot check.
 - **CSP smoke test in deployment**: verify Clerk, Plaid Link, and Sentry all work under
   the enforced production CSP.
 

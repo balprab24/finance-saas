@@ -200,10 +200,20 @@ const app = new Hono<AuthEnv>()
       const userId = getUserId(c);
       const values = c.req.valid('json');
 
+      // Deleted rows are echoed back (excluding internal Plaid/user columns)
+      // so the client can offer an undo that re-creates them via bulk-create.
       const data = await db
         .delete(transactions)
         .where(and(eq(transactions.userId, userId), inArray(transactions.id, values.ids)))
-        .returning({ id: transactions.id });
+        .returning({
+          id: transactions.id,
+          amount: transactions.amount,
+          payee: transactions.payee,
+          notes: transactions.notes,
+          date: transactions.date,
+          accountId: transactions.accountId,
+          categoryId: transactions.categoryId,
+        });
 
       return c.json({ data });
     },
@@ -262,10 +272,20 @@ const app = new Hono<AuthEnv>()
       const { id } = c.req.valid('param');
       if (!id) return jsonError(c, 400, 'Missing id');
 
+      // The deleted row is echoed back (excluding internal Plaid/user columns)
+      // so the client can offer an undo that re-creates it via bulk-create.
       const [data] = await db
         .delete(transactions)
         .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
-        .returning({ id: transactions.id });
+        .returning({
+          id: transactions.id,
+          amount: transactions.amount,
+          payee: transactions.payee,
+          notes: transactions.notes,
+          date: transactions.date,
+          accountId: transactions.accountId,
+          categoryId: transactions.categoryId,
+        });
 
       if (!data) return jsonError(c, 404, 'Not found');
       return c.json({ data });

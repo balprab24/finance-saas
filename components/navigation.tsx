@@ -38,6 +38,7 @@ export function Navigation() {
             className="border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] hover:bg-[var(--aurex-surface-hover)] hover:text-[var(--aurex-text-1)] focus-visible:ring-offset-0"
           >
             <Menu className="size-4" />
+            <span className="sr-only">Open navigation menu</span>
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="border-r border-[var(--aurex-border)] bg-[var(--aurex-bg-elev)] px-2">

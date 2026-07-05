@@ -150,7 +150,8 @@
     border-color: var(--aurex-border-strong);
   }
 
-  /* Marketing-only: a neutral hairline divider replacing the rainbow gradient. */
+  /* Marketing-only: a flat neutral hairline divider. Full width, no fade —
+     the brand rule is zero gradients, even grayscale ones. */
   .aurex-hairline {
     position: relative;
   }
@@ -161,26 +162,20 @@
     right: 0;
     bottom: 0;
     height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(0, 0, 0, 0.12) 50%,
-      transparent 100%
-    );
+    background: rgba(0, 0, 0, 0.12);
     pointer-events: none;
   }
 
-  /* Marketing-only: horizontal statement ruling that fades before it competes
-     with the actual reconciliation sheet. */
+  /* Marketing-only: horizontal statement ruling. The linear-gradient here is a
+     flat 1px-line tiling technique (it renders as hairlines, not a color ramp);
+     the ruling ends with the container — a hard cutoff, never a fade. */
   .aurex-ruling {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    background-image: linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+    background-image: linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px);
     background-size: 100% 36px;
-    -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 92%);
-    mask-image: linear-gradient(to bottom, #000 0%, transparent 92%);
   }
 
   /* Marketing-only: the accountant's double rule that closes a reconciled
