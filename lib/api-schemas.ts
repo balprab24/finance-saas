@@ -66,7 +66,7 @@ export const exchangePublicTokenSchema = z.object({
         .nullable()
         .optional(),
     })
-    .passthrough()
+    // Only institution is consumed server-side; unknown metadata keys are stripped.
     .optional(),
 });
 

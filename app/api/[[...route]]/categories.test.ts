@@ -4,10 +4,14 @@ const state: {
   auth: { userId: string } | null;
   insertedValues: unknown[];
   insertShouldThrow: Error | null;
+  updatedReturning: unknown[];
+  deletedReturning: unknown[];
 } = {
   auth: { userId: 'user_alice' },
   insertedValues: [],
   insertShouldThrow: null,
+  updatedReturning: [{ id: 'cat_1', name: 'X', userId: 'user_alice' }],
+  deletedReturning: [{ id: 'cat_1' }],
 };
 
 vi.mock('@/db/drizzle', () => {
@@ -32,10 +36,10 @@ vi.mock('@/db/drizzle', () => {
     select: () => selectChain,
     insert: () => insertChain,
     update: () => ({
-      set: () => ({ where: () => ({ returning: () => Promise.resolve([{ id: 'cat_1', name: 'X', userId: 'user_alice' }]) }) }),
+      set: () => ({ where: () => ({ returning: () => Promise.resolve(state.updatedReturning) }) }),
     }),
     delete: () => ({
-      where: () => ({ returning: () => Promise.resolve([{ id: 'cat_1' }]) }),
+      where: () => ({ returning: () => Promise.resolve(state.deletedReturning) }),
     }),
   };
 
@@ -70,6 +74,8 @@ beforeEach(() => {
   state.auth = { userId: 'user_alice' };
   state.insertedValues = [];
   state.insertShouldThrow = null;
+  state.updatedReturning = [{ id: 'cat_1', name: 'X', userId: 'user_alice' }];
+  state.deletedReturning = [{ id: 'cat_1' }];
 });
 
 afterEach(() => {
@@ -120,5 +126,33 @@ describe('categories route — auth and validation', () => {
 
     expect(status).toBe(409);
     expect(body.error).toBe('A category with that name already exists');
+  });
+});
+
+// The userId-scoped where clause means another tenant's id behaves exactly like
+// a missing row: the contract is 404, never data or a 500.
+describe('cross-tenant :id access returns 404', () => {
+  it('GET /:id for a category the caller does not own', async () => {
+    const { status, body } = await request('/cat_owned_by_bob');
+    expect(status).toBe(404);
+    expect(body.error).toBe('Not found');
+  });
+
+  it('PATCH /:id for a category the caller does not own', async () => {
+    state.updatedReturning = []; // scoped update matches no row
+    const { status, body } = await request('/cat_owned_by_bob', {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'Hijacked' }),
+    });
+    expect(status).toBe(404);
+    expect(body.error).toBe('Not found');
+  });
+
+  it('DELETE /:id for a category the caller does not own', async () => {
+    state.deletedReturning = []; // scoped delete matches no row
+    const { status, body } = await request('/cat_owned_by_bob', { method: 'DELETE' });
+    expect(status).toBe(404);
+    expect(body.error).toBe('Not found');
   });
 });
