@@ -85,6 +85,8 @@ export default function CategoriesPage() {
             data={categories}
             onDelete={(rows) => deleteCategories.mutate({ ids: rows.map((r) => r.original.id) })}
             disabled={isDisabled}
+            bulkActionTitle="Delete selected categories?"
+            bulkActionDescription="This will delete the selected categories and uncategorize their transactions. The transactions themselves are kept."
           />
         )}
       </div>

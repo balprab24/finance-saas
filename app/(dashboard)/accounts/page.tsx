@@ -26,6 +26,16 @@ export default function AccountsPage() {
   const archiveAccounts = useBulkArchiveAccounts();
   const syncPlaidItem = useSyncPlaidItem();
   const accounts = accountsQuery.data || [];
+
+  // When the active list is empty, probe whether archived accounts exist so the
+  // empty state can say "your accounts are hidden" instead of a misleading
+  // "No accounts yet". Gated so the extra fetch only runs in that edge case.
+  const activeListIsEmpty =
+    !showArchived && !accountsQuery.isLoading && !accountsQuery.isError && accounts.length === 0;
+  const archivedProbe = useGetAccounts({ includeArchived: true, enabled: activeListIsEmpty });
+  const archivedCount = activeListIsEmpty
+    ? (archivedProbe.data?.filter((account) => account.archivedAt).length ?? 0)
+    : 0;
   const plaidItemIds = Array.from(
     new Set(
       accounts
@@ -107,21 +117,44 @@ export default function AccountsPage() {
             onRetry={() => accountsQuery.refetch()}
           />
         ) : accounts.length === 0 ? (
-          <EmptyState
-            icon={Wallet}
-            title="No accounts yet"
-            message="Add an account by hand, or link a bank to import balances and transactions automatically."
-            action={
-              <Button
-                onClick={newAccount.onOpen}
-                size="sm"
-                className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[var(--aurex-bar)]"
-              >
-                <Plus className="mr-2 size-3.5" />
-                Add account
-              </Button>
-            }
-          />
+          archivedCount > 0 ? (
+            <EmptyState
+              icon={Archive}
+              title="No active accounts"
+              message={`${
+                archivedCount === 1
+                  ? 'One archived account is'
+                  : `${archivedCount} archived accounts are`
+              } hidden from this list. Show them to restore one, or add a new account.`}
+              action={
+                <Button
+                  onClick={() => setShowArchived(true)}
+                  size="sm"
+                  variant="outline"
+                  className="h-9 border-[var(--aurex-border)] bg-[var(--aurex-surface)] text-[var(--aurex-text-1)] hover:bg-[var(--aurex-surface-hover)]"
+                >
+                  <Archive className="mr-2 size-3.5" />
+                  Show archived
+                </Button>
+              }
+            />
+          ) : (
+            <EmptyState
+              icon={Wallet}
+              title="No accounts yet"
+              message="Add an account by hand, or link a bank to import balances and transactions automatically."
+              action={
+                <Button
+                  onClick={newAccount.onOpen}
+                  size="sm"
+                  className="h-9 bg-[var(--aurex-brand)] text-white hover:bg-[var(--aurex-bar)]"
+                >
+                  <Plus className="mr-2 size-3.5" />
+                  Add account
+                </Button>
+              }
+            />
+          )
         ) : (
           <DataTable
             filterKey="name"
