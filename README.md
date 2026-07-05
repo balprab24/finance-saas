@@ -358,9 +358,39 @@ above.
   indicator. It is not present in `npm run build && npm run start`
   output.
 
-## Security Notes
+## Security
+
+Aurex handles financial data, so security is layered rather than bolted on:
+
+- **Tenant isolation, twice.** Every API query is scoped to the authenticated
+  Clerk `userId`, and the schema backs that up with composite foreign keys
+  referencing `(id, user_id)` — a row can't point at another tenant's data
+  even if application code slipped. Cross-tenant access by id is locked to
+  `404` by tests.
+- **Auth by default.** `middleware.ts` runs Clerk's `auth.protect()` on every
+  route outside a small public allowlist; Hono API routes additionally run
+  Clerk middleware plus a `requireAuth` guard.
+- **Validated on both sides.** Client forms use zod via react-hook-form; the
+  API re-validates everything with shared schemas (bounded lengths, integer
+  milliunit amounts, 500-row bulk caps). A global 2 MB request body limit
+  rejects oversized payloads before any work happens.
+- **Strict Content-Security-Policy.** Scripts run under a per-request nonce
+  with `strict-dynamic` — no `unsafe-inline` script execution in modern
+  browsers. HSTS, `frame-ancestors 'none'`, `nosniff`, and a locked-down
+  Permissions-Policy ship on every response.
+- **Verified webhooks.** The Plaid webhook requires a signed JWT, compares
+  the body hash in constant time, and is replay-protected; the cron endpoint
+  fails closed unless its `CRON_SECRET` bearer matches.
+- **Encrypted tokens.** Plaid access tokens are stored AES-GCM encrypted with
+  a versioned keyring, never in plaintext.
+- **Rate limiting.** Per-user, per-bucket limits (reads, mutations, bulk
+  operations, demo seeding) enforced before database work; the public webhook
+  is IP-rate-limited before signature verification.
+- **Dependency hygiene.** CI blocks on `npm audit --audit-level=high`, and
+  Dependabot files weekly update PRs for npm and GitHub Actions.
+
+Operational notes:
 
 - Do not commit `.env.local` or real credentials.
 - `.env`, `.env*.local`, local database files, screenshots, and auth artifacts are gitignored.
 - `NEXT_PUBLIC_*` values are browser-visible by design; keep secrets in server-only variables such as `CLERK_SECRET_KEY` and `DATABASE_URL`.
-- API routes scope database access to `auth.userId` so one user cannot read or mutate another user's data.
