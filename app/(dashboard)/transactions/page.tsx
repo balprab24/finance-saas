@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, ReceiptText } from 'lucide-react';
+import qs from 'query-string';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Plus, ReceiptText, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -19,6 +21,7 @@ import { useGetTransactions } from '@/features/transactions/api/use-get-transact
 import { useBulkDeleteTransactions } from '@/features/transactions/api/use-bulk-delete-transactions';
 import { useBulkCreateTransactions } from '@/features/transactions/api/use-bulk-create-transactions';
 import { useSelectAccount } from '@/features/accounts/hooks/use-select-account';
+import { useGetCategory } from '@/features/categories/api/use-get-category';
 import { UploadButton } from './upload-button';
 import { ImportCard } from './import-card';
 
@@ -34,6 +37,25 @@ const INITIAL_IMPORT_RESULTS = {
 };
 
 export default function TransactionsPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const categoryId = params.get('categoryId') || undefined;
+  const filterCategory = useGetCategory(categoryId);
+
+  // Arriving from a dashboard ledger row filters by category; the chip in the
+  // masthead meta makes that state visible and clearable without URL surgery.
+  const onClearCategoryFilter = () => {
+    const query = {
+      accountId: params.get('accountId') || '',
+      from: params.get('from') || '',
+      to: params.get('to') || '',
+    };
+    router.push(
+      qs.stringifyUrl({ url: pathname, query }, { skipEmptyString: true, skipNull: true }),
+    );
+  };
+
   const [AccountDialog, confirm] = useSelectAccount();
   const [variant, setVariant] = useState<VARIANTS>(VARIANTS.LIST);
   const [importResults, setImportResults] = useState(INITIAL_IMPORT_RESULTS);
@@ -89,9 +111,24 @@ export default function TransactionsPage() {
         <PageMasthead
           title="Transactions"
           meta={
-            transactionsQuery.isLoading
-              ? 'Loading…'
-              : `${count} ${count === 1 ? 'transaction' : 'transactions'}`
+            transactionsQuery.isLoading ? (
+              'Loading…'
+            ) : (
+              <>
+                {`${count} ${count === 1 ? 'transaction' : 'transactions'}`}
+                {categoryId ? (
+                  <button
+                    type="button"
+                    onClick={onClearCategoryFilter}
+                    aria-label={`Clear category filter: ${filterCategory.data?.name ?? 'category'}`}
+                    className="relative ml-2 inline-flex items-center gap-1 rounded-full border border-[var(--aurex-border)] px-2 py-0.5 align-middle text-[11.5px] font-medium text-[var(--aurex-text-2)] transition-colors after:absolute after:-inset-x-1 after:-inset-y-2.5 hover:border-[var(--aurex-border-strong)] hover:bg-[var(--aurex-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--aurex-brand)]"
+                  >
+                    in {filterCategory.data?.name ?? '…'}
+                    <X aria-hidden className="size-3" />
+                  </button>
+                ) : null}
+              </>
+            )
           }
           actions={
             <>

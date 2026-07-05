@@ -1,7 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const state: { selectResults: unknown[][]; updateCalls: number } = {
+const state: {
+  selectResults: unknown[][];
+  returningResults: unknown[][];
+  returningColumns: Array<string[] | null>;
+  updateCalls: number;
+} = {
   selectResults: [],
+  returningResults: [],
+  returningColumns: [],
   updateCalls: 0,
 };
 
@@ -16,8 +23,13 @@ vi.mock('@/db/drizzle', () => {
   const writeChain: Record<string, unknown> = {};
   const writePassthrough = ['set', 'where', 'values'];
   for (const m of writePassthrough) writeChain[m] = () => writeChain;
-  (writeChain as { returning: () => Promise<unknown[]> }).returning = () =>
-    Promise.resolve([{ id: 'tx_1' }]);
+  (writeChain as { returning: (cols?: Record<string, unknown>) => Promise<unknown[]> }).returning =
+    (cols) => {
+      state.returningColumns.push(cols ? Object.keys(cols) : null);
+      return Promise.resolve(
+        state.returningResults.length ? state.returningResults.shift()! : [{ id: 'tx_1' }],
+      );
+    };
 
   const cte = { as: () => ({}) };
 
@@ -83,6 +95,8 @@ async function patchTransaction(body: typeof validPatchBody) {
 
 beforeEach(() => {
   state.selectResults = [];
+  state.returningResults = [];
+  state.returningColumns = [];
   state.updateCalls = 0;
 });
 
@@ -118,5 +132,67 @@ describe('PATCH /transactions/:id ownership checks', () => {
     expect(status).toBe(400);
     expect(body.error).toBe('Invalid account');
     expect(state.updateCalls).toBe(0);
+  });
+});
+
+// The userId-scoped where clause means another tenant's id behaves exactly like
+// a missing row: the contract is 404, never data or a 500.
+describe('cross-tenant :id access returns 404', () => {
+  it('GET /:id for a transaction the caller does not own', async () => {
+    state.selectResults.push([]); // scoped lookup finds no row
+    const { default: app } = await import('./transactions');
+    const res = await app.fetch(new Request('http://localhost/tx_owned_by_bob'));
+    expect(res.status).toBe(404);
+    expect(((await res.json()) as { error: string }).error).toBe('Not found');
+  });
+
+  it('PATCH /:id for a transaction the caller does not own', async () => {
+    state.selectResults.push([{ id: 'acct_alice' }]); // caller owns the payload account
+    state.returningResults.push([]); // scoped update matches no row
+    const { status, body } = await patchTransaction({
+      ...validPatchBody,
+      accountId: 'acct_alice',
+    });
+    expect(status).toBe(404);
+    expect(body.error).toBe('Not found');
+  });
+
+  it('DELETE /:id for a transaction the caller does not own', async () => {
+    state.returningResults.push([]); // scoped delete matches no row
+    const { default: app } = await import('./transactions');
+    const res = await app.fetch(
+      new Request('http://localhost/tx_owned_by_bob', { method: 'DELETE' }),
+    );
+    expect(res.status).toBe(404);
+    expect(((await res.json()) as { error: string }).error).toBe('Not found');
+  });
+});
+
+describe('delete responses echo only restore-safe columns', () => {
+  const restoreColumns = ['id', 'amount', 'payee', 'notes', 'date', 'accountId', 'categoryId'];
+
+  it('DELETE /:id selects the explicit undo column list', async () => {
+    state.returningResults.push([{ id: 'tx_1' }]);
+    const { default: app } = await import('./transactions');
+    const res = await app.fetch(new Request('http://localhost/tx_1', { method: 'DELETE' }));
+    expect(res.status).toBe(200);
+    expect(state.returningColumns.at(0)).toEqual(restoreColumns);
+    expect(state.returningColumns.at(0)).not.toContain('plaidId');
+    expect(state.returningColumns.at(0)).not.toContain('userId');
+  });
+
+  it('POST /bulk-delete selects the explicit undo column list', async () => {
+    state.returningResults.push([{ id: 'tx_1' }, { id: 'tx_2' }]);
+    const { default: app } = await import('./transactions');
+    const res = await app.fetch(
+      new Request('http://localhost/bulk-delete', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ ids: ['tx_1', 'tx_2'] }),
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(state.returningColumns.at(0)).toEqual(restoreColumns);
+    expect(state.returningColumns.at(0)).not.toContain('plaidId');
   });
 });
