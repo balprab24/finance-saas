@@ -1,6 +1,15 @@
 import { expect, test } from '@playwright/test';
 
 test('landing page renders the statement workflow', async ({ page }) => {
+  // The nonce-based CSP blocks any script Next failed to stamp; surface those
+  // violations as test failures instead of silent hydration breakage.
+  const cspViolations: string[] = [];
+  page.on('console', (message) => {
+    if (message.text().includes('Content Security Policy')) {
+      cspViolations.push(message.text());
+    }
+  });
+
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/');
 
@@ -41,6 +50,8 @@ test('landing page renders the statement workflow', async ({ page }) => {
     scroll: document.documentElement.scrollWidth,
   }));
   expect(mobileWidth.scroll).toBeLessThanOrEqual(mobileWidth.client);
+
+  expect(cspViolations).toEqual([]);
 });
 
 test('legal pages are publicly reachable without sign in', async ({ page }) => {
