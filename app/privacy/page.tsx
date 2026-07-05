@@ -2,6 +2,11 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { LegalPage } from '@/components/marketing/legal-page';
 
+// Rendered per-request so Next can stamp the middleware CSP nonce onto the
+// page's inline scripts; a static prerender would ship nonce-less scripts
+// that the strict CSP blocks.
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Privacy — Aurex',
   description: 'How Aurex handles your financial data, in plain language.',

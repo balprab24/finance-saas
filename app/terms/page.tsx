@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import { LegalPage } from '@/components/marketing/legal-page';
 
+// Rendered per-request so Next can stamp the middleware CSP nonce onto the
+// page's inline scripts (see app/privacy/page.tsx).
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Terms — Aurex',
   description: 'Plain-language terms for using Aurex.',

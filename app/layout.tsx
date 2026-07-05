@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { Schibsted_Grotesk, Geist_Mono } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Toaster } from 'sonner';
@@ -28,7 +29,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  // The middleware CSP allows scripts by nonce ('strict-dynamic' disables host
+  // allowlists), so Clerk must stamp the nonce onto the clerk-js script tag it
+  // injects. Every page renders dynamically, so headers() is always available.
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
+
   return (
     <ClerkProvider
       signInUrl="/sign-in"
@@ -36,6 +44,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       signInFallbackRedirectUrl="/dashboard"
       signUpFallbackRedirectUrl="/dashboard"
       afterSignOutUrl="/"
+      nonce={nonce}
+      dynamic
     >
       <html
         lang="en"
