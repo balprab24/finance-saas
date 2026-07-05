@@ -268,3 +268,45 @@ describe('accounts route — auth and validation', () => {
     expect(status).toBe(400);
   });
 });
+
+// The userId-scoped where clause means another tenant's id behaves exactly like
+// a missing row: the contract is 404, never data or a 500.
+describe('cross-tenant :id access returns 404', () => {
+  it('GET /:id for an account the caller does not own', async () => {
+    const { status, body } = await request('/acct_owned_by_bob');
+    expect(status).toBe(404);
+    expect(body.error).toBe('Not found');
+  });
+
+  it('PATCH /:id for an account the caller does not own', async () => {
+    state.updatedReturning = []; // scoped update matches no row
+    const { status, body } = await request('/acct_owned_by_bob', {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'Hijacked' }),
+    });
+    expect(status).toBe(404);
+    expect(body.error).toBe('Not found');
+  });
+
+  it('POST /:id/archive for an account the caller does not own', async () => {
+    state.updatedReturning = [];
+    const { status, body } = await request('/acct_owned_by_bob/archive', { method: 'POST' });
+    expect(status).toBe(404);
+    expect(body.error).toBe('Not found');
+  });
+
+  it('POST /:id/restore for an account the caller does not own', async () => {
+    state.updatedReturning = [];
+    const { status, body } = await request('/acct_owned_by_bob/restore', { method: 'POST' });
+    expect(status).toBe(404);
+    expect(body.error).toBe('Not found');
+  });
+
+  it('DELETE /:id for an account the caller does not own', async () => {
+    state.selectResults = [[{ count: 0 }]]; // scoped transaction count sees nothing
+    const { status, body } = await request('/acct_owned_by_bob', { method: 'DELETE' });
+    expect(status).toBe(404);
+    expect(body.error).toBe('Not found');
+  });
+});

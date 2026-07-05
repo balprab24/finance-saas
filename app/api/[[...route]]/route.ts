@@ -9,12 +9,14 @@ import onboarding from './onboarding';
 import transactions from './transactions';
 import summary from './summary';
 import plaid from './plaid';
+import { apiBodyLimit } from '@/lib/api-body-limit';
 import { reportApiRouteError } from '@/lib/observability';
 
 export const runtime = 'nodejs';
 
 const app = new Hono()
   .basePath('/api')
+  .use(apiBodyLimit)
   .route('/accounts', accounts)
   .route('/budgets', budgets)
   .route('/categories', categories)
