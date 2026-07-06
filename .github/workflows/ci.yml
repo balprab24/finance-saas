@@ -57,4 +57,8 @@ jobs:
 
       - run: npx playwright install --with-deps chromium
 
+      # Diagnostic for browser networking failures: surface any proxy env the
+      # runner image injects (Chromium honors these; Node fetch does not).
+      - run: env | grep -i proxy || echo "no proxy env vars"
+
       - run: npm run e2e
