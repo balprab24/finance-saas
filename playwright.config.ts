@@ -23,6 +23,10 @@ export default defineConfig({
   use: {
     baseURL,
     trace: 'on-first-retry',
+    // Chromium on Linux honors http_proxy-style env vars; a proxy-polluted CI
+    // environment makes every page.goto fail with ERR_NAME_NOT_RESOLVED (the
+    // proxy's hostname, not ours). All targets are loopback — never proxy.
+    launchOptions: { args: ['--no-proxy-server'] },
   },
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
