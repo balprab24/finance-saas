@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'crypto';
 
 import { NextResponse } from 'next/server';
 
+import { pruneOperationalTables } from '@/lib/db-maintenance';
 import { drainPlaidSyncJobs } from '@/lib/plaid-sync-jobs';
 import {
   finishPlaidSyncCronCheckIn,
@@ -48,8 +49,11 @@ export async function GET(request: Request) {
       maxJobs: CRON_MAX_JOBS,
       deadline: Date.now() + CRON_BUDGET_MS,
     });
+    // Housekeeping piggybacks on the drain tick; a prune failure must never
+    // fail the drain, so it degrades to null in the response.
+    const pruned = await pruneOperationalTables().catch(() => null);
     finishPlaidSyncCronCheckIn({ checkInId, status: 'ok' });
-    return NextResponse.json({ ok: true, ...result });
+    return NextResponse.json({ ok: true, ...result, pruned });
   } catch (err) {
     reportPlaidSyncCronDrainFailure(err);
     finishPlaidSyncCronCheckIn({ checkInId, status: 'error' });

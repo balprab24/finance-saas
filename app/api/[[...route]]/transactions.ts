@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { clerkMiddleware } from '@clerk/hono';
 import { and, desc, eq, gte, inArray, isNull, lt } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
@@ -34,7 +33,6 @@ const MAX_LIST_ROWS = 2000;
 const app = new Hono<AuthEnv>()
   .get(
     '/',
-    clerkMiddleware(),
     requireAuth,
     readLimit,
     zValidator('query', dateRangeQuerySchema),
@@ -87,7 +85,6 @@ const app = new Hono<AuthEnv>()
   )
   .get(
     '/:id',
-    clerkMiddleware(),
     requireAuth,
     readLimit,
     zValidator('param', idParamSchema),
@@ -115,7 +112,6 @@ const app = new Hono<AuthEnv>()
   )
   .post(
     '/',
-    clerkMiddleware(),
     requireAuth,
     mutationLimit,
     zValidator('json', createTransactionSchema),
@@ -153,7 +149,6 @@ const app = new Hono<AuthEnv>()
   )
   .post(
     '/bulk-create',
-    clerkMiddleware(),
     requireAuth,
     bulkLimit,
     zValidator('json', bulkCreateTransactionsSchema),
@@ -203,7 +198,6 @@ const app = new Hono<AuthEnv>()
   )
   .post(
     '/bulk-delete',
-    clerkMiddleware(),
     requireAuth,
     bulkLimit,
     zValidator('json', bulkIdsSchema),
@@ -231,7 +225,6 @@ const app = new Hono<AuthEnv>()
   )
   .patch(
     '/:id',
-    clerkMiddleware(),
     requireAuth,
     mutationLimit,
     zValidator('param', idParamSchema),
@@ -274,7 +267,6 @@ const app = new Hono<AuthEnv>()
   )
   .delete(
     '/:id',
-    clerkMiddleware(),
     requireAuth,
     mutationLimit,
     zValidator('param', idParamSchema),

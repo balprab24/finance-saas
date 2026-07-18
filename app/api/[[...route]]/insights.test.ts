@@ -16,7 +16,7 @@ const state: {
 
 vi.mock('@/db/drizzle', () => {
   const selectChain: Record<string, unknown> = {};
-  const passthrough = ['from', 'where', 'innerJoin', 'leftJoin', 'groupBy', 'orderBy'];
+  const passthrough = ['from', 'where', 'innerJoin', 'leftJoin', 'groupBy', 'orderBy', 'limit'];
   for (const m of passthrough) selectChain[m] = () => selectChain;
   (selectChain as { then: (resolve: (v: unknown[]) => void) => void }).then = (resolve) =>
     resolve(state.selectResults.shift() ?? []);

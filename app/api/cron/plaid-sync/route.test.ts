@@ -5,6 +5,11 @@ vi.mock('@/lib/plaid-sync-jobs', () => ({
   drainPlaidSyncJobs: (options: unknown) => drain(options),
 }));
 
+const prune = vi.fn();
+vi.mock('@/lib/db-maintenance', () => ({
+  pruneOperationalTables: () => prune(),
+}));
+
 import { GET } from './route';
 
 const ORIGINAL_SECRET = process.env.CRON_SECRET;
@@ -17,6 +22,8 @@ beforeEach(() => {
   process.env.CRON_SECRET = 'cron-secret-test';
   drain.mockReset();
   drain.mockResolvedValue({ processed: 2, succeeded: 2, failed: 0 });
+  prune.mockReset();
+  prune.mockResolvedValue({ rateLimitsDeleted: 3, webhookEventsDeleted: 1 });
 });
 
 afterEach(() => {
@@ -64,5 +71,29 @@ describe('GET /api/cron/plaid-sync', () => {
     const res = await callCron({ authorization: 'Bearer cron-secret-test' });
     expect(res.status).toBe(500);
     await expect(res.json()).resolves.toMatchObject({ ok: false });
+    expect(prune).not.toHaveBeenCalled();
+  });
+
+  it('prunes operational tables on a successful drain and reports counts', async () => {
+    const res = await callCron({ authorization: 'Bearer cron-secret-test' });
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({
+      ok: true,
+      pruned: { rateLimitsDeleted: 3, webhookEventsDeleted: 1 },
+    });
+    expect(prune).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the drain response ok when pruning fails', async () => {
+    prune.mockRejectedValue(new Error('prune failed'));
+    const res = await callCron({ authorization: 'Bearer cron-secret-test' });
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({ ok: true, pruned: null });
+  });
+
+  it('does not prune on an unauthorized request', async () => {
+    const res = await callCron({ authorization: 'Bearer nope' });
+    expect(res.status).toBe(401);
+    expect(prune).not.toHaveBeenCalled();
   });
 });
