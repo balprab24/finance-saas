@@ -16,6 +16,7 @@ export const API_RATE_LIMITS = {
   mutation: { limit: 60, windowMs: 60_000 },
   bulkMutation: { limit: 12, windowMs: 60_000 },
   demoSeed: { limit: 3, windowMs: 5 * 60_000 },
+  export: { limit: 10, windowMs: 60_000 },
 } satisfies Record<string, RateLimitConfig>;
 
 function safeBucket(bucket: string) {
