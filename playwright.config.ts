@@ -23,10 +23,15 @@ export default defineConfig({
   use: {
     baseURL,
     trace: 'on-first-retry',
-    // Chromium on Linux honors http_proxy-style env vars; a proxy-polluted CI
-    // environment makes every page.goto fail with ERR_NAME_NOT_RESOLVED (the
-    // proxy's hostname, not ours). All targets are loopback — never proxy.
+    // Never proxy: all targets are loopback (Chromium honors http_proxy-style
+    // env on Linux).
     launchOptions: { args: ['--no-proxy-server'] },
+    // Use the full Chromium binary in new-headless mode instead of the
+    // chrome-headless-shell build. On ubuntu-24.04 runner images from July
+    // 2026 the headless shell fails every navigation with
+    // ERR_NAME_NOT_RESOLVED — even for IP literals, with proxy env clean and
+    // --no-proxy-server applied — while the full binary's network stack works.
+    channel: 'chromium',
   },
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
