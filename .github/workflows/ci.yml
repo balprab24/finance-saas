@@ -83,10 +83,7 @@ jobs:
 
       - run: npm run e2e
         env:
-          # Temporary diagnostic: prints the Chromium launch command and
-          # browser stderr so launch-arg and sandbox failures are visible.
-          DEBUG: pw:browser
-          # Candidate fix: neutralize the malformed bus address for the
-          # browser processes.
-          DBUS_SESSION_BUS_ADDRESS: ''
-          DBUS_SYSTEM_BUS_ADDRESS: ''
+          # Temporary diagnostic: pw:api logs every navigation hop (including
+          # redirect targets), pw:browser logs the launch command and browser
+          # stderr. Together they show which URL actually failed to resolve.
+          DEBUG: pw:api,pw:browser
