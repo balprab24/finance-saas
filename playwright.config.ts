@@ -15,6 +15,8 @@ const webServerCommand =
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  // One worker in CI keeps the single browser's verbose diagnostics readable.
+  workers: process.env.CI ? 1 : undefined,
   timeout: 30_000,
   expect: {
     timeout: 10_000,
@@ -24,8 +26,21 @@ export default defineConfig({
     baseURL,
     trace: 'on-first-retry',
     // Never proxy: all targets are loopback (Chromium honors http_proxy-style
-    // env on Linux).
-    launchOptions: { args: ['--no-proxy-server'] },
+    // env on Linux). The CI-only verbose flags surface host-resolver and
+    // network-state decisions in the pw:browser stderr stream while the
+    // ERR_NAME_NOT_RESOLVED runner-image regression is being diagnosed.
+    launchOptions: {
+      args: [
+        '--no-proxy-server',
+        ...(process.env.CI
+          ? [
+              '--enable-logging=stderr',
+              '--v=0',
+              '--vmodule=*host_resolver*=3,*dns*=3,*network_change*=3,*address_tracker*=3',
+            ]
+          : []),
+      ],
+    },
     // Use the full Chromium binary in new-headless mode instead of the
     // chrome-headless-shell build. On ubuntu-24.04 runner images from July
     // 2026 the headless shell fails every navigation with
