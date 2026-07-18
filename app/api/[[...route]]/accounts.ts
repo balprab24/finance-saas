@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { clerkMiddleware } from '@clerk/hono';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
@@ -35,7 +34,7 @@ async function getAccountTransactionCount(userId: string, accountId: string) {
 }
 
 const app = new Hono<AuthEnv>()
-  .get('/', clerkMiddleware(), requireAuth, readLimit, async (c) => {
+  .get('/', requireAuth, readLimit, async (c) => {
     const userId = getUserId(c);
     const includeArchived = c.req.query('includeArchived') === 'true';
 
@@ -67,7 +66,6 @@ const app = new Hono<AuthEnv>()
   })
   .get(
     '/:id',
-    clerkMiddleware(),
     requireAuth,
     readLimit,
     zValidator('param', idParamSchema),
@@ -102,7 +100,6 @@ const app = new Hono<AuthEnv>()
   )
   .post(
     '/',
-    clerkMiddleware(),
     requireAuth,
     mutationLimit,
     zValidator('json', createAccountSchema),
@@ -127,7 +124,6 @@ const app = new Hono<AuthEnv>()
   )
   .post(
     '/bulk-archive',
-    clerkMiddleware(),
     requireAuth,
     bulkLimit,
     zValidator('json', bulkIdsSchema),
@@ -146,7 +142,6 @@ const app = new Hono<AuthEnv>()
   )
   .post(
     '/bulk-delete',
-    clerkMiddleware(),
     requireAuth,
     bulkLimit,
     zValidator('json', bulkIdsSchema),
@@ -176,7 +171,6 @@ const app = new Hono<AuthEnv>()
   )
   .patch(
     '/:id',
-    clerkMiddleware(),
     requireAuth,
     mutationLimit,
     zValidator('param', idParamSchema),
@@ -206,7 +200,6 @@ const app = new Hono<AuthEnv>()
   )
   .post(
     '/:id/archive',
-    clerkMiddleware(),
     requireAuth,
     mutationLimit,
     zValidator('param', idParamSchema),
@@ -227,7 +220,6 @@ const app = new Hono<AuthEnv>()
   )
   .post(
     '/:id/restore',
-    clerkMiddleware(),
     requireAuth,
     mutationLimit,
     zValidator('param', idParamSchema),
@@ -248,7 +240,6 @@ const app = new Hono<AuthEnv>()
   )
   .delete(
     '/:id',
-    clerkMiddleware(),
     requireAuth,
     mutationLimit,
     zValidator('param', idParamSchema),

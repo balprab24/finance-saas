@@ -9,6 +9,10 @@ config();
 
 import { randomUUID } from 'crypto';
 
+// Safe to import statically despite the note above: db-config is pure and
+// reads no env at module load.
+import { isLoopbackHost } from '../lib/db-config';
+
 // Plaid Sandbox test institution "First Platypus Bank".
 const SANDBOX_INSTITUTION_ID = 'ins_109508';
 
@@ -38,6 +42,25 @@ function preflight() {
   const env = (process.env.PLAID_ENV || 'sandbox').trim().toLowerCase();
   if (env !== 'sandbox') fail('PLAID_ENV is sandbox', `refusing to run against PLAID_ENV="${env}"`);
   else ok('PLAID_ENV is sandbox');
+
+  // The script writes sandbox-verify rows into whatever DATABASE_URL points at.
+  // A remote host is almost certainly a shared or production database.
+  const dbUrl = process.env.DATABASE_URL?.trim();
+  if (dbUrl && process.env.ALLOW_REMOTE_DB_VERIFY !== 'true') {
+    try {
+      const host = new URL(dbUrl).hostname;
+      if (!isLoopbackHost(host)) {
+        fail(
+          'DATABASE_URL is local',
+          `refusing to write verification rows to remote host "${host}"; set ALLOW_REMOTE_DB_VERIFY=true to override`,
+        );
+      } else {
+        ok('DATABASE_URL is local');
+      }
+    } catch {
+      fail('DATABASE_URL is parseable', 'could not parse DATABASE_URL as a URL');
+    }
+  }
 
   if (failures > 0) {
     console.log('\nPreflight failed. Populate .env.local with sandbox credentials and retry.');

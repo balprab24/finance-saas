@@ -244,6 +244,25 @@ describe('Plaid route', () => {
     expect(state.plaidClient.linkTokenCreate).not.toHaveBeenCalled();
   });
 
+  it('rate limits the items listing per user', async () => {
+    state.checkRateLimit.mockResolvedValueOnce({
+      allowed: false,
+      limit: 60,
+      remaining: 0,
+      resetAt: new Date('2026-01-01T00:01:00Z'),
+      retryAfterSeconds: 30,
+    });
+
+    const { status, body, headers } = await request('/items');
+
+    expect(status).toBe(429);
+    expect(body.error).toBe('Too many requests');
+    expect(headers.get('retry-after')).toBe('30');
+    expect(state.checkRateLimit).toHaveBeenCalledWith(
+      expect.objectContaining({ key: 'plaid:items:user:user_alice' }),
+    );
+  });
+
   it('creates Link tokens with Transactions settings and the Clerk user id', async () => {
     const { status, body } = await request('/link-token', { method: 'POST' });
 
