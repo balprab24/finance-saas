@@ -8,7 +8,13 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    # Pinned to 22.04: ubuntu-latest (24.04) images since July 2026 block the
+    # bundled Playwright Chromium's networking at the OS level — every
+    # navigation fails ERR_NAME_NOT_RESOLVED in ~55ms (IP literals included)
+    # across old/new browser builds, sandbox on/off, in/out-of-process network
+    # service, proxy env clean. Node networking is unaffected. Revisit when
+    # runner-images resolves the regression.
+    runs-on: ubuntu-22.04
 
     services:
       postgres:
@@ -69,6 +75,7 @@ jobs:
       - run: |
           sysctl kernel.apparmor_restrict_unprivileged_userns || true
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          sudo aa-status 2>/dev/null | head -40 || echo "aa-status unavailable"
 
       # Diagnostic: the full-Chromium run showed dbus "Could not parse server
       # address" spam, which means a malformed DBUS_*_BUS_ADDRESS is exported
