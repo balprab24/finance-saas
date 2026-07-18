@@ -10,13 +10,17 @@ import { eq } from 'drizzle-orm';
 
 import * as schema from '../db/schema';
 import { buildDemoWorkspace } from '../lib/demo-data';
+import { resolveDbOptions } from '../lib/db-config';
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
   console.error('DATABASE_URL is not set');
   process.exit(1);
 }
-const client = postgres(connectionString, { prepare: false });
+const client = postgres(connectionString, {
+  prepare: false,
+  ...resolveDbOptions(connectionString),
+});
 const db = drizzle(client, { schema });
 
 const userId = process.argv[2];

@@ -8,6 +8,7 @@ config({ path: '.env.local' });
 
 import * as schema from '../db/schema';
 import { getActiveSecretVersion, reencryptSecret } from '../lib/server-crypto';
+import { resolveDbOptions } from '../lib/db-config';
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -23,7 +24,10 @@ if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PROD_PLAID_KEY_RO
 }
 
 const dryRun = process.argv.includes('--dry-run');
-const client = postgres(connectionString, { prepare: false });
+const client = postgres(connectionString, {
+  prepare: false,
+  ...resolveDbOptions(connectionString),
+});
 const db = drizzle(client, { schema });
 
 async function main() {

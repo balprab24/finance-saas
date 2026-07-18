@@ -4,7 +4,7 @@ import { clerkMiddleware } from '@clerk/hono';
 import { and, desc, eq, gte, inArray, isNull, lt } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
-import { parseRange } from '@/lib/date-range';
+import { clampRangeSpan, parseRange } from '@/lib/date-range';
 import { accounts, categories, transactions } from '@/db/schema';
 import {
   bulkCreateTransactionsSchema,
@@ -26,6 +26,11 @@ const readLimit = authenticatedRateLimit('transactions:read', API_RATE_LIMITS.re
 const mutationLimit = authenticatedRateLimit('transactions:mutation', API_RATE_LIMITS.mutation);
 const bulkLimit = authenticatedRateLimit('transactions:bulk', API_RATE_LIMITS.bulkMutation);
 
+// Response bounds: the list endpoint has no pagination, so an uncapped range would
+// let one request pull a full multi-year history into a single JSON body.
+const MAX_RANGE_DAYS = 366;
+const MAX_LIST_ROWS = 2000;
+
 const app = new Hono<AuthEnv>()
   .get(
     '/',
@@ -37,7 +42,12 @@ const app = new Hono<AuthEnv>()
       const userId = getUserId(c);
       const { from, to, accountId, categoryId } = c.req.valid('query');
 
-      const { start: startDate, endExclusive } = parseRange(from, to);
+      const parsed = parseRange(from, to);
+      const { start: startDate, endExclusive } = clampRangeSpan(
+        parsed.start,
+        parsed.endExclusive,
+        MAX_RANGE_DAYS,
+      );
 
       const data = await db
         .select({
@@ -69,7 +79,8 @@ const app = new Hono<AuthEnv>()
             lt(transactions.date, endExclusive),
           ),
         )
-        .orderBy(desc(transactions.date));
+        .orderBy(desc(transactions.date))
+        .limit(MAX_LIST_ROWS);
 
       return c.json({ data });
     },

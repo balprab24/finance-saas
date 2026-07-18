@@ -11,6 +11,18 @@ export function parseRange(
   return { start, endExclusive };
 }
 
+// Bound a [start, endExclusive) window to at most maxDays by moving start forward.
+// Keeps the newest portion of an oversized request instead of rejecting it, so
+// callers get a silently capped response rather than a 400.
+export function clampRangeSpan(
+  start: Date,
+  endExclusive: Date,
+  maxDays: number,
+): { start: Date; endExclusive: Date } {
+  const floor = subDays(endExclusive, maxDays);
+  return { start: start < floor ? floor : start, endExclusive };
+}
+
 // Resolve a `YYYY-MM` month string (defaulting to the current month) to a
 // [start, endExclusive) window and a normalized first-of-month key for storage.
 export function parseMonth(
