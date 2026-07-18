@@ -70,8 +70,23 @@ jobs:
           sysctl kernel.apparmor_restrict_unprivileged_userns || true
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
+      # Diagnostic: the full-Chromium run showed dbus "Could not parse server
+      # address" spam, which means a malformed DBUS_*_BUS_ADDRESS is exported
+      # by the runner image. Chromium consults dbus for network state; a
+      # poisoned bus address can leave it convinced the machine is offline,
+      # which fails every navigation as ERR_NAME_NOT_RESOLVED.
+      - run: |
+          echo "DBUS_SESSION_BUS_ADDRESS=${DBUS_SESSION_BUS_ADDRESS-<unset>}"
+          echo "DBUS_SYSTEM_BUS_ADDRESS=${DBUS_SYSTEM_BUS_ADDRESS-<unset>}"
+          ip addr show lo || true
+          cat /etc/resolv.conf || true
+
       - run: npm run e2e
         env:
           # Temporary diagnostic: prints the Chromium launch command and
           # browser stderr so launch-arg and sandbox failures are visible.
           DEBUG: pw:browser
+          # Candidate fix: neutralize the malformed bus address for the
+          # browser processes.
+          DBUS_SESSION_BUS_ADDRESS: ''
+          DBUS_SYSTEM_BUS_ADDRESS: ''
