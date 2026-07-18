@@ -35,17 +35,17 @@ export function resolveDbOptions(
 
   const loopback = isLoopbackHost(url.hostname);
   const sslParam = url.searchParams.get('sslmode') ?? url.searchParams.get('ssl');
-  const sslDisabledByParam = sslParam === 'disable' || sslParam === 'false';
   const sslDisabledByEnv = env.DATABASE_SSL === 'disable';
 
   const ssl: 'require' | undefined =
     sslParam !== null || loopback || sslDisabledByEnv ? undefined : 'require';
 
-  if (
-    env.NODE_ENV === 'production' &&
-    !loopback &&
-    (sslDisabledByEnv || sslDisabledByParam)
-  ) {
+  // An explicit sslmode in the URL is deliberate operator intent (CI points at
+  // an ephemeral TLS-less Postgres this way) and is honored everywhere. Only
+  // the ambient DATABASE_SSL escape hatch is refused in production: it can
+  // linger in an environment unnoticed and silently downgrade a remote
+  // connection to plaintext.
+  if (env.NODE_ENV === 'production' && !loopback && sslDisabledByEnv) {
     throw new Error(
       'Refusing plaintext Postgres connection in production; use sslmode=require or unset DATABASE_SSL',
     );

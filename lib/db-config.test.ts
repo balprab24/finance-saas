@@ -44,9 +44,11 @@ describe('resolveDbOptions — TLS', () => {
     expect(() =>
       resolveDbOptions(REMOTE, { NODE_ENV: 'production', DATABASE_SSL: 'disable' }),
     ).toThrow(/Refusing plaintext/);
-    expect(() =>
-      resolveDbOptions(`${REMOTE}?sslmode=disable`, { NODE_ENV: 'production' }),
-    ).toThrow(/Refusing plaintext/);
+  });
+
+  it('honors an explicit sslmode=disable in the URL even in production', () => {
+    const opts = resolveDbOptions(`${REMOTE}?sslmode=disable`, { NODE_ENV: 'production' });
+    expect(opts.ssl).toBeUndefined();
   });
 
   it('allows loopback plaintext even in production', () => {
