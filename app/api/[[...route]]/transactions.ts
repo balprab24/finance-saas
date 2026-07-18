@@ -1,9 +1,11 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { and, desc, eq, gte, inArray, isNull, lt } from 'drizzle-orm';
+import { format, subDays } from 'date-fns';
 
 import { db } from '@/db/drizzle';
 import { clampRangeSpan, parseRange } from '@/lib/date-range';
+import { buildTransactionsCsv } from '@/lib/csv-export';
 import { accounts, categories, transactions } from '@/db/schema';
 import {
   bulkCreateTransactionsSchema,
@@ -24,11 +26,14 @@ import { API_RATE_LIMITS, authenticatedRateLimit } from '@/lib/api-rate-limit';
 const readLimit = authenticatedRateLimit('transactions:read', API_RATE_LIMITS.read);
 const mutationLimit = authenticatedRateLimit('transactions:mutation', API_RATE_LIMITS.mutation);
 const bulkLimit = authenticatedRateLimit('transactions:bulk', API_RATE_LIMITS.bulkMutation);
+const exportLimit = authenticatedRateLimit('transactions:export', API_RATE_LIMITS.export);
 
 // Response bounds: the list endpoint has no pagination, so an uncapped range would
 // let one request pull a full multi-year history into a single JSON body.
 const MAX_RANGE_DAYS = 366;
 const MAX_LIST_ROWS = 2000;
+// Exports legitimately want the whole clamped year; ~10k rows is about a 1 MB file.
+const MAX_EXPORT_ROWS = 10_000;
 
 const app = new Hono<AuthEnv>()
   .get(
@@ -81,6 +86,69 @@ const app = new Hono<AuthEnv>()
         .limit(MAX_LIST_ROWS);
 
       return c.json({ data });
+    },
+  )
+  // Registered before '/:id' — route order is load-bearing, or 'export' would
+  // be captured as an id.
+  .get(
+    '/export',
+    requireAuth,
+    exportLimit,
+    zValidator('query', dateRangeQuerySchema),
+    async (c) => {
+      const userId = getUserId(c);
+      const { from, to, accountId, categoryId } = c.req.valid('query');
+
+      const parsed = parseRange(from, to);
+      const { start: startDate, endExclusive } = clampRangeSpan(
+        parsed.start,
+        parsed.endExclusive,
+        MAX_RANGE_DAYS,
+      );
+
+      const rows = await db
+        .select({
+          date: transactions.date,
+          payee: transactions.payee,
+          amount: transactions.amount,
+          category: categories.name,
+          account: accounts.name,
+          notes: transactions.notes,
+        })
+        .from(transactions)
+        .innerJoin(
+          accounts,
+          and(eq(transactions.accountId, accounts.id), eq(accounts.userId, userId)),
+        )
+        .leftJoin(
+          categories,
+          and(eq(transactions.categoryId, categories.id), eq(categories.userId, userId)),
+        )
+        .where(
+          and(
+            eq(transactions.userId, userId),
+            accountId ? eq(transactions.accountId, accountId) : undefined,
+            categoryId ? eq(transactions.categoryId, categoryId) : undefined,
+            gte(transactions.date, startDate),
+            lt(transactions.date, endExclusive),
+          ),
+        )
+        .orderBy(desc(transactions.date))
+        .limit(MAX_EXPORT_ROWS + 1);
+
+      const truncated = rows.length > MAX_EXPORT_ROWS;
+      const csv = buildTransactionsCsv(truncated ? rows.slice(0, MAX_EXPORT_ROWS) : rows);
+
+      const fromLabel = format(startDate, 'yyyy-MM-dd');
+      const toLabel = format(subDays(endExclusive, 1), 'yyyy-MM-dd');
+
+      c.header('Content-Type', 'text/csv; charset=utf-8');
+      c.header(
+        'Content-Disposition',
+        `attachment; filename="aurex-transactions-${fromLabel}_${toLabel}.csv"`,
+      );
+      if (truncated) c.header('X-Export-Truncated', 'true');
+      return c.body(csv);
     },
   )
   .get(
