@@ -34,6 +34,13 @@ export default defineConfig({
         '--no-proxy-server',
         ...(process.env.CI
           ? [
+              // July-2026 ubuntu-24.04 runner images kill Chromium's separate
+              // network-service process at launch (navigations die in ~55ms as
+              // ERR_NAME_NOT_RESOLVED even for IP literals; --no-sandbox does
+              // not govern the network service's own seccomp sandbox). Run the
+              // network service unsandboxed and in-process to sidestep it.
+              '--disable-features=NetworkServiceSandbox',
+              '--enable-features=NetworkServiceInProcess',
               '--enable-logging=stderr',
               '--v=0',
               '--vmodule=*host_resolver*=3,*dns*=3,*network_change*=3,*address_tracker*=3',
