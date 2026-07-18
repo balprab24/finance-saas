@@ -67,6 +67,11 @@ async function request(path: string, init?: RequestInit) {
 }
 
 beforeEach(() => {
+  // The /recurring fixtures use fixed dates while the route feeds real `new Date()`
+  // into detectRecurring's overdue cutoff, so the clock must be pinned or the suite
+  // rots as wall time advances. toFake: ['Date'] leaves timers real so app.fetch
+  // cannot hang on faked microtasks.
+  vi.useFakeTimers({ now: new Date('2026-06-15T12:00:00Z'), toFake: ['Date'] });
   state.auth = { userId: 'user_alice' };
   state.selectResults = [];
   state.insertedValues = [];
@@ -75,6 +80,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.resetModules();
 });
 
