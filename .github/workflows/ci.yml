@@ -8,13 +8,18 @@ on:
 
 jobs:
   build-and-test:
-    # Pinned to 22.04: ubuntu-latest (24.04) images since July 2026 block the
-    # bundled Playwright Chromium's networking at the OS level — every
-    # navigation fails ERR_NAME_NOT_RESOLVED in ~55ms (IP literals included)
-    # across old/new browser builds, sandbox on/off, in/out-of-process network
-    # service, proxy env clean. Node networking is unaffected. Revisit when
-    # runner-images resolves the regression.
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+
+    # The job runs inside the official Playwright image — the environment the
+    # Playwright team tests browsers against. The July 2026 refresh of BOTH the
+    # ubuntu-24.04 and ubuntu-22.04 runner images broke Chromium networking on
+    # the bare runner: every navigation failed ERR_NAME_NOT_RESOLVED in ~55ms
+    # (IP literals included) across old/new browser builds, sandbox on/off,
+    # and with the network service in-process, while Node networking was fine.
+    # The container isolates e2e from that runner-image churn. Keep the tag in
+    # lockstep with the package.json @playwright/test version.
+    container:
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
 
     services:
       postgres:
@@ -23,8 +28,6 @@ jobs:
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci
           POSTGRES_DB: ci
-        ports:
-          - 5432:5432
         options: >-
           --health-cmd "pg_isready -U ci -d ci"
           --health-interval 10s
@@ -32,7 +35,10 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      # Job containers reach service containers by service name, not localhost.
+      # sslmode=disable is explicit: the ephemeral CI Postgres serves no TLS,
+      # and lib/db-config treats a bare non-loopback host as TLS-required.
+      DATABASE_URL: postgresql://ci:ci@postgres:5432/ci?sslmode=disable
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2ktY2xlcmsuZXhhbXBsZS5jb20k
       CLERK_SECRET_KEY: sk_test_ci
       NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
@@ -61,36 +67,8 @@ jobs:
 
       - run: npm run build
 
-      - run: npx playwright install --with-deps chromium
-
-      # Diagnostic for browser networking failures: surface any proxy env the
-      # runner image injects (Chromium honors these; Node fetch does not).
-      - run: env | grep -i proxy || echo "no proxy env vars"
-
-      # Ubuntu 24.04 runner images from July 2026 restrict unprivileged user
-      # namespaces again. The sandboxed Chromium network service then fails to
-      # initialize its resolver and every navigation errors with
-      # ERR_NAME_NOT_RESOLVED — even IP-literal targets like 127.0.0.1. Print
-      # the current setting for the record, then relax it for this job.
-      - run: |
-          sysctl kernel.apparmor_restrict_unprivileged_userns || true
-          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-          sudo aa-status 2>/dev/null | head -40 || echo "aa-status unavailable"
-
-      # Diagnostic: the full-Chromium run showed dbus "Could not parse server
-      # address" spam, which means a malformed DBUS_*_BUS_ADDRESS is exported
-      # by the runner image. Chromium consults dbus for network state; a
-      # poisoned bus address can leave it convinced the machine is offline,
-      # which fails every navigation as ERR_NAME_NOT_RESOLVED.
-      - run: |
-          echo "DBUS_SESSION_BUS_ADDRESS=${DBUS_SESSION_BUS_ADDRESS-<unset>}"
-          echo "DBUS_SYSTEM_BUS_ADDRESS=${DBUS_SYSTEM_BUS_ADDRESS-<unset>}"
-          ip addr show lo || true
-          cat /etc/resolv.conf || true
+      # The image ships matching browsers; this validates the version pairing
+      # and is a fast no-op when package.json and the image tag agree.
+      - run: npx playwright install chromium
 
       - run: npm run e2e
-        env:
-          # Temporary diagnostic: pw:api logs every navigation hop (including
-          # redirect targets), pw:browser logs the launch command and browser
-          # stderr. Together they show which URL actually failed to resolve.
-          DEBUG: pw:api,pw:browser
