@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/nextjs';
 
-import { scrubEvent, scrubLog } from '@/lib/sentry-scrub';
+import { scrubBreadcrumb, scrubEvent, scrubLog } from '@/lib/sentry-scrub';
 
 function sampleRate(value: string | undefined, fallback: number) {
   if (!value) return fallback;
@@ -16,9 +16,10 @@ Sentry.init({
   sendDefaultPii: false,
   replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: 0,
-  // Redact secrets that may be interpolated into error messages/logs before send.
+  // Redact secrets that may be interpolated into error messages/logs/breadcrumbs.
   beforeSend: (event) => scrubEvent(event),
   beforeSendLog: (log) => scrubLog(log),
+  beforeBreadcrumb: (breadcrumb) => scrubBreadcrumb(breadcrumb),
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
