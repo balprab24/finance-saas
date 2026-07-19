@@ -15,8 +15,6 @@ const webServerCommand =
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
-  // One worker in CI keeps the single browser's verbose diagnostics readable.
-  workers: process.env.CI ? 1 : undefined,
   timeout: 30_000,
   expect: {
     timeout: 10_000,
@@ -25,35 +23,6 @@ export default defineConfig({
   use: {
     baseURL,
     trace: 'on-first-retry',
-    // Never proxy: all targets are loopback (Chromium honors http_proxy-style
-    // env on Linux). The CI-only verbose flags surface host-resolver and
-    // network-state decisions in the pw:browser stderr stream while the
-    // ERR_NAME_NOT_RESOLVED runner-image regression is being diagnosed.
-    launchOptions: {
-      args: [
-        '--no-proxy-server',
-        ...(process.env.CI
-          ? [
-              // July-2026 ubuntu-24.04 runner images kill Chromium's separate
-              // network-service process at launch (navigations die in ~55ms as
-              // ERR_NAME_NOT_RESOLVED even for IP literals; --no-sandbox does
-              // not govern the network service's own seccomp sandbox). Run the
-              // network service unsandboxed and in-process to sidestep it.
-              '--disable-features=NetworkServiceSandbox',
-              '--enable-features=NetworkServiceInProcess',
-              '--enable-logging=stderr',
-              '--v=0',
-              '--vmodule=*host_resolver*=3,*dns*=3,*network_change*=3,*address_tracker*=3',
-            ]
-          : []),
-      ],
-    },
-    // Use the full Chromium binary in new-headless mode instead of the
-    // chrome-headless-shell build. On ubuntu-24.04 runner images from July
-    // 2026 the headless shell fails every navigation with
-    // ERR_NAME_NOT_RESOLVED — even for IP literals, with proxy env clean and
-    // --no-proxy-server applied — while the full binary's network stack works.
-    channel: 'chromium',
   },
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined

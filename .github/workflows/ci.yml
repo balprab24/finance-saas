@@ -10,17 +10,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    # The job runs inside the official Playwright image — the environment the
-    # Playwright team tests browsers against. The July 2026 refresh of BOTH the
-    # ubuntu-24.04 and ubuntu-22.04 runner images broke Chromium networking on
-    # the bare runner: every navigation failed ERR_NAME_NOT_RESOLVED in ~55ms
-    # (IP literals included) across old/new browser builds, sandbox on/off,
-    # and with the network service in-process, while Node networking was fine.
-    # The container isolates e2e from that runner-image churn. Keep the tag in
-    # lockstep with the package.json @playwright/test version.
-    container:
-      image: mcr.microsoft.com/playwright:v1.61.1-noble
-
     services:
       postgres:
         image: postgres:16-alpine
@@ -28,6 +17,8 @@ jobs:
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci
           POSTGRES_DB: ci
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd "pg_isready -U ci -d ci"
           --health-interval 10s
@@ -35,12 +26,17 @@ jobs:
           --health-retries 5
 
     env:
-      # Job containers reach service containers by service name, not localhost.
-      # sslmode=disable is explicit: the ephemeral CI Postgres serves no TLS,
-      # and lib/db-config treats a bare non-loopback host as TLS-required.
-      DATABASE_URL: postgresql://ci:ci@postgres:5432/ci?sslmode=disable
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2ktY2xlcmsuZXhhbXBsZS5jb20k
-      CLERK_SECRET_KEY: sk_test_ci
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      # Production-form dummy keys, deliberately: a pk_test key makes Clerk's
+      # middleware treat the app as a development instance and 307 real browser
+      # navigations into its dev-browser handshake on the key's frontend-API
+      # domain — ci-clerk.example.com, which never resolves — so every
+      # Playwright page.goto dies as ERR_NAME_NOT_RESOLVED while curl/Node
+      # (no handshake path) sail through. Production instances never
+      # handshake; signed-out decisions stay local and auth.protect()
+      # redirects to the local /sign-in.
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_live_Y2ktY2xlcmsuZXhhbXBsZS5jb20k
+      CLERK_SECRET_KEY: sk_live_ci
       NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
       NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
       NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: /dashboard
@@ -67,8 +63,6 @@ jobs:
 
       - run: npm run build
 
-      # The image ships matching browsers; this validates the version pairing
-      # and is a fast no-op when package.json and the image tag agree.
-      - run: npx playwright install chromium
+      - run: npx playwright install --with-deps chromium
 
       - run: npm run e2e
