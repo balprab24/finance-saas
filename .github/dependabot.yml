@@ -9,6 +9,20 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # react-day-picker 10 is a breaking API change: `initialFocus` was removed,
+      # the `SelectSingleEventHandler` type no longer exists, and the `classNames`
+      # keys were renamed (`table` is gone). It broke typecheck across
+      # date-filter.tsx, date-picker.tsx, and ui/calendar.tsx when merged, and it
+      # carries no security fix. Adopting it means a deliberate migration plus
+      # visual QA of the (auth-gated) calendar, not an automated bump.
+      - dependency-name: react-day-picker
+        update-types: ['version-update:semver-major']
+      # vitest 4 regressed test-file types on a previous attempt for no
+      # security-class gain. Same reasoning: major bumps here are a project, not
+      # a dependency chore.
+      - dependency-name: vitest
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
