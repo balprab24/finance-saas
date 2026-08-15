@@ -44,6 +44,45 @@ describe('middleware content security policy', () => {
     expect(scriptSrc).toContain("'nonce-");
   });
 
+  it('derives the Clerk frontend-API origin from the publishable key', async () => {
+    const { clerkFapiOrigin } = await import('./lib/csp');
+
+    // base64('clerk.aurex.app$') — the shape Clerk uses for a production instance.
+    const liveKey = `pk_live_${btoa('clerk.aurex.app$')}`;
+    expect(clerkFapiOrigin(liveKey)).toBe('https://clerk.aurex.app');
+
+    const testKey = `pk_test_${btoa('sharp-lion-42.clerk.accounts.dev$')}`;
+    expect(clerkFapiOrigin(testKey)).toBe('https://sharp-lion-42.clerk.accounts.dev');
+  });
+
+  it('returns null rather than widening the policy on a malformed key', async () => {
+    const { clerkFapiOrigin } = await import('./lib/csp');
+
+    expect(clerkFapiOrigin(undefined)).toBeNull();
+    expect(clerkFapiOrigin('')).toBeNull();
+    expect(clerkFapiOrigin('not-a-clerk-key')).toBeNull();
+    expect(clerkFapiOrigin(`pk_live_${btoa('no-dot-here$')}`)).toBeNull();
+    expect(clerkFapiOrigin(`pk_live_${btoa('evil.com https://attacker.test$')}`)).toBeNull();
+    expect(clerkFapiOrigin('pk_live_!!!not-base64!!!')).toBeNull();
+  });
+
+  it('allowlists the Clerk production frontend API in connect-src, which strict-dynamic cannot cover', async () => {
+    vi.stubEnv('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY', `pk_live_${btoa('clerk.aurex.app$')}`);
+    vi.resetModules();
+    const { buildCsp } = await import('./lib/csp');
+    const csp = buildCsp('n');
+
+    const connectSrc = csp.split('; ').find((d) => d.startsWith('connect-src'))!;
+    expect(connectSrc).toContain('https://clerk.aurex.app');
+    const scriptSrc = csp.split('; ').find((d) => d.startsWith('script-src'))!;
+    expect(scriptSrc).toContain('https://clerk.aurex.app');
+    const frameSrc = csp.split('; ').find((d) => d.startsWith('frame-src'))!;
+    expect(frameSrc).toContain('https://clerk.aurex.app');
+
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
   it('generates unique base64 nonces', async () => {
     const { generateCspNonce } = await import('./lib/csp');
     const a = generateCspNonce();

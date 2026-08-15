@@ -159,6 +159,29 @@ In the Clerk dashboard (Production instance):
   redirect URIs (Clerk's docs walk through this).
 - Use production-tier (`pk_live_*` / `sk_live_*`) keys in production — the `pk_test_*` keys are
   tied to Clerk's test instance and won't accept production users.
+- A Clerk production instance needs DNS records (CNAMEs) on a domain you control, so it
+  cannot be stood up on a `*.vercel.app` subdomain. A custom domain is a prerequisite for
+  `pk_live_*` keys.
+
+### CSP and the Clerk frontend API
+
+A production Clerk instance serves its Frontend API from `clerk.<your-domain>`, which
+neither `*.clerk.com` nor `*.clerk.accounts.dev` matches. `script-src` tolerates that gap
+because of `'strict-dynamic'`, but **`'strict-dynamic'` has no effect on `connect-src`** —
+so an unlisted FAPI origin blocks Clerk's XHR and breaks sign-in on the live domain while
+everything still works locally.
+
+`lib/csp.ts` therefore derives the origin from the publishable key itself (`clerkFapiOrigin`):
+everything after the `pk_live_`/`pk_test_` prefix is the base64 of the FAPI domain plus a
+trailing `$`. It is added to `script-src`, `connect-src`, and `frame-src`. A malformed key
+yields `null` rather than a widened policy.
+
+> **Rebuild, don't just restart.** `NEXT_PUBLIC_*` values are inlined at build time, so the
+> derived origin is baked into the middleware bundle. Changing `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+> requires a **redeploy** — restarting the server with a new value has no effect on the CSP.
+
+Sentry ingest hosts are allowlisted for both US (`*.ingest.us.sentry.io`) and EU
+(`*.ingest.de.sentry.io`) regions, plus the legacy `*.ingest.sentry.io`.
 
 ## Account archival and hard-delete safety
 
