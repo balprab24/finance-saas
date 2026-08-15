@@ -1,6 +1,10 @@
 # Aurex Security And Codebase Review
 
-_Reviewed: June 25, 2026_
+_Originally reviewed: June 25, 2026 · Last updated: August 15, 2026_
+
+> This document is a chronological log. The sections below are kept as written at the
+> time of each pass; later sections supersede earlier ones where they conflict. The
+> current state of the codebase is described by **Final pass — August 15, 2026**.
 
 ## Executive Summary
 
@@ -98,3 +102,80 @@ rebased onto `main` and re-audited before landing:
   now unions error responses, so destructuring `data` no longer narrows.
   `use-bulk-delete-transactions.ts` was pinned to `, 200`, matching the idiom
   already used in `use-delete-transaction.ts` and `use-restore-transactions.ts`.
+
+## Final pass — August 15, 2026
+
+Closing out the project. A stack of security work written on July 18 had never been
+merged, while the July 28 pass independently re-implemented parts of it. Both were
+reconciled and landed.
+
+### Newly enforced controls
+
+- **Default-deny API authentication.** `app/api/[[...route]]/route.ts` now applies a
+  Clerk session guard at the Hono root with an explicit public allowlist (the Plaid
+  webhook only, which authenticates via its own signed JWT). Per-route `requireAuth`
+  is retained as defense-in-depth. Previously a route added without its own guard was
+  simply unauthenticated; `route-auth.test.ts` proves the backstop, the webhook
+  exemption, and normal pass-through.
+- **Postgres transport security.** `lib/db-config.ts` requires TLS for any non-loopback
+  database host, honors an explicit `sslmode`/`ssl` parameter in the URL as deliberate
+  operator intent, and refuses in production when the ambient `DATABASE_SSL=disable`
+  escape hatch would silently downgrade a remote connection to plaintext. Also bounds
+  the connection pool for serverless (`max: 5`, bounded idle/connect/lifetime),
+  complementing the existing `prepare: false` for pooler compatibility.
+- **Operational data retention.** `lib/db-maintenance.ts` prunes expired `rate_limits`
+  rows and `plaid_webhook_events` older than 30 days from the cron drain, non-fatally,
+  so the replay-guard table cannot grow without bound.
+- **Response bounds.** The transactions list clamps its date span to 366 days and caps
+  at 2000 rows; `/insights/recurring` caps its scan at 5000 rows; `/plaid/items` gained
+  the one rate limiter it was missing; the middleware cron bypass was narrowed to the
+  exact drain path.
+
+### Reconciled duplicates
+
+- **`lib/sentry-scrub.ts`** existed in two divergent versions. They were merged rather
+  than one discarded, because the layers are complementary and none is sufficient
+  alone: (a) redaction by the runtime *value* of known secret env vars, the only thing
+  that catches a shapeless secret like `CRON_SECRET`; (b) redaction by credential
+  *shape*, which also works in the browser where env values are absent; and (c)
+  redaction by sensitive *key name*, which catches a secret that is neither a known env
+  value nor a recognizable shape. On top of that, `request.headers` / `cookies` / `data`
+  are dropped wholesale and query strings stripped from URLs. All three Sentry runtimes
+  wire `beforeSend`, `beforeSendLog`, and `beforeBreadcrumb`.
+- The duplicated ES256 pin in `lib/plaid-webhook.ts` was collapsed to one, keeping both
+  branches' tests (wrong-algorithm rejection, stale tokens, missing `kid`).
+
+### Corrected
+
+- **The tenant-isolation integration test had never passed anywhere**, including CI.
+  Drizzle wraps driver errors in a `DrizzleQueryError`, so the Postgres SQLSTATE lives
+  on `.cause`, not on the thrown error — the assertion was checking the wrong level. The
+  control itself was always correct: Postgres rejects the cross-tenant insert via
+  `transactions_account_user_fk` with SQLSTATE 23503. Now genuinely verified.
+- **Content-Security-Policy would have broken Clerk in production.** A Clerk production
+  instance serves its frontend API from `clerk.<your-domain>`, matching neither
+  `*.clerk.com` nor `*.clerk.accounts.dev`. `script-src` tolerates that via
+  `'strict-dynamic'`, but that keyword has no effect on `connect-src`, so Clerk's XHR
+  would have been blocked on the live domain while working perfectly in development.
+  `lib/csp.ts` now derives the origin from the publishable key itself
+  (`clerkFapiOrigin`), returning `null` rather than widening the policy on a malformed
+  key. The Sentry EU ingest host was allowlisted alongside US.
+
+### Verification
+
+- `npm run lint`, `npm run typecheck`, `npm run build` — all clean.
+- `npm test` — 263 passing (255 unit/API + 8 real-Postgres integration).
+- `npm run e2e` — 4 passing, including a zero-CSP-violations assertion.
+- `npm audit` and `npm audit --omit=dev` — **0 vulnerabilities**.
+- CSP verified by rebuilding with a production-form `pk_live` key and reading the
+  emitted header: the derived origin appears in `script-src`, `connect-src`, and
+  `frame-src`.
+
+### Known, accepted gaps
+
+- No Clerk `user.deleted` webhook: deleting a Clerk account leaves that user's Postgres
+  rows in place. Documented in the README rather than fixed.
+- `/banks` errors when Plaid is unconfigured (`getPlaidClient()` throws lazily); the
+  route is only reachable by a signed-in user.
+- Playwright coverage remains public-surface only; authenticated flows are covered by
+  the API-route suites.
