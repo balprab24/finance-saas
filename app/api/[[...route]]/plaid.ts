@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { clerkMiddleware } from '@clerk/hono';
 import { and, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import { createHash, timingSafeEqual } from 'crypto';
 
@@ -55,6 +54,7 @@ const RATE_LIMITS = {
   manualSync: { limit: 10, windowMs: 60_000 },
   updateLinkToken: { limit: 10, windowMs: 60_000 },
   removeItem: { limit: 5, windowMs: 60_000 },
+  items: { limit: 60, windowMs: 60_000 },
   webhook: { limit: 300, windowMs: 60_000 },
 };
 
@@ -110,7 +110,7 @@ async function markWebhookItemError(itemId: string, error: unknown) {
 }
 
 const app = new Hono<AuthEnv>()
-  .post('/link-token', clerkMiddleware(), requireAuth, async (c) => {
+  .post('/link-token', requireAuth, async (c) => {
     const userId = getUserId(c);
     const rateLimit = await enforcePlaidRateLimit(
       c,
@@ -137,7 +137,6 @@ const app = new Hono<AuthEnv>()
   })
   .post(
     '/exchange-public-token',
-    clerkMiddleware(),
     requireAuth,
     zValidator('json', exchangePublicTokenSchema),
     async (c) => {
@@ -240,8 +239,14 @@ const app = new Hono<AuthEnv>()
       }
     },
   )
-  .get('/items', clerkMiddleware(), requireAuth, async (c) => {
+  .get('/items', requireAuth, async (c) => {
     const userId = getUserId(c);
+    const rateLimit = await enforcePlaidRateLimit(
+      c,
+      `plaid:items:user:${userId}`,
+      RATE_LIMITS.items,
+    );
+    if (rateLimit) return rateLimit;
 
     const items = await db
       .select({
@@ -309,7 +314,6 @@ const app = new Hono<AuthEnv>()
   })
   .post(
     '/items/:itemId/sync',
-    clerkMiddleware(),
     requireAuth,
     zValidator('param', itemParamSchema),
     async (c) => {
@@ -339,7 +343,6 @@ const app = new Hono<AuthEnv>()
   )
   .post(
     '/items/:itemId/update-link-token',
-    clerkMiddleware(),
     requireAuth,
     zValidator('param', itemParamSchema),
     async (c) => {
@@ -376,7 +379,6 @@ const app = new Hono<AuthEnv>()
   )
   .delete(
     '/items/:itemId',
-    clerkMiddleware(),
     requireAuth,
     zValidator('param', itemParamSchema),
     async (c) => {
