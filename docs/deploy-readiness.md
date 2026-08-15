@@ -1,9 +1,31 @@
 # Deploy readiness (Vercel)
 
+> **Status: Aurex is not deployed, by choice.** It is maintained as a source-available
+> reference implementation; standing up a hosted instance means paying for a domain and
+> running three third-party account setups for a demo. This document is the checklist for
+> whoever deploys it later — it is kept accurate, not stale.
+
 Pre/post-deploy checklist for Aurex. Items marked **✅ verified in repo** are
 checked into the codebase and confirmed; items marked **⚠️ confirm in Vercel/prod**
 require the Vercel dashboard or the production database and cannot be verified from
 the repo alone.
+
+## 0. Prerequisites worth knowing before you start
+
+- **A custom domain is effectively required.** A Clerk *production* instance (the source
+  of `pk_live_*` / `sk_live_*` keys) needs CNAME records on a domain you control, and you
+  cannot set DNS records on a `*.vercel.app` subdomain. Deploying to `*.vercel.app` is
+  possible, but only with Clerk *development* keys, which render a "development mode"
+  banner on the auth screens.
+- **CSP and Clerk.** `lib/csp.ts` derives the Clerk frontend-API origin from the
+  publishable key (`clerkFapiOrigin`) because `*.clerk.com` does not match a production
+  instance's `clerk.<your-domain>` host, and `'strict-dynamic'` does not cover
+  `connect-src`. `NEXT_PUBLIC_*` is inlined at build time, so **rotating the Clerk key
+  requires a redeploy, not a restart.**
+- **Plaid is optional.** With `PLAID_*` unset the app builds and runs; `getPlaidClient()`
+  is lazy and only throws when a Plaid route is actually called. The `/banks` route will
+  error if a signed-in user opens it, so either configure Plaid or expect that surface to
+  be unavailable.
 
 Related: the Plaid-specific slice of this list lives in
 [`plaid-sandbox-verification.md`](./features/plaid-sandbox-verification.md) §5.
@@ -50,13 +72,13 @@ pages (and their API routes) will error.
 ## 3. Cron cadence
 
 **✅ verified in repo** — `vercel.json` schedules `/api/cron/plaid-sync` at
-`*/5 * * * *`, and `app/api/cron/plaid-sync/route.ts` rejects calls without the
-`CRON_SECRET` bearer token.
+`0 6 * * *` (daily), and `app/api/cron/plaid-sync/route.ts` rejects calls without
+the `CRON_SECRET` bearer token.
 
-**⚠️ confirm in Vercel** — `*/5` (every 5 min) requires **Vercel Pro**. On the
-**Hobby** plan the cron only runs **daily**; if so, set
-`SENTRY_PLAID_SYNC_MONITOR_SCHEDULE` to the actual cadence so the Sentry Cron
-monitor does not raise false missed-check-in alerts.
+**⚠️ confirm in Vercel** — the daily cadence is deliberate: the **Hobby** plan only
+runs cron jobs once per day. The queue is designed for `*/5 * * * *`; on **Pro**,
+change the schedule and set `SENTRY_PLAID_SYNC_MONITOR_SCHEDULE` to match so the
+Sentry Cron monitor does not raise false missed-check-in alerts.
 
 ## 4. Sentry observability
 
