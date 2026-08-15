@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const state: {
+  auth: { userId: string } | null;
   selectResults: unknown[][];
   returningResults: unknown[][];
   returningColumns: Array<string[] | null>;
   updateCalls: number;
 } = {
+  auth: { userId: 'user_alice' },
   selectResults: [],
   returningResults: [],
   returningColumns: [],
@@ -14,7 +16,7 @@ const state: {
 
 vi.mock('@/db/drizzle', () => {
   const selectChain: Record<string, unknown> = {};
-  const passthrough = ['from', 'where', 'innerJoin', 'leftJoin', 'groupBy', 'orderBy'];
+  const passthrough = ['from', 'where', 'innerJoin', 'leftJoin', 'groupBy', 'orderBy', 'limit'];
   for (const m of passthrough) selectChain[m] = () => selectChain;
   (selectChain as { then: (resolve: (v: unknown[]) => void) => void }).then = (
     resolve,
@@ -58,7 +60,7 @@ vi.mock('@clerk/hono', () => ({
   clerkMiddleware: () => async (_c: unknown, next: () => Promise<void>) => {
     await next();
   },
-  getAuth: () => ({ userId: 'user_alice' }),
+  getAuth: () => state.auth,
 }));
 
 vi.mock('@/lib/api-rate-limit', () => ({
@@ -66,6 +68,7 @@ vi.mock('@/lib/api-rate-limit', () => ({
     read: { limit: 1, windowMs: 1000 },
     mutation: { limit: 1, windowMs: 1000 },
     bulkMutation: { limit: 1, windowMs: 1000 },
+    export: { limit: 1, windowMs: 1000 },
   },
   authenticatedRateLimit: () => async (_c: unknown, next: () => Promise<void>) => {
     await next();
@@ -94,6 +97,7 @@ async function patchTransaction(body: typeof validPatchBody) {
 }
 
 beforeEach(() => {
+  state.auth = { userId: 'user_alice' };
   state.selectResults = [];
   state.returningResults = [];
   state.returningColumns = [];
@@ -102,6 +106,52 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.resetModules();
+});
+
+describe('GET /transactions/export', () => {
+  it('returns an attachment CSV with injection-guarded fields and exact amounts', async () => {
+    state.selectResults.push([
+      {
+        date: new Date(2026, 5, 15),
+        payee: '=SUM(A1:A9)',
+        amount: -15990,
+        category: 'Subscriptions',
+        account: 'Checking',
+        notes: null,
+      },
+    ]);
+
+    const { default: app } = await import('./transactions');
+    const res = await app.fetch(new Request('http://localhost/export'));
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/csv');
+    expect(res.headers.get('content-disposition')).toMatch(
+      /attachment; filename="aurex-transactions-.*\.csv"/,
+    );
+    expect(res.headers.get('x-export-truncated')).toBeNull();
+
+    const body = await res.text();
+    expect(body.startsWith('date,payee,amount,category,account,notes\r\n')).toBe(true);
+    expect(body).toContain("'=SUM(A1:A9)");
+    expect(body).toContain('-15.990');
+  });
+
+  it('requires authentication', async () => {
+    state.auth = null;
+    const { default: app } = await import('./transactions');
+    const res = await app.fetch(new Request('http://localhost/export'));
+    expect(res.status).toBe(401);
+  });
+
+  it('is not captured by the :id route', async () => {
+    state.selectResults.push([]);
+    const { default: app } = await import('./transactions');
+    const res = await app.fetch(new Request('http://localhost/export'));
+    // The :id handler would 404 on an unknown id; export returns an empty CSV.
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/csv');
+  });
 });
 
 describe('PATCH /transactions/:id ownership checks', () => {

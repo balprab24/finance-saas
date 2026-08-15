@@ -16,7 +16,7 @@ const state: {
 
 vi.mock('@/db/drizzle', () => {
   const selectChain: Record<string, unknown> = {};
-  const passthrough = ['from', 'where', 'innerJoin', 'leftJoin', 'groupBy', 'orderBy'];
+  const passthrough = ['from', 'where', 'innerJoin', 'leftJoin', 'groupBy', 'orderBy', 'limit'];
   for (const m of passthrough) selectChain[m] = () => selectChain;
   (selectChain as { then: (resolve: (v: unknown[]) => void) => void }).then = (resolve) =>
     resolve(state.selectResults.shift() ?? []);
@@ -184,6 +184,19 @@ describe('insights route — ignore', () => {
     expect(status).toBe(400);
     expect(body.success).toBe(false);
     expect(state.insertCalls).toBe(0);
+  });
+
+  it('stamps the calling user on an ignore (per-tenant scoping)', async () => {
+    state.auth = { userId: 'user_bob' };
+    const { status } = await request('/recurring/ignore', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ merchantKey: 'netflix' }),
+    });
+    expect(status).toBe(200);
+    // The ignore is written under the caller's id, so one user's ignore list can
+    // never mask another user's recurring detection.
+    expect(state.insertedValues.at(0)).toMatchObject({ merchantKey: 'netflix', userId: 'user_bob' });
   });
 
   it('deletes an ignore on DELETE', async () => {

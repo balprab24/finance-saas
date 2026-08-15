@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { clerkMiddleware } from '@clerk/hono';
 import { and, desc, eq, gte, lt, sql, sum } from 'drizzle-orm';
 import { differenceInDays, subDays } from 'date-fns';
 
@@ -24,7 +23,6 @@ function percentageChange(current: number, previous: number) {
 
 const app = new Hono<AuthEnv>().get(
   '/',
-  clerkMiddleware(),
   requireAuth,
   reportLimit,
   zValidator('query', dateRangeQuerySchema),

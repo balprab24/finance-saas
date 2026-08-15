@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { clerkMiddleware } from '@clerk/hono';
 import { and, eq, gte, lt, sql } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
@@ -27,7 +26,6 @@ const mutationLimit = authenticatedRateLimit('budgets:mutation', API_RATE_LIMITS
 const app = new Hono<AuthEnv>()
   .get(
     '/',
-    clerkMiddleware(),
     requireAuth,
     reportLimit,
     zValidator('query', budgetMonthQuerySchema),
@@ -113,7 +111,6 @@ const app = new Hono<AuthEnv>()
   )
   .post(
     '/',
-    clerkMiddleware(),
     requireAuth,
     mutationLimit,
     zValidator('json', upsertBudgetSchema),
@@ -145,7 +142,6 @@ const app = new Hono<AuthEnv>()
   )
   .delete(
     '/:id',
-    clerkMiddleware(),
     requireAuth,
     mutationLimit,
     zValidator('param', idParamSchema),

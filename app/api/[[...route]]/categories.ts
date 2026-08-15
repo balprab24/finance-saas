@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { clerkMiddleware } from '@clerk/hono';
 import { and, eq, inArray } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
@@ -25,7 +24,7 @@ const mutationLimit = authenticatedRateLimit('categories:mutation', API_RATE_LIM
 const bulkLimit = authenticatedRateLimit('categories:bulk', API_RATE_LIMITS.bulkMutation);
 
 const app = new Hono<AuthEnv>()
-  .get('/', clerkMiddleware(), requireAuth, readLimit, async (c) => {
+  .get('/', requireAuth, readLimit, async (c) => {
     const userId = getUserId(c);
 
     const data = await db
@@ -37,7 +36,6 @@ const app = new Hono<AuthEnv>()
   })
   .get(
     '/:id',
-    clerkMiddleware(),
     requireAuth,
     readLimit,
     zValidator('param', idParamSchema),
@@ -57,7 +55,6 @@ const app = new Hono<AuthEnv>()
   )
   .post(
     '/',
-    clerkMiddleware(),
     requireAuth,
     mutationLimit,
     zValidator('json', createCategorySchema),
@@ -82,7 +79,6 @@ const app = new Hono<AuthEnv>()
   )
   .post(
     '/bulk-delete',
-    clerkMiddleware(),
     requireAuth,
     bulkLimit,
     zValidator('json', bulkIdsSchema),
@@ -100,7 +96,6 @@ const app = new Hono<AuthEnv>()
   )
   .patch(
     '/:id',
-    clerkMiddleware(),
     requireAuth,
     mutationLimit,
     zValidator('param', idParamSchema),
@@ -130,7 +125,6 @@ const app = new Hono<AuthEnv>()
   )
   .delete(
     '/:id',
-    clerkMiddleware(),
     requireAuth,
     mutationLimit,
     zValidator('param', idParamSchema),
