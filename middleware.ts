@@ -10,8 +10,9 @@ const isPublicRoute = createRouteMatcher([
   '/support',
   '/api/plaid/webhook',
   // Cron drain endpoint: enforces its own CRON_SECRET bearer check, so Clerk must
-  // not intercept it. Not actually unauthenticated.
-  '/api/cron/(.*)',
+  // not intercept it. Not actually unauthenticated. Matched exactly — a future
+  // cron route must be listed here deliberately rather than inheriting the bypass.
+  '/api/cron/plaid-sync',
   '/sign-in(.*)',
   '/sign-up(.*)',
 ]);

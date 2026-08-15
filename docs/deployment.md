@@ -78,16 +78,19 @@ Bank syncs run as background jobs (`plaid_sync_jobs`) rather than inside the req
 triggered them. Two things drain the queue:
 
 - **Vercel Cron** (the reliability backbone) calls `GET /api/cron/plaid-sync` on the schedule
-  in `vercel.json` (every 5 minutes). The endpoint authenticates with `CRON_SECRET` (Vercel
-  injects it as the `Authorization: Bearer` header), claims due jobs with `FOR UPDATE SKIP
-  LOCKED`, and retries transient failures with exponential backoff. Crashed-worker jobs stuck
-  in `running` are reclaimed after a few minutes.
+  in `vercel.json`. The endpoint authenticates with `CRON_SECRET` (Vercel injects it as the
+  `Authorization: Bearer` header), claims due jobs with `FOR UPDATE SKIP LOCKED`, and retries
+  transient failures with exponential backoff. Crashed-worker jobs stuck in `running` are
+  reclaimed after a few minutes.
 - **A warm-path drain** runs immediately after a manual sync or a Plaid webhook (via Next's
   `after()`), so users usually don't wait for the next tick.
 
-> **Vercel plan note:** the Hobby plan runs cron jobs **once per day** only — the
-> `*/5 * * * *` cadence requires **Pro**. On Hobby the warm path still drains the happy path,
-> but a job that fails and backs off won't be retried until the daily run.
+> **Vercel plan note.** `vercel.json` ships a **daily** schedule (`0 6 * * *`) because the
+> Hobby plan only runs cron jobs once per day. The queue is designed for a `*/5 * * * *`
+> cadence — if you deploy on **Pro**, change the schedule to `*/5 * * * *` and set
+> `SENTRY_PLAID_SYNC_MONITOR_SCHEDULE` to match, or the Sentry cron monitor will report
+> false missed check-ins. On the daily schedule the warm path still drains the happy path,
+> but a job that fails and backs off waits until the next daily run.
 
 Generate `CRON_SECRET` with `openssl rand -hex 32` and set it in the host environment.
 
@@ -159,6 +162,29 @@ In the Clerk dashboard (Production instance):
   redirect URIs (Clerk's docs walk through this).
 - Use production-tier (`pk_live_*` / `sk_live_*`) keys in production — the `pk_test_*` keys are
   tied to Clerk's test instance and won't accept production users.
+- A Clerk production instance needs DNS records (CNAMEs) on a domain you control, so it
+  cannot be stood up on a `*.vercel.app` subdomain. A custom domain is a prerequisite for
+  `pk_live_*` keys.
+
+### CSP and the Clerk frontend API
+
+A production Clerk instance serves its Frontend API from `clerk.<your-domain>`, which
+neither `*.clerk.com` nor `*.clerk.accounts.dev` matches. `script-src` tolerates that gap
+because of `'strict-dynamic'`, but **`'strict-dynamic'` has no effect on `connect-src`** —
+so an unlisted FAPI origin blocks Clerk's XHR and breaks sign-in on the live domain while
+everything still works locally.
+
+`lib/csp.ts` therefore derives the origin from the publishable key itself (`clerkFapiOrigin`):
+everything after the `pk_live_`/`pk_test_` prefix is the base64 of the FAPI domain plus a
+trailing `$`. It is added to `script-src`, `connect-src`, and `frame-src`. A malformed key
+yields `null` rather than a widened policy.
+
+> **Rebuild, don't just restart.** `NEXT_PUBLIC_*` values are inlined at build time, so the
+> derived origin is baked into the middleware bundle. Changing `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+> requires a **redeploy** — restarting the server with a new value has no effect on the CSP.
+
+Sentry ingest hosts are allowlisted for both US (`*.ingest.us.sentry.io`) and EU
+(`*.ingest.de.sentry.io`) regions, plus the legacy `*.ingest.sentry.io`.
 
 ## Account archival and hard-delete safety
 

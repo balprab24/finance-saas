@@ -23,6 +23,7 @@ import { useBulkCreateTransactions } from '@/features/transactions/api/use-bulk-
 import { useSelectAccount } from '@/features/accounts/hooks/use-select-account';
 import { useGetCategory } from '@/features/categories/api/use-get-category';
 import { UploadButton } from './upload-button';
+import { ExportButton } from './export-button';
 import { ImportCard } from './import-card';
 
 enum VARIANTS {
@@ -141,6 +142,7 @@ export default function TransactionsPage() {
                 Add transaction
               </Button>
               <UploadButton onUpload={onUpload} />
+              <ExportButton disabled={transactions.length === 0} />
             </>
           }
         />
