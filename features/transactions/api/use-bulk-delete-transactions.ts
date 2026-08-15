@@ -6,7 +6,7 @@ import { readApiError } from '@/lib/api-errors';
 import { client } from '@/lib/hono';
 import { useRestoreTransactions } from './use-restore-transactions';
 
-type ResponseType = InferResponseType<typeof client.api.transactions['bulk-delete']['$post']>;
+type ResponseType = InferResponseType<typeof client.api.transactions['bulk-delete']['$post'], 200>;
 type RequestType = InferRequestType<typeof client.api.transactions['bulk-delete']['$post']>['json'];
 
 export const useBulkDeleteTransactions = () => {

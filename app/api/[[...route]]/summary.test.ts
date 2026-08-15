@@ -128,4 +128,18 @@ describe('GET /summary input handling', () => {
     expect(status).toBe(401);
     expect(body.error).toBe('Unauthorized');
   });
+
+  it('scopes an accountId filter to the caller (foreign account → zeros, no leak)', async () => {
+    // Every aggregate query ANDs userId with the accountId filter, so a foreign
+    // account the caller does not own contributes nothing rather than leaking.
+    pushPeriods(
+      { income: 0, expensesSigned: 0, remaining: 0 },
+      { income: 0, expensesSigned: 0, remaining: 0 },
+    );
+    const { status, body } = await requestSummary('accountId=acct_owned_by_bob');
+    expect(status).toBe(200);
+    expect(body.data!.incomeAmount).toBe(0);
+    expect(body.data!.expensesAmount).toBe(0);
+    expect(body.data!.remainingAmount).toBe(0);
+  });
 });

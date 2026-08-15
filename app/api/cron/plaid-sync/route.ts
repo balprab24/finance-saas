@@ -1,3 +1,5 @@
+import { timingSafeEqual } from 'crypto';
+
 import { NextResponse } from 'next/server';
 
 import { drainPlaidSyncJobs } from '@/lib/plaid-sync-jobs';
@@ -20,6 +22,14 @@ export const maxDuration = 60;
 const CRON_BUDGET_MS = 50_000;
 const CRON_MAX_JOBS = 25;
 
+// Constant-time equality so the bearer check cannot be probed byte-by-byte via a
+// timing side-channel. Differing lengths short-circuit (length is not sensitive).
+function timingSafeStringEqual(a: string, b: string) {
+  const aBuf = Buffer.from(a);
+  const bBuf = Buffer.from(b);
+  return aBuf.length === bBuf.length && timingSafeEqual(aBuf, bBuf);
+}
+
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
   const authorization = request.headers.get('authorization');
@@ -27,7 +37,7 @@ export async function GET(request: Request) {
   // Fail closed: an unset secret must never expose an open drain endpoint. Vercel
   // automatically sends `Authorization: Bearer ${CRON_SECRET}` on cron invocations
   // when CRON_SECRET is configured.
-  if (!secret || authorization !== `Bearer ${secret}`) {
+  if (!secret || !authorization || !timingSafeStringEqual(authorization, `Bearer ${secret}`)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

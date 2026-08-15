@@ -186,6 +186,19 @@ describe('insights route — ignore', () => {
     expect(state.insertCalls).toBe(0);
   });
 
+  it('stamps the calling user on an ignore (per-tenant scoping)', async () => {
+    state.auth = { userId: 'user_bob' };
+    const { status } = await request('/recurring/ignore', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ merchantKey: 'netflix' }),
+    });
+    expect(status).toBe(200);
+    // The ignore is written under the caller's id, so one user's ignore list can
+    // never mask another user's recurring detection.
+    expect(state.insertedValues.at(0)).toMatchObject({ merchantKey: 'netflix', userId: 'user_bob' });
+  });
+
   it('deletes an ignore on DELETE', async () => {
     const { status } = await request('/recurring/ignore', {
       method: 'DELETE',

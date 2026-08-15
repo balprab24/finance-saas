@@ -34,6 +34,12 @@ export async function verifyPlaidWebhookToken(token: string) {
   }
 
   const publicKey = await importJWK(cached.key, cached.alg);
-  const { payload } = await jwtVerify(token, publicKey, { maxTokenAge: '5 min' });
+  // Pin the accepted algorithm. Plaid signs webhooks with ES256; without an
+  // explicit allowlist a forged header alg is only blocked implicitly by the EC
+  // key type. Pinning makes algorithm confusion impossible by construction.
+  const { payload } = await jwtVerify(token, publicKey, {
+    algorithms: ['ES256'],
+    maxTokenAge: '5 min',
+  });
   return payload as PlaidWebhookClaims;
 }

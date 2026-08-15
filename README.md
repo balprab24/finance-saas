@@ -62,10 +62,12 @@ The parts of this project worth a code review:
   job queue** (`plaid_sync_jobs`, claimed with `FOR UPDATE SKIP LOCKED`) drained by cron, and
   **replay-guarded** webhooks (constant-time body-hash comparison + a dedup table). Errors
   flow to Sentry.
-- **Tested and CI-gated.** 27 Vitest suites (API route tests colocated with the handlers, plus
-  library unit tests) and Playwright e2e. CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))
-  runs `audit → lint → migrate → test → build → e2e` against a real `postgres:16` service on
-  every push and PR.
+- **Tested and CI-gated.** ~200 tests across colocated API-route suites and library units
+  (Vitest) — including a real-Postgres integration test that the composite tenant FKs reject a
+  cross-tenant write — plus Playwright public-surface smoke tests. CI
+  ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
+  `audit → lint → typecheck → migrate → test → build → e2e` against a real `postgres:16` service
+  on every push and PR; the audit gate blocks on runtime-dependency advisories.
 
 ## Features
 
@@ -163,12 +165,17 @@ npm run db:seed      # seed demo data for one Clerk user id
 ## Testing
 
 ```bash
-npm test       # 27 Vitest suites (API routes + library units)
-npm run e2e    # Playwright smoke tests against a production build
+npm test           # Vitest: API-route + library unit suites (~200 tests)
+npm run typecheck  # tsc --noEmit
+npm run e2e        # Playwright public-surface smoke tests against a production build
 ```
 
-CI runs the full gate — `npm audit --audit-level=high`, lint, migrate, test, build, and e2e —
-against a real Postgres service on every push and pull request.
+CI runs the full gate — runtime `npm audit`, lint, typecheck, migrate, test, build, and e2e —
+against a real Postgres service on every push and pull request. The Playwright pass covers the
+public surface (anonymous redirect, CSP, webhook `401`); CI has no authenticated Clerk session,
+so authenticated flows are exercised by the API-route suites. DB integration tests (including the
+composite-FK tenant-isolation test) run in CI, where `DATABASE_URL` is set and migrations run
+first.
 
 ## Deployment
 
@@ -197,12 +204,30 @@ Aurex handles financial data, so security is layered rather than bolted on:
 - **Encrypted secrets & verified webhooks** — Plaid access tokens are AES-GCM encrypted with a
   versioned keyring; the Plaid webhook requires a signed JWT, compares the body hash in
   constant time, and is replay-protected.
-- **Dependency hygiene** — CI blocks on `npm audit --audit-level=high`, and Dependabot files
-  weekly update PRs.
+- **Dependency hygiene** — CI blocks on high/critical advisories in **runtime** dependencies
+  (`npm audit --omit=dev`); dev/build-toolchain advisories are surfaced but non-blocking, and
+  Dependabot files weekly update PRs.
 
 Full write-up in [`docs/security-review.md`](docs/security-review.md). Never commit
 `.env.local` or real credentials; `NEXT_PUBLIC_*` values are browser-visible by design, so
 secrets stay in server-only variables like `CLERK_SECRET_KEY` and `DATABASE_URL`.
+
+## Status & what's next
+
+Aurex is feature-complete for a single-user workspace and safe to try with demo, CSV, or Plaid
+Sandbox data. Known scope limits and next steps, kept honest:
+
+- Single workspace per user — no shared/household accounts or multi-currency yet.
+- Playwright coverage is public-surface only (CI has no authenticated Clerk session);
+  authenticated flows are covered by the API-route suites.
+- Dependencies are currently clean in both scopes — `npm audit` and
+  `npm audit --omit=dev` both report 0. CI still splits the gate (blocking on runtime
+  advisories, non-blocking on the dev toolchain) so a dev-only advisory with no
+  non-breaking fix can never wedge the pipeline.
+
+The latest hardening pass — Sentry secret scrubbing, timing-safe cron auth, a pinned webhook
+algorithm, the two-tier audit gate, and the composite-FK isolation test — is logged in
+[`docs/security-review.md`](docs/security-review.md).
 
 ## Design
 
