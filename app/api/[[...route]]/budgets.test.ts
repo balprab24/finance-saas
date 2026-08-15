@@ -200,4 +200,13 @@ describe('budgets route — DELETE', () => {
     expect(status).toBe(404);
     expect(body.error).toBe('Not found');
   });
+
+  it('cannot clear another tenant budget (scoped delete matches nothing → 404)', async () => {
+    // The DELETE is scoped by userId, so a budget id owned by another user never
+    // matches for this caller — it 404s instead of deleting a foreign row.
+    state.selectResults = [[]];
+    const { status, body } = await request('/b_owned_by_bob', { method: 'DELETE' });
+    expect(status).toBe(404);
+    expect(body.error).toBe('Not found');
+  });
 });

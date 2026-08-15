@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { handle } from 'hono/vercel';
+import { clerkMiddleware, getAuth } from '@clerk/hono';
 
 import accounts from './accounts';
 import budgets from './budgets';
@@ -14,9 +15,27 @@ import { reportApiRouteError } from '@/lib/observability';
 
 export const runtime = 'nodejs';
 
+// Default-deny: every API route requires a Clerk session unless explicitly
+// listed here. The webhook authenticates itself via Plaid's signed JWT, and
+// route modules keep their own requireAuth as defense-in-depth. A future route
+// added without auth middleware is therefore still protected.
+const PUBLIC_API_PATHS = new Set(['/api/plaid/webhook']);
+
+const clerk = clerkMiddleware();
+
 const app = new Hono()
   .basePath('/api')
   .use(apiBodyLimit)
+  .use(async (c, next) => {
+    if (PUBLIC_API_PATHS.has(c.req.path)) return next();
+    return clerk(c, next);
+  })
+  .use(async (c, next) => {
+    if (PUBLIC_API_PATHS.has(c.req.path)) return next();
+    const auth = getAuth(c);
+    if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+    await next();
+  })
   .route('/accounts', accounts)
   .route('/budgets', budgets)
   .route('/categories', categories)

@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { clerkMiddleware } from '@clerk/hono';
-import { and, eq, gte, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lt, sql } from 'drizzle-orm';
 import { subMonths } from 'date-fns';
 
 import { db } from '@/db/drizzle';
@@ -19,6 +18,10 @@ const displayNameExpr = sql<string>`coalesce(${transactions.merchantName}, ${tra
 
 const RECURRING_WINDOW_MONTHS = 6;
 const TRAILING_MONTHS = 3;
+// Detection pulls raw rows for in-process grouping; the cap bounds a heavy
+// user's scan (~27 expense rows/day over the window) and, with newest-first
+// ordering, degrades by dropping the oldest rows only.
+const RECURRING_SCAN_MAX_ROWS = 5000;
 
 const reportLimit = authenticatedRateLimit('insights:report', API_RATE_LIMITS.report);
 const mutationLimit = authenticatedRateLimit('insights:mutation', API_RATE_LIMITS.mutation);
@@ -29,7 +32,7 @@ function percentChange(current: number, previous: number) {
 }
 
 const app = new Hono<AuthEnv>()
-  .get('/recurring', clerkMiddleware(), requireAuth, reportLimit, async (c) => {
+  .get('/recurring', requireAuth, reportLimit, async (c) => {
     const userId = getUserId(c);
     const now = new Date();
     const windowStart = subMonths(now, RECURRING_WINDOW_MONTHS);
@@ -49,7 +52,9 @@ const app = new Hono<AuthEnv>()
           lt(transactions.amount, 0),
           gte(transactions.date, windowStart),
         ),
-      );
+      )
+      .orderBy(desc(transactions.date))
+      .limit(RECURRING_SCAN_MAX_ROWS);
 
     const ignored = await db
       .select({ merchantKey: recurringIgnores.merchantKey })
@@ -67,7 +72,6 @@ const app = new Hono<AuthEnv>()
   })
   .get(
     '/trends',
-    clerkMiddleware(),
     requireAuth,
     reportLimit,
     zValidator('query', budgetMonthQuerySchema),
@@ -120,7 +124,6 @@ const app = new Hono<AuthEnv>()
   )
   .get(
     '/unusual',
-    clerkMiddleware(),
     requireAuth,
     reportLimit,
     zValidator('query', budgetMonthQuerySchema),
@@ -188,7 +191,6 @@ const app = new Hono<AuthEnv>()
   )
   .post(
     '/recurring/ignore',
-    clerkMiddleware(),
     requireAuth,
     mutationLimit,
     zValidator('json', ignoreRecurringSchema),
@@ -206,7 +208,6 @@ const app = new Hono<AuthEnv>()
   )
   .delete(
     '/recurring/ignore',
-    clerkMiddleware(),
     requireAuth,
     mutationLimit,
     zValidator('json', ignoreRecurringSchema),

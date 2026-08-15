@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { clerkMiddleware } from '@clerk/hono';
 import { eq, sql } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
@@ -46,12 +45,12 @@ async function getWorkspaceStatus(userId: string) {
 }
 
 const app = new Hono<AuthEnv>()
-  .get('/status', clerkMiddleware(), requireAuth, readLimit, async (c) => {
+  .get('/status', requireAuth, readLimit, async (c) => {
     const userId = getUserId(c);
     const status = await getWorkspaceStatus(userId);
     return c.json(status);
   })
-  .post('/demo', clerkMiddleware(), requireAuth, demoSeedLimit, async (c) => {
+  .post('/demo', requireAuth, demoSeedLimit, async (c) => {
     const userId = getUserId(c);
 
     const status = await getWorkspaceStatus(userId);
