@@ -58,7 +58,14 @@ describe('middleware content security policy', () => {
   it('returns null rather than widening the policy on a malformed key', async () => {
     const { clerkFapiOrigin } = await import('./lib/csp');
 
-    expect(clerkFapiOrigin(undefined)).toBeNull();
+    // Note: don't call clerkFapiOrigin(undefined) to test the unset case — an
+    // explicit undefined triggers the parameter default, which reads the ambient
+    // env var (CI sets a dummy pk_live key). Stub the env instead, so this asserts
+    // the same thing whether or not a key is present in the environment.
+    vi.stubEnv('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY', '');
+    expect(clerkFapiOrigin()).toBeNull();
+    vi.unstubAllEnvs();
+
     expect(clerkFapiOrigin('')).toBeNull();
     expect(clerkFapiOrigin('not-a-clerk-key')).toBeNull();
     expect(clerkFapiOrigin(`pk_live_${btoa('no-dot-here$')}`)).toBeNull();
