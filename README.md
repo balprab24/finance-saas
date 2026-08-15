@@ -5,6 +5,8 @@ importing bank CSVs, linking real banks through Plaid, and reading cash flow thr
 document-grade dashboard. Money is exact to the cent, every query is tenant-isolated, and the
 whole API is type-safe end to end.
 
+[![CI](https://github.com/balprab24/finance-saas/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/balprab24/finance-saas/actions/workflows/ci.yml)
+
 ![Next.js 15](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs&logoColor=white)
 ![React 19](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
@@ -62,9 +64,10 @@ The parts of this project worth a code review:
   job queue** (`plaid_sync_jobs`, claimed with `FOR UPDATE SKIP LOCKED`) drained by cron, and
   **replay-guarded** webhooks (constant-time body-hash comparison + a dedup table). Errors
   flow to Sentry.
-- **Tested and CI-gated.** ~200 tests across colocated API-route suites and library units
-  (Vitest) — including a real-Postgres integration test that the composite tenant FKs reject a
-  cross-tenant write — plus Playwright public-surface smoke tests. CI
+- **Tested and CI-gated.** 263 tests across colocated API-route suites and library units
+  (Vitest) — including real-Postgres integration tests proving the composite tenant FKs
+  reject a cross-tenant write and that the sync queue claims jobs correctly — plus Playwright
+  public-surface smoke tests. CI
   ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
   `audit → lint → typecheck → migrate → test → build → e2e` against a real `postgres:16` service
   on every push and PR; the audit gate blocks on runtime-dependency advisories.
@@ -74,6 +77,8 @@ The parts of this project worth a code review:
 - Authenticated dashboard powered by Clerk
 - Account, category, and transaction CRUD with bulk actions
 - Bulk transaction import from CSV, with column mapping and a validate-before-import review
+- CSV export of the current filtered view, formula-injection safe and exact to the milliunit
+  on re-import
 - Statement-style dashboard: net cash position, a cash-flow chart, and a ranked category ledger
 - Monthly budgets with per-category spend tracking
 - Spending insights: recurring subscriptions, category movers, and unusual-spend detection
@@ -165,7 +170,7 @@ npm run db:seed      # seed demo data for one Clerk user id
 ## Testing
 
 ```bash
-npm test           # Vitest: API-route + library unit suites (~200 tests)
+npm test           # Vitest: API-route + library unit suites (263 tests)
 npm run typecheck  # tsc --noEmit
 npm run e2e        # Playwright public-surface smoke tests against a production build
 ```
@@ -192,9 +197,15 @@ Aurex handles financial data, so security is layered rather than bolted on:
 - **Tenant isolation, twice** — every query is scoped to the Clerk `userId`, and composite
   `(id, user_id)` foreign keys enforce it at the schema level. Cross-tenant access by id is
   locked to `404` by tests.
-- **Auth by default** — `middleware.ts` runs Clerk's `auth.protect()` on every route outside a
-  small public allowlist; Hono routes additionally run Clerk middleware plus a `requireAuth`
-  guard.
+- **Auth by default, twice over** — `middleware.ts` runs Clerk's `auth.protect()` on every
+  route outside a small public allowlist, and the Hono app itself applies a **default-deny**
+  session guard at its root with a webhook-only exemption
+  ([`app/api/[[...route]]/route.ts`](app/api/%5B%5B...route%5D%5D/route.ts)). A new API route
+  added without its own `requireAuth` is still protected — `route-auth.test.ts` proves the
+  backstop.
+- **Encrypted transport to Postgres** — [`lib/db-config.ts`](lib/db-config.ts) requires TLS
+  for any non-loopback database host, honors an explicit `sslmode` in the URL, and fails
+  closed in production rather than silently downgrading to plaintext.
 - **Validated on both sides** — client forms use Zod via react-hook-form; the API re-validates
   with the same schemas (bounded lengths, integer milliunit amounts, bulk caps), behind a
   global 2 MB request-body limit.
@@ -215,18 +226,31 @@ secrets stay in server-only variables like `CLERK_SECRET_KEY` and `DATABASE_URL`
 ## Status & what's next
 
 Aurex is feature-complete for a single-user workspace and safe to try with demo, CSV, or Plaid
-Sandbox data. Known scope limits and next steps, kept honest:
+Sandbox data. Known scope limits, kept honest:
 
+- **Not deployed, deliberately.** Aurex is source-available rather than hosted: a public
+  instance would mean a paid domain (a Clerk *production* instance requires DNS records you
+  control, which `*.vercel.app` cannot provide) plus three third-party account setups to run
+  a demo. [`docs/deploy-readiness.md`](docs/deploy-readiness.md) is a working checklist for
+  anyone who wants to stand one up. To run it yourself you need free Clerk development keys
+  and the bundled Postgres (see [Getting started](#getting-started)); once signed in, the
+  dashboard's **Load sample data** button fills a workspace with 75 days of transactions
+  across three accounts, so every surface has real data immediately.
 - Single workspace per user — no shared/household accounts or multi-currency yet.
 - Playwright coverage is public-surface only (CI has no authenticated Clerk session);
   authenticated flows are covered by the API-route suites.
+- Deleting your Clerk account does not yet purge the corresponding Postgres rows — there is
+  no `user.deleted` webhook. Data you delete *inside* the app is removed as the in-app
+  Privacy page describes.
+- Plaid is wired for **Sandbox**; production access requires Plaid's approval process.
 - Dependencies are currently clean in both scopes — `npm audit` and
   `npm audit --omit=dev` both report 0. CI still splits the gate (blocking on runtime
   advisories, non-blocking on the dev toolchain) so a dev-only advisory with no
   non-breaking fix can never wedge the pipeline.
 
-The latest hardening pass — Sentry secret scrubbing, timing-safe cron auth, a pinned webhook
-algorithm, the two-tier audit gate, and the composite-FK isolation test — is logged in
+The latest hardening pass — default-deny API auth, the Postgres TLS policy, Sentry secret
+scrubbing, timing-safe cron auth, a pinned webhook algorithm, the two-tier audit gate, and
+the composite-FK isolation test — is logged in
 [`docs/security-review.md`](docs/security-review.md).
 
 ## Design

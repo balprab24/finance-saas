@@ -78,16 +78,19 @@ Bank syncs run as background jobs (`plaid_sync_jobs`) rather than inside the req
 triggered them. Two things drain the queue:
 
 - **Vercel Cron** (the reliability backbone) calls `GET /api/cron/plaid-sync` on the schedule
-  in `vercel.json` (every 5 minutes). The endpoint authenticates with `CRON_SECRET` (Vercel
-  injects it as the `Authorization: Bearer` header), claims due jobs with `FOR UPDATE SKIP
-  LOCKED`, and retries transient failures with exponential backoff. Crashed-worker jobs stuck
-  in `running` are reclaimed after a few minutes.
+  in `vercel.json`. The endpoint authenticates with `CRON_SECRET` (Vercel injects it as the
+  `Authorization: Bearer` header), claims due jobs with `FOR UPDATE SKIP LOCKED`, and retries
+  transient failures with exponential backoff. Crashed-worker jobs stuck in `running` are
+  reclaimed after a few minutes.
 - **A warm-path drain** runs immediately after a manual sync or a Plaid webhook (via Next's
   `after()`), so users usually don't wait for the next tick.
 
-> **Vercel plan note:** the Hobby plan runs cron jobs **once per day** only — the
-> `*/5 * * * *` cadence requires **Pro**. On Hobby the warm path still drains the happy path,
-> but a job that fails and backs off won't be retried until the daily run.
+> **Vercel plan note.** `vercel.json` ships a **daily** schedule (`0 6 * * *`) because the
+> Hobby plan only runs cron jobs once per day. The queue is designed for a `*/5 * * * *`
+> cadence — if you deploy on **Pro**, change the schedule to `*/5 * * * *` and set
+> `SENTRY_PLAID_SYNC_MONITOR_SCHEDULE` to match, or the Sentry cron monitor will report
+> false missed check-ins. On the daily schedule the warm path still drains the happy path,
+> but a job that fails and backs off waits until the next daily run.
 
 Generate `CRON_SECRET` with `openssl rand -hex 32` and set it in the host environment.
 
