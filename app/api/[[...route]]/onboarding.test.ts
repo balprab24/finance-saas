@@ -147,4 +147,18 @@ describe('onboarding API', () => {
     expect(body.error).toBe('Unauthorized');
     expect(state.selectResults).toHaveLength(0);
   });
+
+  it('seeds demo data only into the calling user workspace (tenant isolation)', async () => {
+    state.auth = { userId: 'user_bob' };
+    state.selectResults.push([{ count: 0 }], [{ count: 0 }], [{ count: 0 }]);
+
+    const { status } = await requestOnboarding('/demo', { method: 'POST' });
+
+    expect(status).toBe(201);
+    const seeded = state.insertedRows.flat() as Array<{ userId?: string }>;
+    expect(seeded.length).toBeGreaterThan(0);
+    // Every seeded row is stamped with the caller's id — a user can never seed
+    // rows into another tenant's workspace.
+    expect(seeded.every((row) => row.userId === 'user_bob')).toBe(true);
+  });
 });
