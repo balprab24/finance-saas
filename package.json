@@ -49,7 +49,7 @@
     "react": "^19.2.8",
     "react-countup": "^6.5.3",
     "react-currency-input-field": "^4.0.6",
-    "react-day-picker": "^9.14.0",
+    "react-day-picker": "^10.0.1",
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.83.0",
     "react-icons": "^5.7.0",
