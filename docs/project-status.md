@@ -1,6 +1,11 @@
 # Aurex — Project Status
 
-_Last reviewed: 2026-08-15_
+_Last reviewed: 2026-08-31_
+
+An independent review on 2026-08-31 (see `docs/security-review.md`) re-verified the
+August 15 close-out from scratch and found no critical or high-severity issues. It
+added CodeQL scanning, coverage tooling, and a Node `engines` pin; no product behavior
+changed.
 
 ## Where the project stands
 

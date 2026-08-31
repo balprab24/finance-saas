@@ -1,10 +1,11 @@
 # Aurex Security And Codebase Review
 
-_Originally reviewed: June 25, 2026 · Last updated: August 15, 2026_
+_Originally reviewed: June 25, 2026 · Last updated: August 31, 2026_
 
 > This document is a chronological log. The sections below are kept as written at the
 > time of each pass; later sections supersede earlier ones where they conflict. The
-> current state of the codebase is described by **Final pass — August 15, 2026**.
+> current state of the codebase is described by
+> **Independent review — August 31, 2026**.
 
 ## Executive Summary
 
@@ -179,3 +180,51 @@ reconciled and landed.
   route is only reachable by a signed-in user.
 - Playwright coverage remains public-surface only; authenticated flows are covered by
   the API-route suites.
+
+## Independent review — August 31, 2026
+
+A closing-session pass, run independently against the August 15 close-out claim
+rather than continuing from it: three separate read-only audits covered every Hono
+route's tenant scoping, the full product surface, and CI/infra maturity, plus direct
+reads of the schema, migrations, and CSP/error-handling code. **The August 15
+self-assessment holds.** No critical or high-severity issue was found anywhere in the
+API surface — every query scoping, input-validation, secret-handling, and webhook
+claim in the sections above was independently re-verified, not just re-read.
+
+### New, Low-severity findings
+
+- **`style-src` has no nonce.** `lib/csp.ts` gives `script-src` a per-request nonce
+  with `'strict-dynamic'`, but `style-src` is still `'self' 'unsafe-inline'`. This is
+  **evaluated and accepted, not fixed**: CSP nonces apply to `<style>` *elements*, not
+  inline `style=""` *attributes*, and Radix/shadcn primitives plus Recharts both rely
+  on inline style attributes for positioning and SVG sizing. Closing this gap would
+  mean removing inline styles from every UI primitive in use — an unjustified
+  refactor to narrow a CSS-only vector. Left as-is, same category as the other
+  documented CSP tradeoffs above.
+- **No SAST beyond `npm audit`.** Dependency advisories were covered; the app's own
+  code had no static analysis pass. Added a CodeQL workflow
+  (`.github/workflows/codeql.yml`, `javascript-typescript`, push/PR to `main` + weekly
+  schedule) — independent of `ci.yml`, so it can't affect the existing gate.
+- **No coverage measurement.** 263 tests existed with no coverage number attached.
+  Added `@vitest/coverage-v8` and a `coverage` block in `vitest.config.ts`, plus a
+  `test:coverage` script. Deliberately **not** wired into CI as an enforced threshold —
+  a sane number needs a baseline run first.
+- **No `engines` field.** Node version was pinned only in `ci.yml`. Added
+  `"engines": { "node": ">=20" }` to `package.json`.
+
+### Deferred, not attempted this pass
+
+- **Env-schema validation at boot** (t3-env or a hand-rolled zod `env.ts`) — real
+  value, but ~30 `process.env` reads are scattered across ~25 files; the risk of
+  missing a path in a closing session outweighs the benefit. Recommended next step for
+  whoever picks this project back up.
+- **Splitting `ci.yml` into multiple jobs** — the pipeline has a documented fragility
+  history (a real multi-commit fight to stabilize Playwright in CI); not reopened for
+  an unrelated change.
+
+### Verification
+
+- `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:coverage`,
+  `npm run build` — all run clean after the changes above.
+- CodeQL cannot be verified locally; confirm it runs green under the repo's Actions
+  tab after this lands on `main`.

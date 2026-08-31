@@ -2,6 +2,9 @@
   "name": "finance-saas",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -18,7 +21,8 @@
     "plaid:verify": "tsx scripts/plaid-sandbox-verify.ts",
     "screenshot": "tsx scripts/screenshot.ts",
     "screenshot:auth": "tsx scripts/screenshot-auth-cdp.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@clerk/hono": "^0.1.65",
@@ -72,6 +76,7 @@
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^3.2.7",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
