@@ -258,3 +258,7 @@ the composite-FK isolation test — is logged in
 The UI follows the **Light Counter** design system — a light, document-grade aesthetic with no
 brand hue, where color carries financial meaning rather than decoration. The full spec is in
 [`DESIGN.md`](DESIGN.md); the product brief and voice are in [`PRODUCT.md`](PRODUCT.md).
+
+---
+
+Built by [balprab24](https://github.com/balprab24).
